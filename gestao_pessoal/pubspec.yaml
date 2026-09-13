@@ -1,0 +1,58 @@
+name: gestao_pessoal
+description: "Daily Flow - App pessoal de gestão de rotina (hábitos, tarefas, pomodoro, estatísticas)."
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Gerenciamento de Estado
+  flutter_riverpod: ^2.5.1
+
+  # Roteamento
+  go_router: ^14.0.0
+
+  # Persistência Local (Offline First - AsyncStorage equivalent para Flutter)
+  shared_preferences: ^2.2.3
+
+  # Interface, Animações e Gráficos
+  flutter_animate: ^4.5.0
+  fl_chart: ^0.68.0
+  google_fonts: ^6.2.0
+  flutter_colorpicker: ^1.1.0
+
+  # Recursos Nativos e Utilitários
+  flutter_local_notifications: ^18.0.1
+  wakelock_plus: ^1.2.0
+  vibration: ^2.0.0
+  intl: ^0.20.2
+
+  # Liquid Glass 3D (iOS 26 design language) — shaders + jelly animations
+  liquid_glass_widgets: ^1.4.4
+
+  # Calendário premium
+  syncfusion_flutter_calendar: ^28.1.36
+
+  # Color picker premium
+  flex_color_picker: ^3.6.0
+
+  # UUIDs para IDs
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
