@@ -9,6 +9,9 @@ class AppSettings {
     required this.wallpaperSaturation,
     required this.blobIntensity,
     required this.darkMode,
+    required this.pomodoroFocusColor,
+    required this.pomodoroShortBreakColor,
+    required this.pomodoroLongBreakColor,
   });
 
   /// Cor-base dos blobs do background em HEX (ex: `#8B5CF6`).
@@ -23,11 +26,23 @@ class AppSettings {
   /// Se `true`, mantém o Dark Mode; `false` (futuro) usaria Light.
   final bool darkMode;
 
+  /// Cor do anel e label do modo **Foco** no Pomodoro.
+  final String pomodoroFocusColor;
+
+  /// Cor do anel e label do modo **Pausa Curta** no Pomodoro.
+  final String pomodoroShortBreakColor;
+
+  /// Cor do anel e label do modo **Pausa Longa** no Pomodoro.
+  final String pomodoroLongBreakColor;
+
   static const defaults = AppSettings(
     wallpaperSeed: '#8B5CF6',
     wallpaperSaturation: 1.0,
     blobIntensity: 0.35,
     darkMode: true,
+    pomodoroFocusColor: '#F43F5E',
+    pomodoroShortBreakColor: '#06B6D4',
+    pomodoroLongBreakColor: '#34D399',
   );
 
   AppSettings copyWith({
@@ -35,12 +50,20 @@ class AppSettings {
     double? wallpaperSaturation,
     double? blobIntensity,
     bool? darkMode,
+    String? pomodoroFocusColor,
+    String? pomodoroShortBreakColor,
+    String? pomodoroLongBreakColor,
   }) {
     return AppSettings(
       wallpaperSeed: wallpaperSeed ?? this.wallpaperSeed,
       wallpaperSaturation: wallpaperSaturation ?? this.wallpaperSaturation,
       blobIntensity: blobIntensity ?? this.blobIntensity,
       darkMode: darkMode ?? this.darkMode,
+      pomodoroFocusColor: pomodoroFocusColor ?? this.pomodoroFocusColor,
+      pomodoroShortBreakColor:
+          pomodoroShortBreakColor ?? this.pomodoroShortBreakColor,
+      pomodoroLongBreakColor:
+          pomodoroLongBreakColor ?? this.pomodoroLongBreakColor,
     );
   }
 
@@ -49,6 +72,9 @@ class AppSettings {
         'wallpaperSaturation': wallpaperSaturation,
         'blobIntensity': blobIntensity,
         'darkMode': darkMode,
+        'pomodoroFocusColor': pomodoroFocusColor,
+        'pomodoroShortBreakColor': pomodoroShortBreakColor,
+        'pomodoroLongBreakColor': pomodoroLongBreakColor,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
@@ -57,6 +83,12 @@ class AppSettings {
             (json['wallpaperSaturation'] as num?)?.toDouble() ?? 1.0,
         blobIntensity: (json['blobIntensity'] as num?)?.toDouble() ?? 0.35,
         darkMode: json['darkMode'] as bool? ?? true,
+        pomodoroFocusColor:
+            json['pomodoroFocusColor'] as String? ?? '#F43F5E',
+        pomodoroShortBreakColor:
+            json['pomodoroShortBreakColor'] as String? ?? '#06B6D4',
+        pomodoroLongBreakColor:
+            json['pomodoroLongBreakColor'] as String? ?? '#34D399',
       );
 
   String toJsonString() => jsonEncode(toJson());

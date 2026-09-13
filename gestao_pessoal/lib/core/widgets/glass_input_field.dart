@@ -45,9 +45,10 @@ class GlassInputField extends StatelessWidget {
         cursorColor: AppColors.purpleFluidStart,
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(
-            color: AppColors.textTertiary.withValues(alpha: 0.7),
+          hintStyle: const TextStyle(
+            color: AppColors.textSecondary,
             fontSize: 15,
+            fontWeight: FontWeight.w500,
           ),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,

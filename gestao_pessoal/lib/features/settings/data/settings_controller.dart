@@ -37,6 +37,21 @@ class SettingsNotifier extends Notifier<AppSettings> {
     await _persist();
   }
 
+  Future<void> updatePomodoroFocusColor(String hex) async {
+    state = state.copyWith(pomodoroFocusColor: hex);
+    await _persist();
+  }
+
+  Future<void> updatePomodoroShortBreakColor(String hex) async {
+    state = state.copyWith(pomodoroShortBreakColor: hex);
+    await _persist();
+  }
+
+  Future<void> updatePomodoroLongBreakColor(String hex) async {
+    state = state.copyWith(pomodoroLongBreakColor: hex);
+    await _persist();
+  }
+
   Future<void> resetDefaults() async {
     state = AppSettings.defaults;
     await _persist();

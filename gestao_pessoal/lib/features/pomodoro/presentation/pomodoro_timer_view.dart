@@ -2,10 +2,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatters.dart';
+import '../../settings/data/settings_controller.dart';
 import '../controllers/pomodoro_controller.dart';
 import '../data/pomodoro_session_model.dart';
 
@@ -14,23 +16,28 @@ import '../data/pomodoro_session_model.dart';
 /// Usa [CustomPaint] otimizado (sem AnimatedContainer) e mantém
 /// `TweenAnimationBuilder` apenas para o gradiente do anel.
 ///
-/// O conteúdo (label + tempo) é centralizado usando [Center] + [Column]
-/// com `crossAxisAlignment: stretch` + texto com `textAlign: center`,
-/// garantindo alinhamento perfeito mesmo em larguras variáveis.
-class PomodoroTimerView extends StatelessWidget {
+/// As cores são derivadas das configurações do usuário
+/// (`SettingsNotifier.pomodoroFocusColor` etc.), permitindo
+/// personalização total do visual do timer.
+class PomodoroTimerView extends ConsumerWidget {
   const PomodoroTimerView({super.key, required this.state});
 
   final PomodoroTimerState state;
 
-  Color get _accentColor {
+  Color _accentColor(String focusHex, String shortHex, String longHex) {
     switch (state.type) {
       case PomodoroType.focus:
-        return AppColors.pinkIridescentStart;
+        return _hexToColor(focusHex);
       case PomodoroType.shortBreak:
-        return AppColors.cyanWaterStart;
+        return _hexToColor(shortHex);
       case PomodoroType.longBreak:
-        return AppColors.success;
+        return _hexToColor(longHex);
     }
+  }
+
+  Color _hexToColor(String hex) {
+    final clean = hex.replaceAll('#', '');
+    return Color(int.parse('FF$clean', radix: 16));
   }
 
   String get _label {
@@ -45,7 +52,14 @@ class PomodoroTimerView extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final accent = _accentColor(
+      settings.pomodoroFocusColor,
+      settings.pomodoroShortBreakColor,
+      settings.pomodoroLongBreakColor,
+    );
+
     return Center(
       child: AspectRatio(
         aspectRatio: 1,
@@ -59,7 +73,7 @@ class PomodoroTimerView extends StatelessWidget {
                 child: CustomPaint(
                   painter: _TimerPainter(
                     progress: state.progress,
-                    color: _accentColor,
+                    color: accent,
                   ),
                 ),
               ),
@@ -75,7 +89,7 @@ class PomodoroTimerView extends StatelessWidget {
                       fontSize: 13,
                       letterSpacing: 3,
                       fontWeight: FontWeight.w700,
-                      color: _accentColor,
+                      color: accent,
                     ),
                   ),
                   const SizedBox(height: 16),

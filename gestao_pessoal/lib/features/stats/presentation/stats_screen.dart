@@ -114,17 +114,29 @@ class StatsScreen extends ConsumerWidget {
                             reservedSize: 28,
                             getTitlesWidget: (value, meta) {
                               final i = value.toInt();
-                          if (i < 0 || i >= dailyBars.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final label = switch (period) {
-                            StatsPeriod.weekly => DateFormat('E', 'pt_BR')
-                                .format(dailyBars[i].day)
-                                .substring(0, 1),
-                            StatsPeriod.monthly => '${dailyBars[i].day.day}',
-                            StatsPeriod.yearly =>
-                              DateFormat('MMM', 'pt_BR').format(dailyBars[i].day),
-                          };
+                              if (i < 0 || i >= dailyBars.length) {
+                                return const SizedBox.shrink();
+                              }
+                              // Mostra só 1 a cada N labels pra não
+                              // amontoar tudo no eixo X.
+                              final stride = switch (period) {
+                                StatsPeriod.weekly => 1,
+                                StatsPeriod.monthly => 5,
+                                StatsPeriod.yearly => 1,
+                              };
+                              if (i % stride != 0 &&
+                                  i != dailyBars.length - 1) {
+                                return const SizedBox.shrink();
+                              }
+                              final label = switch (period) {
+                                StatsPeriod.weekly => DateFormat('E', 'pt_BR')
+                                    .format(dailyBars[i].day)
+                                    .substring(0, 1),
+                                StatsPeriod.monthly =>
+                                  '${dailyBars[i].day.day}',
+                                StatsPeriod.yearly => DateFormat('MMM', 'pt_BR')
+                                    .format(dailyBars[i].day),
+                              };
                               return Text(
                                 label,
                                 style: const TextStyle(

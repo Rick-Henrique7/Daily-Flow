@@ -33,6 +33,22 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
+  /// Abre o color picker genérico para qualquer campo que recebe HEX.
+  Future<void> _openColorPickerForField(
+    BuildContext context,
+    WidgetRef ref,
+    String currentHex,
+    Future<void> Function(String) onPicked,
+  ) async {
+    final picked = await showDialog<Color>(
+      context: context,
+      builder: (_) => _PickerDialog(initial: _hexToColor(currentHex)),
+    );
+    if (picked != null) {
+      await onPicked(_colorToHex(picked));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
@@ -174,6 +190,64 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
 
+          const _SectionHeader('Timer de Foco'),
+          LiquidGlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Cores do Ciclo Pomodoro',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Toque para personalizar o anel de cada modo.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _ColorRow(
+                  label: 'Foco',
+                  color: settings.pomodoroFocusColor,
+                  onTap: () => _openColorPickerForField(
+                    context,
+                    ref,
+                    settings.pomodoroFocusColor,
+                    notifier.updatePomodoroFocusColor,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _ColorRow(
+                  label: 'Pausa Curta',
+                  color: settings.pomodoroShortBreakColor,
+                  onTap: () => _openColorPickerForField(
+                    context,
+                    ref,
+                    settings.pomodoroShortBreakColor,
+                    notifier.updatePomodoroShortBreakColor,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _ColorRow(
+                  label: 'Pausa Longa',
+                  color: settings.pomodoroLongBreakColor,
+                  onTap: () => _openColorPickerForField(
+                    context,
+                    ref,
+                    settings.pomodoroLongBreakColor,
+                    notifier.updatePomodoroLongBreakColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
           // Reset
           Center(
             child: TextButton.icon(
@@ -196,6 +270,60 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+      ),
+    );
+  }
+}
+
+class _ColorRow extends StatelessWidget {
+  const _ColorRow({
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+  final String label;
+  final String color;
+  final VoidCallback onTap;
+
+  Color _hexToColor(String hex) {
+    final clean = hex.replaceAll('#', '');
+    return Color(int.parse('FF$clean', radix: 16));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: _hexToColor(color),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: AppColors.glassBorder,
+                  width: 1.5,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const Icon(Icons.tune, color: AppColors.textTertiary, size: 18),
+          ],
+        ),
       ),
     );
   }
