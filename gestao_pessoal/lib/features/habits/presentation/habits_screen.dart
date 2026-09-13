@@ -4,6 +4,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatters.dart';
+import '../../../core/widgets/glass_input_field.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../data/habits_controller.dart';
 import '../domain/habit_model.dart';
@@ -24,10 +25,10 @@ class HabitsScreen extends ConsumerWidget {
     final allHabits = ref.watch(habitsProvider);
 
     // Appointments por dia (syncfusion exige DateTime por evento).
-    final appointments = <CalendarAppointment>[];
+    final appointments = <Appointment>[];
     for (final habit in allHabits) {
       for (final date in habit.completedDates) {
-        appointments.add(CalendarAppointment(
+        appointments.add(Appointment(
           startTime: date,
           endTime: date.add(const Duration(hours: 1)),
           subject: habit.title,
@@ -163,7 +164,7 @@ class _SfCalendarCard extends StatelessWidget {
     required this.onDaySelected,
   });
   final DateTime selectedDay;
-  final List<CalendarAppointment> appointments;
+  final List<Appointment> appointments;
   final ValueChanged<DateTime> onDaySelected;
 
   @override
@@ -218,42 +219,21 @@ class _SfCalendarCard extends StatelessWidget {
 }
 
 class _HabitDataSource extends CalendarDataSource {
-  _HabitDataSource(List<CalendarAppointment> source) {
-    appointments = source.cast();
+  _HabitDataSource(List<Appointment> source) {
+    appointments = source;
   }
 
   @override
-  DateTime getStartTime(int index) =>
-      (appointments as List<CalendarAppointment>)[index].startTime;
+  DateTime getStartTime(int index) => appointments![index].startTime;
 
   @override
-  DateTime getEndTime(int index) =>
-      (appointments as List<CalendarAppointment>)[index].endTime;
+  DateTime getEndTime(int index) => appointments![index].endTime;
 
   @override
-  String getSubject(int index) =>
-      (appointments as List<CalendarAppointment>)[index].subject;
+  String getSubject(int index) => appointments![index].subject;
 
   @override
-  Color getColor(int index) =>
-      (appointments as List<CalendarAppointment>)[index].color;
-}
-
-/// Espelha `CalendarAppointment` do syncfusion sem importar o tipo
-/// (a lib só exporta `Appointment`).
-class CalendarAppointment {
-  CalendarAppointment({
-    required this.startTime,
-    required this.endTime,
-    required this.subject,
-    required this.color,
-    required this.id,
-  });
-  final DateTime startTime;
-  final DateTime endTime;
-  final String subject;
-  final Color color;
-  final String id;
+  Color getColor(int index) => appointments![index].color;
 }
 
 class _HabitCard extends ConsumerWidget {
@@ -408,19 +388,14 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
               const SizedBox(height: 16),
 
               // Nome
-              TextField(
+              GlassInputField(
                 controller: _titleCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nome',
-                  hintText: 'Ex.: Beber 2L de Água',
-                ),
+                hintText: 'Nome — Ex.: Beber 2L de Água',
               ),
               const SizedBox(height: 12),
-              TextField(
+              GlassInputField(
                 controller: _categoryCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Categoria',
-                ),
+                hintText: 'Categoria',
               ),
               const SizedBox(height: 16),
 
@@ -505,19 +480,18 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                 children: [
                   Expanded(
                     flex: 1,
-                    child: TextField(
+                    child: GlassInputField(
                       controller: _targetCtrl,
+                      hintText: 'Meta',
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Meta'),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     flex: 2,
-                    child: TextField(
+                    child: GlassInputField(
                       controller: _unitCtrl,
-                      decoration:
-                          const InputDecoration(labelText: 'Unidade (ml, min...)'),
+                      hintText: 'Unidade (ml, min...)',
                     ),
                   ),
                 ],
