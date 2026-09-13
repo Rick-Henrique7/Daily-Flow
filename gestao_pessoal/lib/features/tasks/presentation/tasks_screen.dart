@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/widgets/glass_input_field.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../data/tasks_controller.dart';
 import '../domain/subtask_model.dart';
@@ -89,61 +90,110 @@ class TasksScreen extends ConsumerWidget {
     await showDialog<void>(
       context: context,
       builder: (_) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
-          title: const Text('Nova Tarefa'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleCtrl,
-                  decoration: const InputDecoration(labelText: 'Título'),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<TaskPriority>(
-                  initialValue: priority,
-                  decoration: const InputDecoration(labelText: 'Prioridade'),
-                  items: [
-                    for (final p in TaskPriority.values)
-                      DropdownMenuItem(
-                        value: p,
-                        child: Row(
-                          children: [
-                            Icon(p.icon, color: p.color, size: 18),
-                            const SizedBox(width: 8),
-                            Text(p.label),
-                          ],
-                        ),
+        builder: (ctx, setState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(16),
+          child: LiquidGlassCard(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Nova Tarefa',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  GlassInputField(
+                    controller: titleCtrl,
+                    hintText: 'Título',
+                  ),
+                  const SizedBox(height: 12),
+                  // Container vítreo ao redor do dropdown pra combinar
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        width: 1,
                       ),
-                  ],
-                  onChanged: (v) => setState(() => priority = v ?? priority),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  decoration: const InputDecoration(labelText: 'Categoria'),
-                  onChanged: (v) => category = v,
-                ),
-              ],
+                    ),
+                    child: DropdownButtonFormField<TaskPriority>(
+                      initialValue: priority,
+                      isExpanded: true,
+                      dropdownColor: AppColors.surfaceElevated,
+                      decoration: const InputDecoration(
+                        hintText: 'Prioridade',
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
+                      iconEnabledColor: AppColors.textPrimary,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      items: [
+                        for (final p in TaskPriority.values)
+                          DropdownMenuItem(
+                            value: p,
+                            child: Row(
+                              children: [
+                                Icon(p.icon, color: p.color, size: 18),
+                                const SizedBox(width: 8),
+                                Text(p.label),
+                              ],
+                            ),
+                          ),
+                      ],
+                      onChanged: (v) =>
+                          setState(() => priority = v ?? priority),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  GlassInputField(
+                    controller: titleCtrl,
+                    hintText: 'Categoria',
+                    onChanged: (v) => category = v,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Cancelar'),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton(
+                        onPressed: () async {
+                          if (titleCtrl.text.trim().isEmpty) return;
+                          await ref.read(tasksProvider.notifier).create(
+                                title: titleCtrl.text.trim(),
+                                priority: priority,
+                                category: category,
+                              );
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                        child: const Text('Criar'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                if (titleCtrl.text.trim().isEmpty) return;
-                await ref.read(tasksProvider.notifier).create(
-                      title: titleCtrl.text.trim(),
-                      priority: priority,
-                      category: category,
-                    );
-                if (ctx.mounted) Navigator.pop(ctx);
-              },
-              child: const Text('Criar'),
-            ),
-          ],
         ),
       ),
     );

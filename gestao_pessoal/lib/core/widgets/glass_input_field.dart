@@ -15,12 +15,14 @@ class GlassInputField extends StatelessWidget {
     this.hintText,
     this.keyboardType,
     this.maxLines = 1,
+    this.onChanged,
   });
 
   final TextEditingController controller;
   final String? hintText;
   final TextInputType? keyboardType;
   final int maxLines;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +39,7 @@ class GlassInputField extends StatelessWidget {
         controller: controller,
         keyboardType: keyboardType,
         maxLines: maxLines,
+        onChanged: onChanged,
         style: const TextStyle(
           color: AppColors.textPrimary,
           fontSize: 15,
