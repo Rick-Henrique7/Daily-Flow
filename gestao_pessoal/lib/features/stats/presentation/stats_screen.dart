@@ -1,4 +1,3 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -88,7 +87,8 @@ class StatsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          // Gráfico de barras (RF-ST-02)
+          // Gráfico de barras (RF-ST-02) — customizado com Flutter puro
+          // para evitar sobreposição de labels do fl_chart.
           LiquidGlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,78 +100,12 @@ class StatsScreen extends ConsumerWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 SizedBox(
                   height: 200,
-                  child: BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 28,
-                            interval: switch (period) {
-                              StatsPeriod.weekly => 1,
-                              StatsPeriod.monthly => 5,
-                              StatsPeriod.yearly => 1,
-                            },
-                            getTitlesWidget: (value, meta) {
-                              final i = value.toInt();
-                              if (i < 0 || i >= dailyBars.length) {
-                                return const SizedBox.shrink();
-                              }
-                              // Mostra só 1 a cada N labels pra não
-                              // amontoar tudo no eixo X.
-                              final stride = switch (period) {
-                                StatsPeriod.weekly => 1,
-                                StatsPeriod.monthly => 5,
-                                StatsPeriod.yearly => 1,
-                              };
-                              if (i % stride != 0 &&
-                                  i != dailyBars.length - 1) {
-                                return const SizedBox.shrink();
-                              }
-                              final label = switch (period) {
-                                StatsPeriod.weekly => DateFormat('E', 'pt_BR')
-                                    .format(dailyBars[i].day)
-                                    .substring(0, 1),
-                                StatsPeriod.monthly =>
-                                  '${dailyBars[i].day.day}',
-                                StatsPeriod.yearly => DateFormat('MMM', 'pt_BR')
-                                    .format(dailyBars[i].day),
-                              };
-                              return Text(
-                                label,
-                                style: const TextStyle(
-                                  color: AppColors.textTertiary,
-                                  fontSize: 10,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      gridData: const FlGridData(show: false),
-                      borderData: FlBorderData(show: false),
-                      barGroups: [
-                        for (var i = 0; i < dailyBars.length; i++)
-                          BarChartGroupData(
-                            x: i,
-                            barRods: [
-                              BarChartRodData(
-                                toY: dailyBars[i].count.toDouble(),
-                                color: AppColors.purpleFluidStart,
-                                width: 14,
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(6),
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
+                  child: _CustomBarChart(
+                    data: dailyBars,
+                    period: period,
                   ),
                 ),
               ],
@@ -269,6 +203,132 @@ class _KpiCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// BarChart customizado com Flutter puro.
+///
+/// Substitui o `BarChart` do fl_chart porque mesmo com `interval` no
+/// SideTitles, a versão 0.68 ainda renderiza todos os labels
+/// sobrepostos em eixos categóricos. Aqui controlamos exatamente
+/// quantos labels aparecem com base no período selecionado.
+class _CustomBarChart extends StatelessWidget {
+  const _CustomBarChart({required this.data, required this.period});
+  final List<_DailyCount> data;
+  final StatsPeriod period;
+
+  /// Quais índices de data devem mostrar label no eixo X.
+  List<int> _labelIndices() {
+    if (data.isEmpty) return const [];
+    final n = data.length;
+    return switch (period) {
+      StatsPeriod.weekly =>
+        List.generate(n, (i) => i), // todos os 7
+      StatsPeriod.monthly => [
+        for (var i = 0; i < n; i++) if (i % 5 == 0) i,
+        if (n - 1 % 5 != 0 && !((n - 1) % 5 == 0)) n - 1,
+      ],
+      StatsPeriod.yearly => List.generate(n, (i) => i),
+    };
+  }
+
+  String _labelFor(DateTime day) {
+    return switch (period) {
+      StatsPeriod.weekly =>
+        DateFormat('E', 'pt_BR').format(day).substring(0, 1),
+      StatsPeriod.monthly => '${day.day}',
+      StatsPeriod.yearly => DateFormat('MMM', 'pt_BR').format(day),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (data.isEmpty) {
+      return const Center(
+        child: Text(
+          'Sem dados',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      );
+    }
+    final maxValue =
+        data.fold<int>(0, (acc, e) => e.count > acc ? e.count : acc);
+    final labelsToShow = _labelIndices().toSet();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Column(
+          children: [
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (var i = 0; i < data.length; i++) ...[
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 400),
+                          height: maxValue == 0
+                              ? 4
+                              : (data[i].count / maxValue) *
+                                  (constraints.maxHeight - 20) +
+                                  4,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                AppColors.purpleFluidStart,
+                                AppColors.purpleFluidEnd,
+                              ],
+                            ),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(6),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.purpleFluidStart
+                                    .withValues(alpha: 0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 18,
+              child: Row(
+                children: [
+                  for (var i = 0; i < data.length; i++)
+                    Expanded(
+                      child: Center(
+                        child: labelsToShow.contains(i)
+                            ? Text(
+                                _labelFor(data[i].day),
+                                style: const TextStyle(
+                                  color: AppColors.textTertiary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

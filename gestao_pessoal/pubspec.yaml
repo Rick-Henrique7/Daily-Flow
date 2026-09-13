@@ -26,7 +26,6 @@ dependencies:
 
   # Interface, Animações e Gráficos
   flutter_animate: ^4.5.0
-  fl_chart: ^0.68.0
   google_fonts: ^6.2.0
   flutter_colorpicker: ^1.1.0
 
