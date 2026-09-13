@@ -112,6 +112,11 @@ class StatsScreen extends ConsumerWidget {
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 28,
+                            interval: switch (period) {
+                              StatsPeriod.weekly => 1,
+                              StatsPeriod.monthly => 5,
+                              StatsPeriod.yearly => 1,
+                            },
                             getTitlesWidget: (value, meta) {
                               final i = value.toInt();
                               if (i < 0 || i >= dailyBars.length) {
