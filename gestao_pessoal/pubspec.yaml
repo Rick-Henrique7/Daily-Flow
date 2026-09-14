@@ -1,5 +1,5 @@
 name: gestao_pessoal
-description: "Daily Flow - App pessoal de gestão de rotina (hábitos, tarefas, pomodoro, estatísticas)."
+description: "Daily Flow — Aplicativo pessoal de gestão de rotina com hábitos, tarefas, timer Pomodoro e estatísticas. Visual Liquid Glass 3D."
 publish_to: 'none'
 
 version: 0.1.0+1
