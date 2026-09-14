@@ -1,0 +1,24 @@
+# Android SDK local (instalado dentro do projeto para evitar privilégios admin)
+.android-sdk/
+.android-sdk.temp/
+.gradle/
+local.properties
+
+# Build artifacts (exceto o APK que é entregue ao usuário)
+**/build/
+!**/build/app/outputs/flutter-apk/
+
+# Node (scripts de geração de ícones)
+gestao_pessoal/scripts/node_modules/
+gestao_pessoal/scripts/package-lock.json
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Misc
+*.log
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
