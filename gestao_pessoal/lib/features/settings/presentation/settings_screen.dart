@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../data/settings_controller.dart';
+import '../domain/app_settings.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -67,106 +68,223 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
         children: [
           const _SectionHeader('Aparência'),
+          // Modo do fundo (animado / sólido)
           LiquidGlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Cor do Papel de Parede',
+                  'Estilo do Fundo',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Define a cor-base dos blobs animados no fundo.',
-                  style: TextStyle(
+                const SizedBox(height: 4),
+                Text(
+                  settings.wallpaperMode.description,
+                  style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: seedColor,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.glassBorder,
-                          width: 1.5,
+                const SizedBox(height: 12),
+                SegmentedButton<WallpaperMode>(
+                  segments: [
+                    for (final m in WallpaperMode.values)
+                      ButtonSegment<WallpaperMode>(
+                        value: m,
+                        label: Text(m.label),
+                        icon: Icon(
+                          m == WallpaperMode.animated
+                              ? Icons.auto_awesome_outlined
+                              : Icons.format_color_fill_outlined,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            settings.wallpaperSeed,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            'Toque para alterar',
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    FilledButton(
-                      onPressed: () => _openColorPicker(context, ref),
-                      child: const Text('Escolher'),
-                    ),
                   ],
+                  selected: {settings.wallpaperMode},
+                  onSelectionChanged: (sel) =>
+                      notifier.updateWallpaperMode(sel.first),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 12),
 
-          // Intensidade dos blobs
-          LiquidGlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Intensidade dos Blobs',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
+          // === Configuração específica do modo ativo ===
+          if (settings.wallpaperMode == WallpaperMode.animated) ...[
+            LiquidGlassCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Cor do Papel de Parede',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
-                    Text(
-                      '${(settings.blobIntensity * 100).round()}%',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Define a cor-base dos blobs animados no fundo.',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
                     ),
-                  ],
-                ),
-                Slider(
-                  value: settings.blobIntensity,
-                  min: 0,
-                  max: 0.7,
-                  divisions: 14,
-                  onChanged: notifier.updateBlobIntensity,
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: seedColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.glassBorder,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              settings.wallpaperSeed,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              'Toque para alterar',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      FilledButton(
+                        onPressed: () => _openColorPicker(context, ref),
+                        child: const Text('Escolher'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
+            const SizedBox(height: 12),
+            // Intensidade dos blobs
+            LiquidGlassCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Intensidade dos Blobs',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        '${(settings.blobIntensity * 100).round()}%',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: settings.blobIntensity,
+                    min: 0,
+                    max: 0.7,
+                    divisions: 14,
+                    onChanged: notifier.updateBlobIntensity,
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            // === MODO SÓLIDO ===
+            LiquidGlassCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Cor do Fundo',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Escolha uma cor única sólida para todo o fundo da tela.',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: _hexToColor(settings.wallpaperSolidColor),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.glassBorder,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              settings.wallpaperSolidColor,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              'Toque para alterar',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      FilledButton(
+                        onPressed: () => _openColorPickerForField(
+                          context,
+                          ref,
+                          settings.wallpaperSolidColor,
+                          notifier.updateWallpaperSolidColor,
+                        ),
+                        child: const Text('Escolher'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
 
           const _SectionHeader('Geral'),
@@ -182,6 +300,38 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   subtitle: const Text(
                     'Mantém o Dark Mode ativo',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+                const Divider(
+                  height: 1,
+                  color: AppColors.glassBorder,
+                ),
+                SwitchListTile.adaptive(
+                  value: settings.hapticsEnabled,
+                  onChanged: notifier.updateHapticsEnabled,
+                  title: const Text(
+                    'Vibração ao tocar',
+                    style: TextStyle(color: AppColors.textPrimary),
+                  ),
+                  subtitle: const Text(
+                    'Feedback tátil em cliques e conclusões de tarefa/hábito',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+                const Divider(
+                  height: 1,
+                  color: AppColors.glassBorder,
+                ),
+                SwitchListTile.adaptive(
+                  value: settings.soundEnabled,
+                  onChanged: notifier.updateSoundEnabled,
+                  title: const Text(
+                    'Som de conclusão',
+                    style: TextStyle(color: AppColors.textPrimary),
+                  ),
+                  subtitle: const Text(
+                    'Toca um "ding" ao concluir uma tarefa ou hábito',
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ),

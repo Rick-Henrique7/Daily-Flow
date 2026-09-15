@@ -2,65 +2,108 @@ import 'package:flutter/material.dart';
 
 /// Paleta de cores do Daily Flow.
 ///
-/// Define o Dark Mode nativo (paleta padrão) e os gradientes vítreos
-/// usados nos componentes Liquid Glass.
+/// Baseada no design system "Financial App — Dark/Green":
+/// - Background quase-preto (#0D0D0D) — nunca puro
+/// - Accent único neon green (#00E676) — usado com parcimônia
+/// - Borders low-contrast (#1E1E1E) — estrutura via profundidade, não linhas
+/// - Sem gradientes entre hues — apenas opacity fades
+/// - Sem drop shadows
 class AppColors {
   AppColors._();
 
-  // === Fundos base (Dark Mode profundo) ===
-  static const Color background = Color(0xFF0D1117);
-  static const Color surface = Color(0xFF121212);
-  static const Color surfaceElevated = Color(0xFF1C1C24);
+  // === Tokens base (do design system) ===
+  static const Color background = Color(0xFF0D0D0D);
+  static const Color surface = Color(0xFF141414);
+  static const Color surface2 = Color(0xFF1C1C1C);
 
-  // === Texto ===
-  static const Color textPrimary = Color(0xFFF5F5F7);
-  static const Color textSecondary = Color(0xFFB0B0B8);
-  static const Color textTertiary = Color(0xFF6E6E78);
+  /// Texto primário / foreground
+  static const Color textPrimary = Color(0xFFFFFFFF);
+  static const Color textSecondary = Color(0xFF7A7A7A);
+  static const Color textTertiary = Color(0xFF525252);
 
-  // === Acentos (gradientes vítreos) ===
-  static const Color purpleFluidStart = Color(0xFF8B5CF6);
-  static const Color purpleFluidEnd = Color(0xFFC084FC);
+  /// Accent único (neon green) — usar com parcimônia
+  static const Color primary = Color(0xFF00E676);
+  static const Color primaryMuted = Color(0xFF1A3D2B);
+  static const Color accentDim = Color(0xFF00B85A);
 
-  static const Color cyanWaterStart = Color(0xFF06B6D4);
-  static const Color cyanWaterEnd = Color(0xFF34D399);
+  /// Border low-contrast (1px)
+  static const Color border = Color(0xFF1E1E1E);
 
-  static const Color pinkIridescentStart = Color(0xFFF43F5E);
-  static const Color pinkIridescentMid = Color(0xFFFB7185);
-  static const Color pinkIridescentEnd = Color(0xFF818CF8);
+  /// Chart bars
+  static const Color chartBar1 = Color(0xFF0D2B1A);
+  static const Color chartBar2 = Color(0xFF1A4D2E);
 
-  // === Estados funcionais ===
-  static const Color success = Color(0xFF34D399);
-  static const Color warning = Color(0xFFFBBF24);
-  static const Color danger = Color(0xFFF43F5E);
-  static const Color info = Color(0xFF06B6D4);
+  // === Aliases de compatibilidade com código existente ===
+  // (mantidos até refactor completo das telas)
+  static const Color surfaceElevated = surface2;
+  static const Color glassBorder = border;
+  static const Color success = primary;
 
-  // === Prioridade de tarefas ===
-  static const Color priorityHigh = Color(0xFFF43F5E);
-  static const Color priorityMedium = Color(0xFFFBBF24);
-  static const Color priorityLow = Color(0xFF06B6D4);
+  /// Primary color era chamado `purpleFluidStart` — agora aponta pra
+  /// neon green (single accent).
+  static const Color purpleFluidStart = primary;
+  static const Color purpleFluidEnd = primary;
 
-  // === Vidro (Glassmorphism) ===
-  static const Color glassFill = Color(0x26FFFFFF); // 15% branco
-  static const Color glassFillStrong = Color(0x4DFFFFFF); // 30% branco
-  static const Color glassBorder = Color(0x80FFFFFF); // 50% branco
-  static const Color glassShadow = Color(0x1F000000); // 12% preto
+  /// `cyanWaterStart` apontava para ciano — agora accent-dim.
+  static const Color cyanWaterStart = accentDim;
+  static const Color cyanWaterEnd = accentDim;
 
-  // === Gradientes pré-montados ===
+  /// `pinkIridescentStart` apontava para rosa — agora primary-muted.
+  static const Color pinkIridescentStart = primaryMuted;
+  static const Color pinkIridescentMid = primaryMuted;
+  static const Color pinkIridescentEnd = primaryMuted;
+
+  // === Estados funcionais (sem red/orange — spec) ===
+  static const Color warning = Color(0xFFB0B0B0); // muted gray
+  static const Color danger = Color(0xFF6E6E6E); // muted gray
+  static const Color info = primaryMuted;
+
+  // === Prioridade de tarefas (escala verde→cinza) ===
+  static const Color priorityHigh = primary;
+  static const Color priorityMedium = accentDim;
+  static const Color priorityLow = textSecondary;
+
+  // === Vidro (não usado no novo design, mantido p/ compat) ===
+  static const Color glassFill = Color(0x00000000); // transparente
+  static const Color glassFillStrong = Color(0x00000000);
+  static const Color glassShadow = Color(0x00000000);
+
+  // === Gradientes (apenas opacity fades — spec) ===
+  /// Gradiente "primary" — fade de opacity (sem mudar de hue).
   static const LinearGradient purpleFluid = LinearGradient(
-    colors: [purpleFluidStart, purpleFluidEnd],
+    colors: [Color(0xFF00E676), Color(0xFF00B85A)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
+  /// "cyanWater" — mesmo hue, opacity fade.
   static const LinearGradient cyanWater = LinearGradient(
-    colors: [cyanWaterStart, cyanWaterEnd],
+    colors: [Color(0xFF00B85A), Color(0xFF1A3D2B)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
+  /// "pinkIridescent" — descontinuado (sem segundo hue no design system).
+  /// Mantido como fallback apontando para tons verdes.
   static const LinearGradient pinkIridescent = LinearGradient(
-    colors: [pinkIridescentStart, pinkIridescentMid, pinkIridescentEnd],
+    colors: [Color(0xFF1A3D2B), Color(0xFF0D2B1A)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  // === Spacing scale (4px base unit — design system) ===
+  static const double space1 = 4;
+  static const double space2 = 8;
+  static const double space3 = 12;
+  static const double space4 = 16;
+  static const double space5 = 20;
+  static const double space6 = 24;
+  static const double space8 = 32;
+  static const double space10 = 40;
+
+  // === Border radius scale (design system) ===
+  static const double radiusSm = 8;
+  static const double radiusMd = 16;
+  static const double radiusLg = 24;
+  static const double radiusXl = 32;
 }

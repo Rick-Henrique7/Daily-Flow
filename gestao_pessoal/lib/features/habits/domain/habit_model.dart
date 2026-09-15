@@ -40,6 +40,7 @@ class HabitModel {
     required this.completedDates,
     required this.streakCount,
     this.reminderTime,
+    this.durationMinutes,
   });
 
   final String id;
@@ -64,6 +65,10 @@ class HabitModel {
 
   /// Horário do lembrete opcional (HH:mm).
   final TimeOfDay? reminderTime;
+
+  /// Estimativa de tempo que o hábito leva para ser realizado, em
+  /// minutos. `null` = sem estimativa.
+  final int? durationMinutes;
 
   IconData get icon => HabitIcons.fromKey(iconKey);
 
@@ -96,6 +101,8 @@ class HabitModel {
     int? streakCount,
     TimeOfDay? reminderTime,
     bool clearReminderTime = false,
+    int? durationMinutes,
+    bool clearDurationMinutes = false,
   }) {
     return HabitModel(
       id: id ?? this.id,
@@ -110,6 +117,8 @@ class HabitModel {
       streakCount: streakCount ?? this.streakCount,
       reminderTime:
           clearReminderTime ? null : (reminderTime ?? this.reminderTime),
+      durationMinutes:
+          clearDurationMinutes ? null : (durationMinutes ?? this.durationMinutes),
     );
   }
 
@@ -127,6 +136,7 @@ class HabitModel {
         'streakCount': streakCount,
         'reminderHour': reminderTime?.hour,
         'reminderMinute': reminderTime?.minute,
+        'durationMinutes': durationMinutes,
       };
 
   factory HabitModel.fromJson(Map<String, dynamic> json) {
@@ -134,6 +144,7 @@ class HabitModel {
     final reminderMinute = json['reminderMinute'] as int?;
     // Migração: documentos antigos usavam `iconCodePoint`.
     final iconKey = (json['iconKey'] as String?) ?? 'water';
+    final duration = json['durationMinutes'];
     return HabitModel(
       id: json['id'] as String,
       title: json['title'] as String,
@@ -151,6 +162,7 @@ class HabitModel {
       reminderTime: (reminderHour != null && reminderMinute != null)
           ? TimeOfDay(hour: reminderHour, minute: reminderMinute)
           : null,
+      durationMinutes: duration is int ? duration : null,
     );
   }
 }

@@ -93,13 +93,15 @@ class DashboardScreen extends ConsumerWidget {
             const SliverToBoxAdapter(child: SizedBox(height: 48)),
             SliverToBoxAdapter(
               child: Center(
-                child: DailyProgressRing(
-                  progress: progress,
-                  label: '$doneItems/$totalItems concluídos',
-                )
-                    .animate()
-                    .fadeIn(duration: 600.ms)
-                    .scale(begin: const Offset(.9, .9)),
+                child: RepaintBoundary(
+                  child: DailyProgressRing(
+                    progress: progress,
+                    label: '$doneItems/$totalItems concluídos',
+                  )
+                      .animate()
+                      .fadeIn(duration: 600.ms)
+                      .scale(begin: const Offset(.9, .9)),
+                ),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 48)),
@@ -146,25 +148,27 @@ class DashboardScreen extends ConsumerWidget {
                     final done = habit.isCompletedOn(now);
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                      child: LiquidGlassCard(
-                        child: ListTile(
-                          leading: Icon(habit.icon, color: habit.color),
-                          title: Text(habit.title),
-                          trailing: IconButton(
-                            tooltip: done ? 'Reabrir' : 'Concluir',
-                            icon: Icon(
-                              done
-                                  ? Icons.check_circle
-                                  : Icons.radio_button_unchecked,
-                              color: done
-                                  ? AppColors.success
-                                  : AppColors.textTertiary,
+                      child: RepaintBoundary(
+                        child: LiquidGlassCard(
+                          child: ListTile(
+                            leading: Icon(habit.icon, color: habit.color),
+                            title: Text(habit.title),
+                            trailing: IconButton(
+                              tooltip: done ? 'Reabrir' : 'Concluir',
+                              icon: Icon(
+                                done
+                                    ? Icons.check_circle
+                                    : Icons.radio_button_unchecked,
+                                color: done
+                                    ? AppColors.success
+                                    : AppColors.textTertiary,
+                              ),
+                              onPressed: () {
+                                ref
+                                    .read(habitsProvider.notifier)
+                                    .toggleCompletionForDate(habit, now);
+                              },
                             ),
-                            onPressed: () {
-                              ref
-                                  .read(habitsProvider.notifier)
-                                  .toggleCompletionForDate(habit, now);
-                            },
                           ),
                         ),
                       ),
@@ -174,37 +178,39 @@ class DashboardScreen extends ConsumerWidget {
                   final taskDone = task.isCompleted;
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                    child: LiquidGlassCard(
-                      child: ListTile(
-                        leading: Icon(task.priority.icon, color: task.priority.color),
-                        title: Text(
-                          task.title,
-                          style: TextStyle(
-                            decoration: taskDone
-                                ? TextDecoration.lineThrough
-                                : null,
-                            color: taskDone
-                                ? AppColors.textSecondary
-                                : AppColors.textPrimary,
+                    child: RepaintBoundary(
+                      child: LiquidGlassCard(
+                        child: ListTile(
+                          leading: Icon(task.priority.icon, color: task.priority.color),
+                          title: Text(
+                            task.title,
+                            style: TextStyle(
+                              decoration: taskDone
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                              color: taskDone
+                                  ? AppColors.textSecondary
+                                  : AppColors.textPrimary,
+                            ),
                           ),
-                        ),
-                        subtitle: Text(
-                          task.category,
-                          style: const TextStyle(color: AppColors.textSecondary),
-                        ),
-                        trailing: IconButton(
-                          tooltip: taskDone ? 'Reabrir' : 'Concluir',
-                          icon: Icon(
-                            taskDone
-                                ? Icons.check_circle
-                                : Icons.radio_button_unchecked,
-                            color: taskDone
-                                ? AppColors.success
-                                : AppColors.textTertiary,
+                          subtitle: Text(
+                            task.category,
+                            style: const TextStyle(color: AppColors.textSecondary),
                           ),
-                          onPressed: () {
-                            ref.read(tasksProvider.notifier).toggleCompleted(task);
-                          },
+                          trailing: IconButton(
+                            tooltip: taskDone ? 'Reabrir' : 'Concluir',
+                            icon: Icon(
+                              taskDone
+                                  ? Icons.check_circle
+                                  : Icons.radio_button_unchecked,
+                              color: taskDone
+                                  ? AppColors.success
+                                  : AppColors.textTertiary,
+                            ),
+                            onPressed: () {
+                              ref.read(tasksProvider.notifier).toggleCompleted(task);
+                            },
+                          ),
                         ),
                       ),
                     ),

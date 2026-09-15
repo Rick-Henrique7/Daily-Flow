@@ -22,6 +22,16 @@ class SettingsNotifier extends Notifier<AppSettings> {
     await _persist();
   }
 
+  Future<void> updateWallpaperSolidColor(String hex) async {
+    state = state.copyWith(wallpaperSolidColor: hex);
+    await _persist();
+  }
+
+  Future<void> updateWallpaperMode(WallpaperMode mode) async {
+    state = state.copyWith(wallpaperMode: mode);
+    await _persist();
+  }
+
   Future<void> updateBlobIntensity(double intensity) async {
     state = state.copyWith(blobIntensity: intensity);
     await _persist();
@@ -34,6 +44,16 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> toggleDarkMode() async {
     state = state.copyWith(darkMode: !state.darkMode);
+    await _persist();
+  }
+
+  Future<void> updateHapticsEnabled(bool enabled) async {
+    state = state.copyWith(hapticsEnabled: enabled);
+    await _persist();
+  }
+
+  Future<void> updateSoundEnabled(bool enabled) async {
+    state = state.copyWith(soundEnabled: enabled);
     await _persist();
   }
 

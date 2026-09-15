@@ -49,10 +49,38 @@ class TasksScreen extends ConsumerWidget {
         ),
       ),
       body: tasks.isEmpty
-          ? const Center(
-              child: Text(
-                'Nenhuma tarefa neste filtro.',
-                style: TextStyle(color: AppColors.textSecondary),
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _emptyIconFor(filter),
+                      size: 56,
+                      color: AppColors.textTertiary,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _emptyTitleFor(filter),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _emptyHintFor(filter),
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             )
           : ReorderableListView.builder(
@@ -63,14 +91,26 @@ class TasksScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final task = tasks[index];
                 return Padding(
-                  key: ValueKey(task.id),
+                  key: ValueKey('task-row-${task.id}'),
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _TaskTile(task: task),
+                  child: Dismissible(
+                    key: ValueKey('task-dismiss-${task.id}'),
+                    direction: DismissDirection.endToStart,
+                    background: const _DeleteBackground(),
+                    confirmDismiss: (_) =>
+                        _confirmDelete(context, task),
+                    onDismissed: (_) =>
+                        _onTaskDismissed(context, ref, task),
+                    child: _TaskTile(
+                      task: task,
+                      onTap: () => _openTaskDialog(context, task),
+                    ),
+                  ),
                 );
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateDialog(context, ref),
+        onPressed: () => _openTaskDialog(context, null),
         child: const Icon(Icons.add),
       ),
     );
@@ -83,97 +123,284 @@ class TasksScreen extends ConsumerWidget {
         TaskFilter.completed => 'Concluídas',
       };
 
-  Future<void> _showCreateDialog(BuildContext context, WidgetRef ref) async {
+  IconData _emptyIconFor(TaskFilter f) => switch (f) {
+        TaskFilter.all => Icons.checklist_outlined,
+        TaskFilter.today => Icons.wb_sunny_outlined,
+        TaskFilter.upcoming => Icons.upcoming_outlined,
+        TaskFilter.completed => Icons.task_alt_outlined,
+      };
+
+  String _emptyTitleFor(TaskFilter f) => switch (f) {
+        TaskFilter.all => 'Nenhuma tarefa por aqui',
+        TaskFilter.today => 'Nada pendente para hoje',
+        TaskFilter.upcoming => 'Sem tarefas futuras',
+        TaskFilter.completed => 'Nenhuma concluída ainda',
+      };
+
+  String _emptyHintFor(TaskFilter f) => switch (f) {
+        TaskFilter.all => 'Toque no + para criar a primeira.',
+        TaskFilter.today =>
+          'Tarefas com data, hora ou repetição para hoje aparecem aqui.',
+        TaskFilter.upcoming =>
+          'Tarefas atrasadas, futuras e recorrentes aparecem aqui.',
+        TaskFilter.completed =>
+          'Quando você marcar tarefas como concluídas, elas aparecem aqui.',
+      };
+
+  /// Abre o dialog no modo edição (se [existing] for não-nulo) ou criação.
+  Future<void> _openTaskDialog(
+      BuildContext context, TaskModel? existing) async {
     await showDialog<void>(
       context: context,
-      builder: (_) => const _CreateTaskDialog(),
+      builder: (_) => _TaskDialog(existing: existing),
+    );
+  }
+
+  /// Confirmação Liquid Glass antes de excluir a tarefa.
+///
+/// Para tarefas recorrentes (com `repeatDays` ou `dueDate` no futuro),
+/// avisa explicitamente que **todas as ocorrências futuras derivadas
+/// desta tarefa também serão removidas** — porque uma `TaskModel`
+/// recorrente representa toda a cadeia, não só uma instância.
+  Future<bool?> _confirmDelete(BuildContext context, TaskModel task) {
+    final recurring = _isRecurring(task);
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(24),
+        child: LiquidGlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: const [
+                  Icon(Icons.delete_outline, color: AppColors.textPrimary),
+                  SizedBox(width: 8),
+                  Text(
+                    'Excluir tarefa?',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '"${task.title}" será removida permanentemente.'
+                ' Essa ação pode ser desfeita na barra inferior.',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+              if (recurring) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface2,
+                    borderRadius: BorderRadius.circular(AppColors.radiusSm),
+                    border: Border.all(
+                      color: AppColors.border,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.repeat_rounded,
+                          size: 18, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _recurrenceWarning(task),
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Cancelar'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.surface2,
+                      foregroundColor: AppColors.textPrimary,
+                    ),
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('Excluir'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Detecta se a tarefa representa uma cadeia de ocorrências futuras.
+  bool _isRecurring(TaskModel t) {
+    if (t.repeatDays.isNotEmpty) return true;
+    final due = t.dueDate;
+    if (due == null) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return due.isAfter(today);
+  }
+
+  /// Texto do aviso exibido quando a tarefa é recorrente ou tem
+  /// data futura — explica que excluir remove toda a cadeia.
+  String _recurrenceWarning(TaskModel t) {
+    if (t.repeatDays.isNotEmpty) {
+      const labels = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+      final days = [...t.repeatDays]..sort();
+      final list = days.map((d) => labels[d]).join(', ');
+      return 'Esta tarefa se repete em $list. Excluir também remove '
+          'todas as ocorrências futuras.';
+    }
+    return 'Esta tarefa tem data futura. Excluir também remove o '
+        'agendamento pendente.';
+  }
+
+  /// Remove a tarefa e oferece "Desfazer" por 4s na snackbar.
+  Future<void> _onTaskDismissed(
+      BuildContext context, WidgetRef ref, TaskModel task) async {
+    final messenger = ScaffoldMessenger.of(context);
+    await ref.read(tasksProvider.notifier).remove(task.id);
+    if (!context.mounted) return;
+    messenger.hideCurrentSnackBar();
+    final recurring = _isRecurring(task);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          recurring
+              ? 'Tarefa "${task.title}" e suas próximas ocorrências foram excluídas'
+              : 'Tarefa "${task.title}" excluída',
+        ),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Desfazer',
+          onPressed: () {
+            ref.read(tasksProvider.notifier).add(task);
+          },
+        ),
+      ),
     );
   }
 }
 
+/// Cartão de tarefa com tap para editar + check para concluir.
 class _TaskTile extends ConsumerWidget {
-  const _TaskTile({required this.task});
+  const _TaskTile({required this.task, required this.onTap});
   final TaskModel task;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dueLine = _dueLine(task);
     return LiquidGlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 4,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: task.priority.color,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  task.title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    decoration:
-                        task.isCompleted ? TextDecoration.lineThrough : null,
-                    color: task.isCompleted
-                        ? AppColors.textSecondary
-                        : AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              IconButton(
-                tooltip: task.isCompleted ? 'Reabrir' : 'Concluir',
-                icon: Icon(
-                  task.isCompleted
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
-                  color: task.isCompleted
-                      ? AppColors.success
-                      : AppColors.textTertiary,
-                ),
-                onPressed: () =>
-                    ref.read(tasksProvider.notifier).toggleCompleted(task),
-              ),
-            ],
-          ),
-          if (dueLine != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 6, left: 16),
-              child: Row(
+              Row(
                 children: [
-                  const Icon(Icons.event_outlined,
-                      size: 14, color: AppColors.textSecondary),
-                  const SizedBox(width: 4),
+                  Container(
+                    width: 4,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: task.priority.color,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      dueLine,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
+                      task.title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        decoration: task.isCompleted
+                            ? TextDecoration.lineThrough
+                            : null,
+                        color: task.isCompleted
+                            ? AppColors.textSecondary
+                            : AppColors.textPrimary,
                       ),
                     ),
                   ),
+                  IconButton(
+                    tooltip: task.isCompleted ? 'Reabrir' : 'Concluir',
+                    icon: Icon(
+                      task.isCompleted
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
+                      color: task.isCompleted
+                          ? AppColors.success
+                          : AppColors.textTertiary,
+                    ),
+                    onPressed: () =>
+                        ref.read(tasksProvider.notifier).toggleCompleted(task),
+                  ),
                 ],
               ),
-            ),
-          if (task.subtasks.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8, left: 16),
-              child: Text(
-                'Sub-tarefas: ${task.completedSubtasksCount}/${task.subtasks.length}',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
+              if (dueLine != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.event_outlined,
+                          size: 14, color: AppColors.textSecondary),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          dueLine,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-        ],
+              if (task.subtasks.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, left: 16),
+                  child: Text(
+                    'Sub-tarefas: ${task.completedSubtasksCount}/${task.subtasks.length}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -191,6 +418,9 @@ class _TaskTile extends ConsumerWidget {
     if (t.repeatDays.isNotEmpty) {
       parts.add('Repete: ${_formatRepeat(t.repeatDays)}');
     }
+    if (t.category.isNotEmpty) {
+      parts.add(t.category);
+    }
     return parts.isEmpty ? null : parts.join(' • ');
   }
 
@@ -201,22 +431,43 @@ class _TaskTile extends ConsumerWidget {
   }
 }
 
-/// Diálogo de criação de tarefa com data, hora e repetição semanal.
-class _CreateTaskDialog extends ConsumerStatefulWidget {
-  const _CreateTaskDialog();
+/// Diálogo de criação OU edição de uma tarefa.
+///
+/// Quando [existing] é `null` é criação; quando é uma [TaskModel] é
+/// edição e o botão primário diz "Salvar".
+class _TaskDialog extends ConsumerStatefulWidget {
+  const _TaskDialog({this.existing});
+  final TaskModel? existing;
+
+  bool get isEditing => existing != null;
 
   @override
-  ConsumerState<_CreateTaskDialog> createState() => _CreateTaskDialogState();
+  ConsumerState<_TaskDialog> createState() => _TaskDialogState();
 }
 
-class _CreateTaskDialogState extends ConsumerState<_CreateTaskDialog> {
-  final _titleCtrl = TextEditingController();
-  final _categoryCtrl = TextEditingController(text: 'Geral');
+class _TaskDialogState extends ConsumerState<_TaskDialog> {
+  // Controllers com keys explícitas para garantir identidade única.
+  // Importante: NUNCA reaproveitar o mesmo controller em dois TextField
+  // — eles compartilham estado e digitação num aparece no outro.
+  late final TextEditingController _titleCtrl;
+  late final TextEditingController _categoryCtrl;
 
-  TaskPriority _priority = TaskPriority.medium;
+  late TaskPriority _priority;
   DateTime? _dueDate;
   TimeOfDay? _dueTime;
-  final Set<int> _repeatDays = {};
+  late final Set<int> _repeatDays;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.existing;
+    _titleCtrl = TextEditingController(text: e?.title ?? '');
+    _categoryCtrl = TextEditingController(text: e?.category ?? '');
+    _priority = e?.priority ?? TaskPriority.medium;
+    _dueDate = e?.dueDate;
+    _dueTime = e?.dueTime;
+    _repeatDays = {...?e?.repeatDays};
+  }
 
   @override
   void dispose() {
@@ -232,7 +483,7 @@ class _CreateTaskDialogState extends ConsumerState<_CreateTaskDialog> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _dueDate ?? now,
-      firstDate: now.subtract(const Duration(days: 30)),
+      firstDate: DateTime(now.year - 1),
       lastDate: now.add(const Duration(days: 365)),
     );
     if (picked != null) setState(() => _dueDate = picked);
@@ -248,16 +499,31 @@ class _CreateTaskDialogState extends ConsumerState<_CreateTaskDialog> {
 
   Future<void> _submit() async {
     if (_titleCtrl.text.trim().isEmpty) return;
-    await ref.read(tasksProvider.notifier).create(
-          title: _titleCtrl.text.trim(),
-          priority: _priority,
-          category: _categoryCtrl.text.trim().isEmpty
-              ? 'Geral'
-              : _categoryCtrl.text.trim(),
-          dueDate: _dueDate,
-          dueTime: _dueTime,
-          repeatDays: _repeatDays.toList()..sort(),
-        );
+    final category = _categoryCtrl.text.trim();
+    final notifier = ref.read(tasksProvider.notifier);
+
+    if (widget.isEditing) {
+      final updated = widget.existing!.copyWith(
+        title: _titleCtrl.text.trim(),
+        priority: _priority,
+        category: category.isEmpty ? 'Geral' : category,
+        dueDate: _dueDate,
+        clearDueDate: _dueDate == null,
+        dueTime: _dueTime,
+        clearDueTime: _dueTime == null,
+        repeatDays: _repeatDays.toList()..sort(),
+      );
+      await notifier.update(updated);
+    } else {
+      await notifier.create(
+        title: _titleCtrl.text.trim(),
+        priority: _priority,
+        category: category.isEmpty ? 'Geral' : category,
+        dueDate: _dueDate,
+        dueTime: _dueTime,
+        repeatDays: _repeatDays.toList()..sort(),
+      );
+    }
     if (mounted) Navigator.pop(context);
   }
 
@@ -273,9 +539,9 @@ class _CreateTaskDialogState extends ConsumerState<_CreateTaskDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Nova Tarefa',
-                style: TextStyle(
+              Text(
+                widget.isEditing ? 'Editar Tarefa' : 'Nova Tarefa',
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -285,6 +551,7 @@ class _CreateTaskDialogState extends ConsumerState<_CreateTaskDialog> {
 
               // Título
               GlassInputField(
+                key: const ValueKey('task-title-field'),
                 controller: _titleCtrl,
                 hintText: 'Título',
               ),
@@ -339,8 +606,9 @@ class _CreateTaskDialogState extends ConsumerState<_CreateTaskDialog> {
               ),
               const SizedBox(height: 12),
 
-              // Categoria
+              // Categoria (controller separado do título)
               GlassInputField(
+                key: const ValueKey('task-category-field'),
                 controller: _categoryCtrl,
                 hintText: 'Categoria',
               ),
@@ -365,8 +633,9 @@ class _CreateTaskDialogState extends ConsumerState<_CreateTaskDialog> {
                           : DateFormatters.shortDate(_dueDate!),
                       active: _dueDate != null,
                       onTap: _pickDate,
-                      onClear:
-                          _dueDate == null ? null : () => setState(() => _dueDate = null),
+                      onClear: _dueDate == null
+                          ? null
+                          : () => setState(() => _dueDate = null),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -378,8 +647,9 @@ class _CreateTaskDialogState extends ConsumerState<_CreateTaskDialog> {
                           : '${_dueTime!.hour.toString().padLeft(2, '0')}:${_dueTime!.minute.toString().padLeft(2, '0')}',
                       active: _dueTime != null,
                       onTap: _pickTime,
-                      onClear:
-                          _dueTime == null ? null : () => setState(() => _dueTime = null),
+                      onClear: _dueTime == null
+                          ? null
+                          : () => setState(() => _dueTime = null),
                     ),
                   ),
                 ],
@@ -425,7 +695,7 @@ class _CreateTaskDialogState extends ConsumerState<_CreateTaskDialog> {
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: _submit,
-                    child: const Text('Criar'),
+                    child: Text(widget.isEditing ? 'Salvar' : 'Criar'),
                   ),
                 ],
               ),
@@ -477,9 +747,8 @@ class _GlassPickerButton extends StatelessWidget {
             Icon(
               icon,
               size: 18,
-              color: active
-                  ? AppColors.textPrimary
-                  : AppColors.textSecondary,
+              color:
+                  active ? AppColors.textPrimary : AppColors.textSecondary,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -550,6 +819,45 @@ class _DayChip extends StatelessWidget {
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Fundo muted revelado ao deslizar a tarefa para a esquerda.
+/// (Design system: "Don't use red/orange for negative states —
+/// use muted gray instead".)
+class _DeleteBackground extends StatelessWidget {
+  const _DeleteBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.transparent, AppColors.surface2],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(AppColors.radiusMd),
+      ),
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Excluir',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+            ),
+          ),
+          SizedBox(width: 8),
+          Icon(Icons.delete_outline, color: AppColors.textPrimary, size: 22),
+        ],
       ),
     );
   }

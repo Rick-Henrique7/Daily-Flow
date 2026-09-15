@@ -31,19 +31,7 @@ class DailyProgressRing extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Track
-          SizedBox(
-            width: size,
-            height: size,
-            child: CircularProgressIndicator(
-              value: 1,
-              strokeWidth: strokeWidth,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                AppColors.surfaceElevated,
-              ),
-            ),
-          ),
-          // Animated progress
+          // Animated progress (sem track escuro por baixo)
           SizedBox(
             width: size,
             height: size,

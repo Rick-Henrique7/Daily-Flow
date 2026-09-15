@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
+
 enum TaskPriority { low, medium, high }
 
 extension TaskPriorityX on TaskPriority {
@@ -14,14 +16,15 @@ extension TaskPriorityX on TaskPriority {
     }
   }
 
+  /// Cores de prioridade em escala verde→cinza (single accent + muted).
   Color get color {
     switch (this) {
       case TaskPriority.low:
-        return const Color(0xFF06B6D4); // 🔵 Baixa
+        return AppColors.textSecondary; // muted gray
       case TaskPriority.medium:
-        return const Color(0xFFFBBF24); // 🟡 Média
+        return AppColors.accentDim;      // darker green
       case TaskPriority.high:
-        return const Color(0xFFF43F5E); // 🔴 Alta
+        return AppColors.primary;         // neon green
     }
   }
 

@@ -113,30 +113,32 @@ class _ModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
-      shape: LiquidRoundedSuperellipse(borderRadius: 20),
-      settings: LiquidGlassSettings(
-        thickness: 18,
-        blur: 14,
-        glassColor: Colors.white.withValues(alpha: 0.18),
-        lightIntensity: 0.6,
-        glowIntensity: 0.6,
-        fresnelStrength: 1.0,
-        ambientRim: 0.5,
-      ),
-      useOwnLayer: true,
-      padding: const EdgeInsets.all(6),
-      child: Row(
-        children: [
-          for (final type in PomodoroType.values)
-            Expanded(
-              child: _ModeChip(
-                label: _label(type),
-                active: current == type,
-                onTap: () => onChanged(type),
+    return RepaintBoundary(
+      child: GlassContainer(
+        shape: LiquidRoundedSuperellipse(borderRadius: 20),
+        settings: LiquidGlassSettings(
+          thickness: 10, // era 18
+          blur: 8, // era 14
+          glassColor: Colors.white.withValues(alpha: 0.18),
+          lightIntensity: 0.5,
+          glowIntensity: 0.5,
+          fresnelStrength: 0.8,
+          ambientRim: 0.4,
+        ),
+        useOwnLayer: true,
+        padding: const EdgeInsets.all(6),
+        child: Row(
+          children: [
+            for (final type in PomodoroType.values)
+              Expanded(
+                child: _ModeChip(
+                  label: _label(type),
+                  active: current == type,
+                  onTap: () => onChanged(type),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -205,33 +207,35 @@ class _GlassCircleButton extends StatelessWidget {
       child: Icon(icon, color: AppColors.textPrimary, size: size * 0.45),
     );
 
-    return AnimatedScale(
-      duration: const Duration(milliseconds: 200),
-      scale: 1.0,
-      child: GlassContainer(
-        shape: const LiquidOval(),
-        settings: LiquidGlassSettings(
-          thickness: 26,
-          blur: 20,
-          glassColor: color.withValues(alpha: 0.55),
-          lightIntensity: 0.8,
-          glowIntensity: 1.0,
-          fresnelStrength: 1.4,
-          chromaticAberration: 0.03,
-          ambientRim: 0.7,
-          shadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.5),
-              offset: const Offset(0, 8),
-              blurRadius: 24,
-            ),
-          ],
-        ),
-        useOwnLayer: true,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: child,
+    return RepaintBoundary(
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 200),
+        scale: 1.0,
+        child: GlassContainer(
+          shape: const LiquidOval(),
+          settings: LiquidGlassSettings(
+            thickness: 14, // era 26
+            blur: 10, // era 20
+            glassColor: color.withValues(alpha: 0.45),
+            lightIntensity: 0.6,
+            glowIntensity: 0.7,
+            fresnelStrength: 1.0, // era 1.4
+            chromaticAberration: 0.015, // era 0.03
+            ambientRim: 0.5,
+            shadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.4),
+                offset: const Offset(0, 6),
+                blurRadius: 16, // era 24
+              ),
+            ],
+          ),
+          useOwnLayer: true,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onPressed,
+            child: child,
+          ),
         ),
       ),
     );

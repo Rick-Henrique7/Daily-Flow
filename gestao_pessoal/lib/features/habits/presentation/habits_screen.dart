@@ -15,6 +15,40 @@ final _selectedDayProvider = StateProvider<DateTime>((ref) {
   return DateTime(now.year, now.month, now.day);
 });
 
+/// Formata uma estimativa em minutos para o cartão de hábito.
+String _cardDurationLabel(int minutes) {
+  if (minutes < 60) return '${minutes}min';
+  final h = minutes ~/ 60;
+  final m = minutes % 60;
+  if (m == 0) return '${h}h';
+  return '${h}h${m.toString().padLeft(2, '0')}';
+}
+
+/// Itera os últimos 90 dias (incluindo hoje) e retorna um set de
+/// dias em que pelo menos um hábito previsto (que contenha o
+/// `weekday` em `frequencyDays`) não foi concluído. Dias futuros são
+/// ignorados — não fazem sentido.
+Set<DateTime> _buildIncompleteDaySet(List<HabitModel> habits) {
+  if (habits.isEmpty) return <DateTime>{};
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+
+  final result = <DateTime>{};
+  for (int i = 0; i <= 90; i++) {
+    final day = today.subtract(Duration(days: i));
+    final weekday = day.weekday;
+
+    for (final habit in habits) {
+      if (habit.frequencyDays.contains(weekday) &&
+          !habit.isCompletedOn(day)) {
+        result.add(day);
+        break;
+      }
+    }
+  }
+  return result;
+}
+
 class HabitsScreen extends ConsumerWidget {
   const HabitsScreen({super.key});
 
@@ -38,6 +72,11 @@ class HabitsScreen extends ConsumerWidget {
       }
     }
 
+    // Dias com pelo menos 1 hábito previsto **não** concluído
+    // (passados + hoje). O calendário pinta esses dias em vermelho via
+    // `monthCellBuilder`.
+    final incompleteDays = _buildIncompleteDaySet(allHabits);
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -53,19 +92,23 @@ class HabitsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 180),
         children: [
-          // Calendário Syncfusion
-          _SfCalendarCard(
-            selectedDay: selectedDay,
-            appointments: appointments,
-            onDaySelected: (day) =>
-                ref.read(_selectedDayProvider.notifier).state = day,
+          // Calendário Syncfusion (re-paint isolado do resto)
+          RepaintBoundary(
+            child: _SfCalendarCard(
+              selectedDay: selectedDay,
+              appointments: appointments,
+              incompleteDays: incompleteDays,
+              onDaySelected: (day) =>
+                  ref.read(_selectedDayProvider.notifier).state = day,
+            ),
           ),
           const SizedBox(height: 16),
 
           // Streak Card
-          LiquidGlassCard(
-            gradient: AppColors.purpleFluid,
-            child: Row(
+          RepaintBoundary(
+            child: LiquidGlassCard(
+              gradient: AppColors.purpleFluid,
+              child: Row(
               children: [
                 const Icon(Icons.local_fire_department,
                     color: AppColors.textPrimary, size: 36),
@@ -95,6 +138,7 @@ class HabitsScreen extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
           ),
           const SizedBox(height: 16),
 
@@ -133,9 +177,16 @@ class HabitsScreen extends ConsumerWidget {
             ...habits.map(
               (habit) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: _HabitCard(
-                  habit: habit,
-                  day: selectedDay,
+                child: Dismissible(
+                  key: ValueKey('habit-${habit.id}'),
+                  direction: DismissDirection.endToStart,
+                  background: _DeleteBackground(),
+                  confirmDismiss: (_) => _confirmDelete(context, habit.title),
+                  onDismissed: (_) => _onHabitDismissed(context, ref, habit),
+                  child: _HabitCard(
+                    habit: habit,
+                    day: selectedDay,
+                  ),
                 ),
               ),
             ),
@@ -155,20 +206,146 @@ class HabitsScreen extends ConsumerWidget {
       builder: (_) => const CreateHabitDialog(),
     );
   }
+
+  /// Diálogo de confirmação antes de excluir um hábito (RF-HB-08).
+  ///
+  /// Retorna `true` se o usuário confirmou, `false` se cancelou, e `null`
+  /// se o diálogo foi dispensado por outro meio (ex: tap fora).
+  Future<bool?> _confirmDelete(BuildContext context, String habitTitle) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(24),
+        child: LiquidGlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: const [
+                  Icon(Icons.delete_outline, color: AppColors.textPrimary),
+                  SizedBox(width: 8),
+                  Text(
+                    'Excluir hábito?',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '"$habitTitle" e todo o seu histórico de conclusões serão removidos. Essa ação pode ser desfeita na barra inferior.',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Cancelar'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.surface2,
+                      foregroundColor: AppColors.textPrimary,
+                    ),
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('Excluir'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Remove o hábito e oferece "Desfazer" por 4 segundos na snackbar.
+  Future<void> _onHabitDismissed(
+      BuildContext context, WidgetRef ref, HabitModel habit) async {
+    final messenger = ScaffoldMessenger.of(context);
+    await ref.read(habitsProvider.notifier).remove(habit.id);
+    if (!context.mounted) return;
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Hábito "${habit.title}" excluído'),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Desfazer',
+          onPressed: () {
+            ref.read(habitsProvider.notifier).add(habit);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// Fundo vermelho revelado ao deslizar o cartão para a esquerda
+/// (delete). Posiciona o ícone de lixeira à direita.
+class _DeleteBackground extends StatelessWidget {
+  const _DeleteBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.transparent, AppColors.surface2],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(AppColors.radiusMd),
+      ),
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Excluir',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+            ),
+          ),
+          SizedBox(width: 8),
+          Icon(Icons.delete_outline, color: AppColors.textPrimary, size: 22),
+        ],
+      ),
+    );
+  }
 }
 
 class _SfCalendarCard extends StatelessWidget {
   const _SfCalendarCard({
     required this.selectedDay,
     required this.appointments,
+    required this.incompleteDays,
     required this.onDaySelected,
   });
   final DateTime selectedDay;
   final List<Appointment> appointments;
+  final Set<DateTime> incompleteDays;
   final ValueChanged<DateTime> onDaySelected;
 
   @override
   Widget build(BuildContext context) {
+    final today = DateTime.now();
     return LiquidGlassCard(
       padding: const EdgeInsets.all(8),
       child: SfCalendar(
@@ -208,6 +385,75 @@ class _SfCalendarCard extends StatelessWidget {
         initialSelectedDate: selectedDay,
         initialDisplayDate: selectedDay,
         dataSource: _HabitDataSource(appointments),
+        // Dias com hábito(s) previsto(s) **não** concluído(s) ficam
+        // destacados em vermelho. Mantemos o número do dia + os
+        // indicadores de appointment do Syncfusion.
+        monthCellBuilder: (context, details) {
+          final date = details.date;
+          final isIncomplete = incompleteDays.contains(
+            DateTime(date.year, date.month, date.day),
+          );
+          final isToday = date.year == today.year &&
+              date.month == today.month &&
+              date.day == today.day;
+          final appts = details.appointments.cast<Appointment>();
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // Fundo muted para dias incompletos (design system: sem
+              // red/orange p/ estados negativos, usar surface-2).
+              if (isIncomplete)
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface2,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.textTertiary,
+                      width: 1,
+                    ),
+                  ),
+                ),
+              // Número do dia (texto secundário se incompleto)
+              Center(
+                child: Text(
+                  '${date.day}',
+                  style: TextStyle(
+                    color: isIncomplete
+                        ? AppColors.textSecondary
+                        : AppColors.textPrimary,
+                    fontWeight:
+                        isToday ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              // Pontos de appointment (até 3 visíveis) — só pra dias
+              // com conclusões registradas
+              if (appts.isNotEmpty)
+                Positioned(
+                  bottom: 3,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (final a in appts.take(3))
+                        Container(
+                          width: 5,
+                          height: 5,
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                          decoration: BoxDecoration(
+                            color: a.color,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+            ],
+          );
+        },
         onSelectionChanged: (details) {
           if (details.date != null) onDaySelected(details.date!);
         },
@@ -269,7 +515,8 @@ class _HabitCard extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  'Meta: ${habit.targetValue} ${habit.unit} • ${habit.category}',
+                  'Meta: ${habit.targetValue} ${habit.unit} • ${habit.category}'
+                  '${habit.durationMinutes != null ? ' • ${_cardDurationLabel(habit.durationMinutes!)}' : ''}',
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
@@ -308,13 +555,14 @@ class CreateHabitDialog extends ConsumerStatefulWidget {
 
 class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
   final _titleCtrl = TextEditingController();
-  final _categoryCtrl = TextEditingController(text: 'Geral');
+  final _categoryCtrl = TextEditingController();
   final _targetCtrl = TextEditingController(text: '1');
   final _unitCtrl = TextEditingController(text: 'vez');
 
   String _iconKey = 'water';
   String _colorHex = '#06B6D4';
   TimeOfDay? _reminder;
+  int? _durationMinutes;
   final Set<int> _frequency = {1, 2, 3, 4, 5, 6, 7};
 
   static const _palette = [
@@ -350,17 +598,92 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
     if (picked != null) setState(() => _reminder = picked);
   }
 
+  /// Abre um picker com durações pré-definidas + opção "Sem estimativa".
+  Future<void> _pickDuration() async {
+    final picked = await showDialog<int?>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(24),
+        child: LiquidGlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Estimativa de duração',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Quanto tempo você pretende dedicar a este hábito?',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final mins in const [5, 10, 15, 20, 30, 45, 60, 90])
+                    _DurationChip(
+                      label: _formatDuration(mins),
+                      active: _durationMinutes == mins,
+                      onTap: () => Navigator.pop(ctx, mins),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, -1), // limpar
+                    child: const Text('Sem estimativa'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, _durationMinutes),
+                    child: const Text('Fechar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null) return;
+    setState(() => _durationMinutes = picked < 0 ? null : picked);
+  }
+
+  String _formatDuration(int minutes) {
+    if (minutes < 60) return '${minutes}min';
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    if (m == 0) return '${h}h';
+    return '${h}h${m.toString().padLeft(2, '0')}';
+  }
+
   Future<void> _submit() async {
     if (_titleCtrl.text.trim().isEmpty) return;
+    final category = _categoryCtrl.text.trim().isEmpty
+        ? 'Geral'
+        : _categoryCtrl.text.trim();
     await ref.read(habitsProvider.notifier).create(
           title: _titleCtrl.text.trim(),
-          category: _categoryCtrl.text.trim(),
+          category: category,
           iconKey: _iconKey,
           colorHex: _colorHex,
           frequencyDays: _frequency.toList()..sort(),
           targetValue: int.tryParse(_targetCtrl.text) ?? 1,
           unit: _unitCtrl.text.trim().isEmpty ? 'vez' : _unitCtrl.text.trim(),
           reminderTime: _reminder,
+          durationMinutes: _durationMinutes,
         );
     if (mounted) Navigator.pop(context);
   }
@@ -498,6 +821,73 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
               ),
               const SizedBox(height: 16),
 
+              // Estimativa de duração
+              const Text(
+                'Estimativa',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: _pickDuration,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: _durationMinutes == null
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : AppColors.purpleFluidStart.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _durationMinutes == null
+                          ? Colors.white.withValues(alpha: 0.15)
+                          : AppColors.purpleFluidStart,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.timer_outlined,
+                        size: 18,
+                        color: _durationMinutes == null
+                            ? AppColors.textSecondary
+                            : AppColors.textPrimary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _durationMinutes == null
+                              ? 'Tempo estimado (ex: 30 min)'
+                              : 'Estimado: ${_formatDuration(_durationMinutes!)}',
+                          style: TextStyle(
+                            color: _durationMinutes == null
+                                ? AppColors.textSecondary
+                                : AppColors.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (_durationMinutes != null)
+                        GestureDetector(
+                          onTap: () =>
+                              setState(() => _durationMinutes = null),
+                          child: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // Frequência
               const Text(
                 'Frequência',
@@ -595,6 +985,48 @@ class _DayChip extends StatelessWidget {
           label,
           style: TextStyle(
             color: AppColors.textPrimary,
+            fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Chip de duração para o picker de estimativa (5min, 10min, 1h...).
+class _DurationChip extends StatelessWidget {
+  const _DurationChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: active ? AppColors.purpleFluid : null,
+          color: active ? null : Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: active
+                ? Colors.transparent
+                : Colors.white.withValues(alpha: 0.15),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 13,
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
           ),
         ),

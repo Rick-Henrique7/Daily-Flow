@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+
+import '../constants/app_colors.dart';
 
 /// Item de navegação com rótulo + ícone.
 class GlassNavItem {
@@ -15,10 +16,15 @@ class GlassNavItem {
   final String route;
 }
 
-/// Barra de navegação inferior com efeito Liquid Glass 3D.
+/// Barra de navegação inferior flat dark.
 ///
-/// Substitui o `BottomNavigationBar` flat do Material por uma camada
-/// vítrea que combina com o resto do design system.
+/// Design system "Financial App — Dark/Green":
+/// - Background: `#141414` (surface)
+/// - Border: 1px `#1E1E1E`
+/// - Radius: 24px (radius-lg)
+/// - Item ativo: ícone + label em `#00E676` (primary)
+/// - Item inativo: ícone + label em `#7A7A7A` (text-secondary)
+/// - Sem drop shadow — depth via surface vs background
 class GlassNavBar extends StatelessWidget {
   const GlassNavBar({
     super.key,
@@ -41,34 +47,19 @@ class GlassNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.fromLTRB(AppColors.space5, 0, AppColors.space5, AppColors.space4),
       child: SafeArea(
         top: false,
-        child: GlassContainer(
-          shape: LiquidRoundedSuperellipse(borderRadius: 28),
-          settings: LiquidGlassSettings(
-            thickness: 36,
-            blur: 24,
-            glassColor: Colors.white.withValues(alpha: 0.18),
-            lightIntensity: 0.75,
-            glowIntensity: 1.0,
-            fresnelStrength: 1.3,
-            chromaticAberration: 0.025,
-            ambientRim: 0.7,
-            ambientStrength: 0.15,
-            edgeAbsorption: 0.12,
-            whitenStrength: 0.05,
-            shadow: const [
-              BoxShadow(
-                color: Color(0x40000000),
-                offset: Offset(0, 12),
-                blurRadius: 32,
-                spreadRadius: 4,
-              ),
-            ],
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppColors.radiusLg),
+            border: Border.all(color: AppColors.border, width: 1),
           ),
-          useOwnLayer: true,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppColors.space2,
+            vertical: AppColors.space2 + 2,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -98,18 +89,16 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active
-        ? const Color(0xFFC084FC)
-        : Colors.white.withValues(alpha: 0.55);
+    final color = active ? AppColors.primary : AppColors.textSecondary;
 
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: AppColors.space2),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -122,9 +111,8 @@ class _NavButton extends StatelessWidget {
               Text(
                 item.label,
                 style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                  letterSpacing: 0.3,
+                  fontSize: 11,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                   color: color,
                 ),
               ),
