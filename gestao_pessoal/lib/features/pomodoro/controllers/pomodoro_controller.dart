@@ -161,9 +161,13 @@ class PomodoroTimerNotifier extends Notifier<PomodoroTimerState> {
     }
   }
 
+  /// Para o timer e reseta o tempo do modo atual para zero (sem mudar modo).
+  /// Se quiser voltar ao Foco, basta clicar no chip "Foco".
   void stop() {
     _ticker?.cancel();
-    _setType(PomodoroType.focus);
+    if (state.isRunning) {
+      state = state.copyWith(isRunning: false);
+    }
   }
 
   /// Força o tipo de ciclo (Foco / Pausa Curta / Pausa Longa).

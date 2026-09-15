@@ -21,9 +21,18 @@ class DashboardScreen extends ConsumerWidget {
     final tasks = ref.watch(tasksProvider);
     final todayTasks = tasks.where((t) {
       if (t.isCompleted) return false;
-      if (t.dueDate == null) return false;
-      final d = t.dueDate!;
-      return d.year == now.year && d.month == now.month && d.day == now.day;
+      // Tarefa pontual com data == hoje
+      if (t.dueDate != null) {
+        final d = t.dueDate!;
+        if (d.year == now.year && d.month == now.month && d.day == now.day) {
+          return true;
+        }
+      }
+      // Tarefa recorrente em que o dia da semana atual bate
+      if (t.repeatDays.isNotEmpty && t.repeatDays.contains(now.weekday)) {
+        return true;
+      }
+      return false;
     }).toList();
 
     final habitsDone = habitsToday.where((h) => h.isCompletedOn(now)).length;
@@ -141,9 +150,17 @@ class DashboardScreen extends ConsumerWidget {
                         child: ListTile(
                           leading: Icon(habit.icon, color: habit.color),
                           title: Text(habit.title),
-                          trailing: Checkbox(
-                            value: done,
-                            onChanged: (_) {
+                          trailing: IconButton(
+                            tooltip: done ? 'Reabrir' : 'Concluir',
+                            icon: Icon(
+                              done
+                                  ? Icons.check_circle
+                                  : Icons.radio_button_unchecked,
+                              color: done
+                                  ? AppColors.success
+                                  : AppColors.textTertiary,
+                            ),
+                            onPressed: () {
                               ref
                                   .read(habitsProvider.notifier)
                                   .toggleCompletionForDate(habit, now);
@@ -154,18 +171,37 @@ class DashboardScreen extends ConsumerWidget {
                     ).animate().fadeIn(delay: (50 * index).ms).slideX(begin: .1);
                   }
                   final task = todayTasks[index - habitsToday.length];
+                  final taskDone = task.isCompleted;
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                     child: LiquidGlassCard(
                       child: ListTile(
                         leading: Icon(task.priority.icon, color: task.priority.color),
-                        title: Text(task.title),
+                        title: Text(
+                          task.title,
+                          style: TextStyle(
+                            decoration: taskDone
+                                ? TextDecoration.lineThrough
+                                : null,
+                            color: taskDone
+                                ? AppColors.textSecondary
+                                : AppColors.textPrimary,
+                          ),
+                        ),
                         subtitle: Text(
                           task.category,
                           style: const TextStyle(color: AppColors.textSecondary),
                         ),
                         trailing: IconButton(
-                          icon: const Icon(Icons.check_circle_outline),
+                          tooltip: taskDone ? 'Reabrir' : 'Concluir',
+                          icon: Icon(
+                            taskDone
+                                ? Icons.check_circle
+                                : Icons.radio_button_unchecked,
+                            color: taskDone
+                                ? AppColors.success
+                                : AppColors.textTertiary,
+                          ),
                           onPressed: () {
                             ref.read(tasksProvider.notifier).toggleCompleted(task);
                           },

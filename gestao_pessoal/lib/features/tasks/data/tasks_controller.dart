@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -28,6 +29,8 @@ class TasksNotifier extends Notifier<List<TaskModel>> {
     TaskPriority priority = TaskPriority.medium,
     String category = 'Geral',
     DateTime? dueDate,
+    TimeOfDay? dueTime,
+    List<int> repeatDays = const [],
   }) async {
     final maxOrder = state.isEmpty
         ? 0
@@ -39,6 +42,8 @@ class TasksNotifier extends Notifier<List<TaskModel>> {
       priority: priority,
       category: category,
       dueDate: dueDate,
+      dueTime: dueTime,
+      repeatDays: repeatDays,
       isCompleted: false,
       completedAt: null,
       subtasks: const [],
@@ -132,11 +137,20 @@ final filteredTasksProvider = Provider<List<TaskModel>>((ref) {
       return tasks;
     case TaskFilter.today:
       return tasks.where((t) {
-        if (t.dueDate == null) return false;
-        final due = t.dueDate!;
-        return due.year == today.year &&
-            due.month == today.month &&
-            due.day == today.day;
+        // 1) Tarefa pontual com data == hoje
+        if (t.dueDate != null) {
+          final due = t.dueDate!;
+          final sameDay = due.year == today.year &&
+              due.month == today.month &&
+              due.day == today.day;
+          if (sameDay) return true;
+        }
+        // 2) Tarefa recorrente em que o dia da semana atual bate
+        if (t.repeatDays.isNotEmpty &&
+            t.repeatDays.contains(today.weekday)) {
+          return true;
+        }
+        return false;
       }).toList();
     case TaskFilter.upcoming:
       return tasks.where((t) {
