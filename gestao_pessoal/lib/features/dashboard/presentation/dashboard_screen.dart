@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatters.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../../habits/data/habits_controller.dart';
+import '../../settings/data/settings_controller.dart';
 import '../../tasks/data/tasks_controller.dart';
 import '../../tasks/domain/subtask_model.dart';
 import 'daily_progress_ring.dart';
@@ -17,6 +18,7 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
+    final accent = ref.watch(accentColorProvider);
     final habitsToday = ref.watch(habitsForDayProvider(now));
     final tasks = ref.watch(tasksProvider);
     final todayTasks = tasks.where((t) {
@@ -119,14 +121,16 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 12)),
             if (habitsToday.isEmpty && todayTasks.isEmpty)
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 32),
                   child: LiquidGlassCard(
                     child: Row(
                       children: [
-                        Icon(Icons.celebration_outlined,
-                            color: AppColors.success),
+                        Icon(
+                          Icons.celebration_outlined,
+                          color: accent,
+                        ),
                         SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -160,7 +164,7 @@ class DashboardScreen extends ConsumerWidget {
                                     ? Icons.check_circle
                                     : Icons.radio_button_unchecked,
                                 color: done
-                                    ? AppColors.success
+                                    ? accent
                                     : AppColors.textTertiary,
                               ),
                               onPressed: () {
@@ -181,7 +185,7 @@ class DashboardScreen extends ConsumerWidget {
                     child: RepaintBoundary(
                       child: LiquidGlassCard(
                         child: ListTile(
-                          leading: Icon(task.priority.icon, color: task.priority.color),
+                          leading: Icon(task.priority.icon, color: task.priority.colorAt(accent)),
                           title: Text(
                             task.title,
                             style: TextStyle(
@@ -204,7 +208,7 @@ class DashboardScreen extends ConsumerWidget {
                                   ? Icons.check_circle
                                   : Icons.radio_button_unchecked,
                               color: taskDone
-                                  ? AppColors.success
+                                  ? accent
                                   : AppColors.textTertiary,
                             ),
                             onPressed: () {
@@ -222,13 +226,14 @@ class DashboardScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateSheet(context),
+        onPressed: () => _showCreateSheet(context, ref),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _showCreateSheet(BuildContext context) {
+  void _showCreateSheet(BuildContext context, WidgetRef ref) {
+    final accent = ref.read(accentColorProvider);
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -242,8 +247,8 @@ class DashboardScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.water_drop_outlined,
-                  color: AppColors.cyanWaterStart),
+              leading: Icon(Icons.water_drop_outlined,
+                  color: accent),
               title: const Text('Novo Hábito'),
               onTap: () {
                 Navigator.pop(context);
@@ -251,7 +256,7 @@ class DashboardScreen extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.task_alt, color: AppColors.purpleFluidStart),
+              leading: Icon(Icons.task_alt, color: accent),
               title: const Text('Nova Tarefa'),
               onTap: () {
                 Navigator.pop(context);

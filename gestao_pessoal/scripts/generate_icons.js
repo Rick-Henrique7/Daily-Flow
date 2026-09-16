@@ -18,8 +18,10 @@ const ANDROID_DENSITIES = {
   'mipmap-xxxhdpi': 192,
 };
 
-// Tamanhos Web (manifest.json)
-const WEB_SIZES = [192, 512];
+// Tamanhos Web (manifest.json). 1024 garante nitidez em telas
+// de altíssima densidade (iOS Pro, Android xxhdpi+) e satisfaz
+// o pedido de "pelo menos 2.5x" sobre o apple-touch-icon de 192.
+const WEB_SIZES = [192, 512, 1024];
 
 async function generate() {
   if (!fs.existsSync(SRC)) {
@@ -88,12 +90,14 @@ async function generate() {
   }
 
   // === favicon ===
+  // 64x64 ficava pixelado em telas Retina/HiDPI. Subimos para 256
+  // (4x maior — atende o "pelo menos 2.5x" e mantém o arquivo leve).
   await base
     .clone()
-    .resize(64, 64)
+    .resize(256, 256)
     .png()
     .toFile(path.join(ROOT, 'web/favicon.png'));
-  console.log('✓ web/favicon.png');
+  console.log('✓ web/favicon.png (256×256)');
 
   console.log('\n🎉 Todos os ícones gerados com sucesso!');
 }

@@ -285,28 +285,203 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ],
+          const SizedBox(height: 12),
+
+          // === Cor do texto (customizada pelo usuário) ===
+          LiquidGlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Cor do Texto',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Personaliza a cor das letras do app inteiro.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: _hexToColor(settings.textColor),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.glassBorder,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            settings.textColor,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            'Toque para alterar',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    FilledButton(
+                      onPressed: () => _openColorPickerForField(
+                        context,
+                        ref,
+                        settings.textColor,
+                        notifier.updateTextColor,
+                      ),
+                      child: const Text('Escolher'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () async {
+                      await notifier.resetTextColor();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Cor do texto restaurada'),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.restart_alt,
+                        color: AppColors.textSecondary, size: 18),
+                    label: const Text(
+                      'Restaurar padrão',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // === Cor de destaque (accent) — customizada pelo usuário ===
+          LiquidGlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Cor de Destaque',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Cor neon usada em FAB, filtros, prioridade alta, '
+                  'check buttons, item ativo da nav bar, switches, sliders.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: _hexToColor(settings.accentColor),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.glassBorder,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            settings.accentColor,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            'Toque para alterar',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    FilledButton(
+                      onPressed: () => _openColorPickerForField(
+                        context,
+                        ref,
+                        settings.accentColor,
+                        notifier.updateAccentColor,
+                      ),
+                      child: const Text('Escolher'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () async {
+                      await notifier.resetAccentColor();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Cor de destaque restaurada'),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.restart_alt,
+                        color: AppColors.textSecondary, size: 18),
+                    label: const Text(
+                      'Restaurar padrão',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 24),
 
           const _SectionHeader('Geral'),
           LiquidGlassCard(
             child: Column(
               children: [
-                SwitchListTile.adaptive(
-                  value: settings.darkMode,
-                  onChanged: (_) => notifier.toggleDarkMode(),
-                  title: const Text(
-                    'Modo Escuro',
-                    style: TextStyle(color: AppColors.textPrimary),
-                  ),
-                  subtitle: const Text(
-                    'Mantém o Dark Mode ativo',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                ),
-                const Divider(
-                  height: 1,
-                  color: AppColors.glassBorder,
-                ),
                 SwitchListTile.adaptive(
                   value: settings.hapticsEnabled,
                   onChanged: notifier.updateHapticsEnabled,

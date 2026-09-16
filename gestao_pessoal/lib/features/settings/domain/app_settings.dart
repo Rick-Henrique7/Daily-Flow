@@ -31,8 +31,9 @@ class AppSettings {
     required this.wallpaperSolidColor,
     required this.wallpaperSaturation,
     required this.blobIntensity,
-    required this.darkMode,
     required this.hapticsEnabled,
+    required this.textColor,
+    required this.accentColor,
     required this.soundEnabled,
     required this.pomodoroFocusColor,
     required this.pomodoroShortBreakColor,
@@ -54,12 +55,19 @@ class AppSettings {
   /// Intensidade/opacidade dos blobs (0.0 – 1.0).
   final double blobIntensity;
 
-  /// Se `true`, mantém o Dark Mode; `false` (futuro) usaria Light.
-  final bool darkMode;
-
   /// Se `true`, vibra a cada interação marcante (concluir tarefa,
   /// hábito, tap em botões). `false` desativa todo feedback tátil.
   final bool hapticsEnabled;
+
+  /// Cor das letras do app em HEX (ex: `#FFFFFF`). Default branco
+  /// puro (per design system). Pode ser customizada pelo usuário.
+  final String textColor;
+
+  /// Cor de destaque (accent) em HEX (ex: `#00E676` neon green).
+  /// Default verde neon. Substitui todas as referências que usariam
+  /// `AppColors.primary` — filtro selecionado, FAB, check button,
+  /// priority bar, item ativo da nav bar, etc.
+  final String accentColor;
 
   /// Se `true`, toca som de "ding" ao concluir tarefa/hábito.
   final bool soundEnabled;
@@ -79,8 +87,9 @@ class AppSettings {
     wallpaperSolidColor: '#0D0D0D',
     wallpaperSaturation: 1.0,
     blobIntensity: 0.0,
-    darkMode: true,
     hapticsEnabled: true,
+    textColor: '#FFFFFF',
+    accentColor: '#00E676',
     soundEnabled: true,
     pomodoroFocusColor: '#00E676',
     pomodoroShortBreakColor: '#00B85A',
@@ -93,9 +102,10 @@ class AppSettings {
     String? wallpaperSolidColor,
     double? wallpaperSaturation,
     double? blobIntensity,
-    bool? darkMode,
     bool? hapticsEnabled,
     bool? soundEnabled,
+    String? textColor,
+    String? accentColor,
     String? pomodoroFocusColor,
     String? pomodoroShortBreakColor,
     String? pomodoroLongBreakColor,
@@ -106,9 +116,10 @@ class AppSettings {
       wallpaperSolidColor: wallpaperSolidColor ?? this.wallpaperSolidColor,
       wallpaperSaturation: wallpaperSaturation ?? this.wallpaperSaturation,
       blobIntensity: blobIntensity ?? this.blobIntensity,
-      darkMode: darkMode ?? this.darkMode,
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
       soundEnabled: soundEnabled ?? this.soundEnabled,
+      textColor: textColor ?? this.textColor,
+      accentColor: accentColor ?? this.accentColor,
       pomodoroFocusColor: pomodoroFocusColor ?? this.pomodoroFocusColor,
       pomodoroShortBreakColor:
           pomodoroShortBreakColor ?? this.pomodoroShortBreakColor,
@@ -123,9 +134,10 @@ class AppSettings {
         'wallpaperSolidColor': wallpaperSolidColor,
         'wallpaperSaturation': wallpaperSaturation,
         'blobIntensity': blobIntensity,
-        'darkMode': darkMode,
         'hapticsEnabled': hapticsEnabled,
         'soundEnabled': soundEnabled,
+        'textColor': textColor,
+        'accentColor': accentColor,
         'pomodoroFocusColor': pomodoroFocusColor,
         'pomodoroShortBreakColor': pomodoroShortBreakColor,
         'pomodoroLongBreakColor': pomodoroLongBreakColor,
@@ -145,9 +157,10 @@ class AppSettings {
       wallpaperSaturation:
           (json['wallpaperSaturation'] as num?)?.toDouble() ?? 1.0,
       blobIntensity: (json['blobIntensity'] as num?)?.toDouble() ?? 0.35,
-      darkMode: json['darkMode'] as bool? ?? true,
       hapticsEnabled: json['hapticsEnabled'] as bool? ?? true,
       soundEnabled: json['soundEnabled'] as bool? ?? true,
+      textColor: json['textColor'] as String? ?? '#FFFFFF',
+      accentColor: json['accentColor'] as String? ?? '#00E676',
       pomodoroFocusColor:
           json['pomodoroFocusColor'] as String? ?? '#F43F5E',
       pomodoroShortBreakColor:

@@ -148,13 +148,21 @@ final taskFilterProvider = StateProvider<TaskFilter>((ref) => TaskFilter.all);
 /// Lista filtrada derivada do filtro ativo.
 ///
 /// Regras por aba (RF-TD-04):
-/// - **Todas**           → todas as tarefas, ordenadas por data/hora.
+/// - **Todas**           → tarefas pendentes (qualquer data) + concluídas
+///                          agendadas para hoje ou no futuro. Concluídas
+///                          com `dueDate` no passado migram só para
+///                          "Concluídas" — sem poluir a lista principal.
+///                          Ordenadas por data/hora crescente.
 /// - **Hoje**             → tarefas pendentes com `dueDate == hoje` OU
-///                          recorrentes cujo `weekday` bate. Exclui
+///                          recorrentes cujo `weekday` bate, OU
+///                          pendentes sem data e sem recorrência
+///                          (ad-hoc — criadas "pra hoje"). Exclui
 ///                          concluídas.
-/// - **Próximas**         → pendentes que NÃO estão em "Hoje": futuras,
-///                          atrasadas e recorrentes sem data. Ordenadas
-///                          por data crescente (atrasadas primeiro).
+/// - **Próximas**         → pendentes que NÃO estão em "Hoje": futuras
+///                          e atrasadas (recorrentes sem data também
+///                          ficam aqui, conforme a definição acima de
+///                          ad-hoc). Ordenadas por data crescente
+///                          (atrasadas primeiro).
 /// - **Concluídas**       → todas as concluídas, mais recentes primeiro.
 final filteredTasksProvider = Provider<List<TaskModel>>((ref) {
   final filter = ref.watch(taskFilterProvider);
@@ -164,7 +172,15 @@ final filteredTasksProvider = Provider<List<TaskModel>>((ref) {
 
   switch (filter) {
     case TaskFilter.all:
-      return [...tasks]..sort(_compareBySchedule);
+      return tasks.where((t) {
+        // Pendente sempre aparece (mesmo atrasada — precisa de atenção).
+        if (!t.isCompleted) return true;
+        // Concluída sem data fica visível (não dá pra datar).
+        final due = t.dueDate;
+        if (due == null) return true;
+        // Concluída do passado → só "Concluídas". Hoje/futuro → "Todas".
+        return !due.isBefore(today);
+      }).toList()..sort(_compareBySchedule);
 
     case TaskFilter.today:
       return tasks
@@ -177,6 +193,9 @@ final filteredTasksProvider = Provider<List<TaskModel>>((ref) {
         });
 
     case TaskFilter.upcoming:
+      // "Próximas" = pendentes que NÃO estão em "Hoje". Como ad-hoc
+      // entra em "Hoje", aqui ficam só as pontuais com data futura e as
+      // atrasadas com data passada.
       return tasks
           .where((t) => !t.isCompleted && !_isScheduledFor(t, today))
           .toList()
@@ -196,6 +215,13 @@ final filteredTasksProvider = Provider<List<TaskModel>>((ref) {
 });
 
 /// Verifica se a tarefa deve aparecer em "Hoje" no dia [today].
+///
+/// Regras:
+/// 1) Pontual com `dueDate == hoje`.
+/// 2) Recorrente cujo `weekday` bate com hoje.
+/// 3) Ad-hoc: sem `dueDate` e sem `repeatDays` — tarefa criada sem
+///    agendamento explícito entra em "Hoje" por padrão (espera-se que
+///    o usuário a conclua hoje; sem isso, fica invisível).
 bool _isScheduledFor(TaskModel t, DateTime today) {
   // 1) Pontual com data == hoje
   final due = t.dueDate;
@@ -208,6 +234,10 @@ bool _isScheduledFor(TaskModel t, DateTime today) {
   }
   // 2) Recorrente em que o dia da semana bate
   if (t.repeatDays.isNotEmpty && t.repeatDays.contains(today.weekday)) {
+    return true;
+  }
+  // 3) Ad-hoc (sem data e sem recorrência) — criada "pra hoje"
+  if (due == null && t.repeatDays.isEmpty) {
     return true;
   }
   return false;

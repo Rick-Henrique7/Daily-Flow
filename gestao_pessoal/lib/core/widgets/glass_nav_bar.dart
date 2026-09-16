@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/settings/data/settings_controller.dart';
 import '../constants/app_colors.dart';
 
 /// Item de navegação com rótulo + ícone.
@@ -22,7 +24,7 @@ class GlassNavItem {
 /// - Background: `#141414` (surface)
 /// - Border: 1px `#1E1E1E`
 /// - Radius: 24px (radius-lg)
-/// - Item ativo: ícone + label em `#00E676` (primary)
+/// - Item ativo: ícone + label em accent (configurável pelo usuário)
 /// - Item inativo: ícone + label em `#7A7A7A` (text-secondary)
 /// - Sem drop shadow — depth via surface vs background
 class GlassNavBar extends StatelessWidget {
@@ -77,7 +79,7 @@ class GlassNavBar extends StatelessWidget {
   }
 }
 
-class _NavButton extends StatelessWidget {
+class _NavButton extends ConsumerWidget {
   const _NavButton({
     required this.item,
     required this.active,
@@ -88,8 +90,9 @@ class _NavButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final color = active ? AppColors.primary : AppColors.textSecondary;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(accentColorProvider);
+    final color = active ? accent : AppColors.textSecondary;
 
     return Expanded(
       child: GestureDetector(

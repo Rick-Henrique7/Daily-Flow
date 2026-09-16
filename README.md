@@ -58,6 +58,7 @@ single accent neon green, sem glassmorphism, sem sombras, offline-first.
 - 🟢 **Lembrete por horário** opcional
 - 🟢 **Streak** automático baseado em datas consecutivas
 - 🟢 **Marcar/desmarcar** por dia no calendário
+- 🟢 **Editar / Excluir** pelo diálogo (botão "Excluir" só aparece em modo edição, ao lado do "Cancelar")
 - 🟢 **Swipe-to-delete** com confirmação + "Desfazer"
 
 ### Tarefas
@@ -65,8 +66,10 @@ single accent neon green, sem glassmorphism, sem sombras, offline-first.
 - ✅ **Data + hora + repetição semanal** por tarefa
 - ✅ **Sub-tarefas** com check individual
 - ✅ **Filtros**: Todas / Hoje / Próximas / Concluídas
-  - **Hoje** inclui tarefas pontuais com `dueDate == hoje` **e** recorrentes
-  - **Próximas** inclui futuras + atrasadas + recorrentes (ordenado por data)
+  - **Hoje** inclui pontuais com `dueDate == hoje` + recorrentes no dia + **ad-hoc** (sem data e sem recorrência — criadas "pra hoje")
+  - **Próximas** inclui pontuais futuras + atrasadas (ordenado por data; ad-hoc migrou pra "Hoje")
+  - **Todas** esconde concluídas com `dueDate` no passado (vão só pra "Concluídas")
+  - **Concluídas** lista todas, mais recentes primeiro
 - ✅ **Empty states contextuais** (ícone + dica por filtro)
 - ✅ **Editar tarefa** (tap no card)
 - ✅ **Swipe-to-delete** com aviso explícito de recorrência + "Desfazer"
@@ -209,7 +212,8 @@ Base: **"Financial App — Dark/Green"** (single accent, sem sombras).
 | `--color-surface` | `#141414` | Cards, nav bar, modais |
 | `--color-surface-2` | `#1C1C1C` | Inputs, nested elements |
 | `--color-foreground` | `#FFFFFF` | Texto primário |
-| `--color-muted-foreground` | `#7A7A7A` | Texto secundário |
+| `--color-muted-foreground` | `#B0B0B0` | Texto secundário (~9:1 sobre dark — WCAG AAA) |
+| `--color-tertiary-foreground` | `#8A8A8A` | Texto terciário/hint (~6:1 — WCAG AA) |
 | `--color-border` | `#1E1E1E` | Borda 1px low-contrast |
 | `--color-primary` | `#00E676` | **Único accent** (neon green) |
 | `--color-primary-muted` | `#1A3D2B` | Primary com opacity |
@@ -330,9 +334,9 @@ Daily-Flow/
 └── gestao_pessoal/          ← projeto Flutter
     ├── pubspec.yaml
     ├── android/             ← app Android
-    ├── web/                 ← app Web (manifest, index.html)
+    ├── web/                 ← app Web (manifest, index.html, ícones PWA 192/512/1024 + maskable + favicon 256)
     ├── assets/
-    │   ├── icons/daily_flow_icon.png   ← ícone edge-to-edge com coroa
+    │   ├── icons/daily_flow_icon.png   ← tridente minimalista em fundo branco (1024×1024)
     │   └── sounds/success.mp3          ← som de conclusão
     ├── scripts/             ← utilitários (PowerShell + Node)
     └── lib/

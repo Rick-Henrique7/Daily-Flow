@@ -4,6 +4,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
+import '../../settings/data/settings_controller.dart';
 import '../../tasks/data/tasks_controller.dart';
 import '../controllers/pomodoro_controller.dart';
 import '../data/pomodoro_session_model.dart';
@@ -20,6 +21,7 @@ class PomodoroScreen extends ConsumerWidget {
         .watch(tasksProvider)
         .where((t) => !t.isCompleted)
         .toList();
+    final accent = ref.watch(accentColorProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Timer de Foco')),
@@ -32,6 +34,7 @@ class PomodoroScreen extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: _ModeSelector(
               current: timer.type,
+              accent: accent,
               onChanged: controller.setType,
             ),
           ),
@@ -44,7 +47,7 @@ class PomodoroScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   const Icon(Icons.bolt_outlined,
-                      color: AppColors.pinkIridescentStart),
+                      color: AppColors.textSecondary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonHideUnderline(
@@ -88,7 +91,7 @@ class PomodoroScreen extends ConsumerWidget {
                 ),
                 _GlassCircleButton(
                   icon: timer.isRunning ? Icons.pause : Icons.play_arrow,
-                  color: AppColors.purpleFluidStart,
+                  color: accent,
                   size: 84,
                   onPressed: controller.toggle,
                 ),
@@ -107,12 +110,18 @@ class PomodoroScreen extends ConsumerWidget {
 }
 
 class _ModeSelector extends StatelessWidget {
-  const _ModeSelector({required this.current, required this.onChanged});
+  const _ModeSelector({
+    required this.current,
+    required this.accent,
+    required this.onChanged,
+  });
   final PomodoroType current;
+  final Color accent;
   final ValueChanged<PomodoroType> onChanged;
 
   @override
   Widget build(BuildContext context) {
+    final accentDim = HSVColor.fromColor(accent).withValue(0.7).toColor();
     return RepaintBoundary(
       child: GlassContainer(
         shape: LiquidRoundedSuperellipse(borderRadius: 20),
@@ -134,6 +143,11 @@ class _ModeSelector extends StatelessWidget {
                 child: _ModeChip(
                   label: _label(type),
                   active: current == type,
+                  gradient: LinearGradient(
+                    colors: [accent, accentDim],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   onTap: () => onChanged(type),
                 ),
               ),
@@ -154,10 +168,12 @@ class _ModeChip extends StatelessWidget {
   const _ModeChip({
     required this.label,
     required this.active,
+    required this.gradient,
     required this.onTap,
   });
   final String label;
   final bool active;
+  final LinearGradient gradient;
   final VoidCallback onTap;
 
   @override
@@ -169,7 +185,7 @@ class _ModeChip extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 2),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          gradient: active ? AppColors.purpleFluid : null,
+          gradient: active ? gradient : null,
           borderRadius: BorderRadius.circular(14),
         ),
         alignment: Alignment.center,

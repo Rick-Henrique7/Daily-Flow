@@ -16,15 +16,20 @@ extension TaskPriorityX on TaskPriority {
     }
   }
 
-  /// Cores de prioridade em escala verde→cinza (single accent + muted).
-  Color get color {
+  /// Cor da prioridade **dinâmica**, respeitando o accent configurado
+  /// pelo usuário.
+  ///
+  /// - `high`   → accent puro
+  /// - `medium` → accent escurecido (HSV value 0.7)
+  /// - `low`    → cinza muted (textSecondary)
+  Color colorAt(Color accent) {
     switch (this) {
       case TaskPriority.low:
-        return AppColors.textSecondary; // muted gray
+        return AppColors.textSecondary;
       case TaskPriority.medium:
-        return AppColors.accentDim;      // darker green
+        return HSVColor.fromColor(accent).withValue(0.7).toColor();
       case TaskPriority.high:
-        return AppColors.primary;         // neon green
+        return accent;
     }
   }
 

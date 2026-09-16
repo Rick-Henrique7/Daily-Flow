@@ -15,67 +15,92 @@ import 'app_colors.dart';
 class AppTheme {
   AppTheme._();
 
+  /// Converte hex `#RRGGBB` em `Color`.
+  static Color _hexToColor(String hex) {
+    final clean = hex.replaceAll('#', '');
+    return Color(int.parse('FF$clean', radix: 16));
+  }
+
   /// DM Sans — base para todo o texto (títulos + corpo).
-  static final TextStyle _base = GoogleFonts.dmSans(
-    color: AppColors.textPrimary,
-    fontWeight: FontWeight.w400,
-  );
+  /// Recebe a cor primária (customizada ou default) por parâmetro.
+  static TextStyle _base(Color foreground) => GoogleFonts.dmSans(
+        color: foreground,
+        fontWeight: FontWeight.w400,
+      );
 
   /// Estilo para display (4xl = 48, 3xl = 36) — bold.
-  static final TextStyle _displayBold = _base.copyWith(
-    fontWeight: FontWeight.w700,
-  );
+  static TextStyle _displayBold(Color foreground) => _base(foreground).copyWith(
+        fontWeight: FontWeight.w700,
+      );
 
   /// Estilo para títulos de seção (xl = 22) — semibold.
-  static final TextStyle _headingSemibold = _base.copyWith(
-    fontWeight: FontWeight.w600,
-  );
+  static TextStyle _headingSemibold(Color foreground) =>
+      _base(foreground).copyWith(fontWeight: FontWeight.w600);
 
   /// Estilo para labels (sm = 13) — medium.
-  static final TextStyle _labelMedium = _base.copyWith(
+  static TextStyle _labelMedium(Color foreground) => _base(foreground).copyWith(
     fontWeight: FontWeight.w500,
   );
 
-  static ThemeData get dark {
+  static ThemeData get dark => darkWith();
+
+  /// Versão parametrizada — aceita `textColorHex` (ex: `#FFEB3B`) p/
+  /// customizar a cor primária do texto, e `accentColorHex` (ex:
+  /// `#FF6B6B`) p/ customizar o accent (default `#00E676` neon green).
+  /// Se ambos `null`, usa o design system default.
+  static ThemeData darkWith({String? textColorHex, String? accentColorHex}) {
     final base = ThemeData.dark(useMaterial3: true);
+    final foreground = _hexToColor(textColorHex ?? '#FFFFFF');
+    final accent = _hexToColor(accentColorHex ?? '#00E676');
+    final accentDim = HSVColor.fromColor(accent)
+        .withValue(0.7)
+        .toColor();
+    final accentMuted = HSVColor.fromColor(accent)
+        .withSaturation(0.5)
+        .withValue(0.2)
+        .toColor();
 
     final colorScheme = ColorScheme.dark(
-      primary: AppColors.primary,
-      secondary: AppColors.accentDim,
-      tertiary: AppColors.primaryMuted,
+      primary: accent,
+      secondary: accentDim,
+      tertiary: accentMuted,
       surface: AppColors.surface,
       onPrimary: AppColors.background,
       onSecondary: AppColors.background,
-      onSurface: AppColors.textPrimary,
+      onSurface: foreground,
       error: AppColors.danger,
       onError: AppColors.textPrimary,
     );
 
     final textTheme = base.textTheme.copyWith(
       // 4xl = 48 — display (valores financeiros grandes)
-      displayLarge: _displayBold.copyWith(fontSize: 48, height: 1.1),
-      displayMedium: _displayBold.copyWith(fontSize: 36, height: 1.2),
-      displaySmall: _displayBold.copyWith(fontSize: 36, height: 1.2),
+      displayLarge: _displayBold(foreground).copyWith(fontSize: 48, height: 1.1),
+      displayMedium: _displayBold(foreground).copyWith(fontSize: 36, height: 1.2),
+      displaySmall: _displayBold(foreground).copyWith(fontSize: 36, height: 1.2),
 
       // 3xl = 36 — h1 (telas)
-      headlineLarge: _displayBold.copyWith(fontSize: 36, height: 1.2),
-      headlineMedium: _displayBold.copyWith(fontSize: 32, height: 1.25),
-      headlineSmall: _headingSemibold.copyWith(fontSize: 22, height: 1.3),
+      headlineLarge: _displayBold(foreground).copyWith(fontSize: 36, height: 1.2),
+      headlineMedium: _displayBold(foreground).copyWith(fontSize: 32, height: 1.25),
+      headlineSmall:
+          _headingSemibold(foreground).copyWith(fontSize: 22, height: 1.3),
 
       // xl = 22 — h2/h3 (títulos de seção)
-      titleLarge: _headingSemibold.copyWith(fontSize: 22, height: 1.3),
-      titleMedium: _headingSemibold.copyWith(fontSize: 18, height: 1.35),
-      titleSmall: _headingSemibold.copyWith(fontSize: 16, height: 1.4),
+      titleLarge:
+          _headingSemibold(foreground).copyWith(fontSize: 22, height: 1.3),
+      titleMedium:
+          _headingSemibold(foreground).copyWith(fontSize: 18, height: 1.35),
+      titleSmall:
+          _headingSemibold(foreground).copyWith(fontSize: 16, height: 1.4),
 
       // base = 15 — body
-      bodyLarge: _base.copyWith(fontSize: 15, height: 1.5),
-      bodyMedium: _base.copyWith(fontSize: 14, height: 1.5),
-      bodySmall: _base.copyWith(fontSize: 13, height: 1.5),
+      bodyLarge: _base(foreground).copyWith(fontSize: 15, height: 1.5),
+      bodyMedium: _base(foreground).copyWith(fontSize: 14, height: 1.5),
+      bodySmall: _base(foreground).copyWith(fontSize: 13, height: 1.5),
 
       // sm = 13 — label
-      labelLarge: _labelMedium.copyWith(fontSize: 13, height: 1.4),
-      labelMedium: _labelMedium.copyWith(fontSize: 12, height: 1.4),
-      labelSmall: _labelMedium.copyWith(fontSize: 11, height: 1.4),
+      labelLarge: _labelMedium(foreground).copyWith(fontSize: 13, height: 1.4),
+      labelMedium: _labelMedium(foreground).copyWith(fontSize: 12, height: 1.4),
+      labelSmall: _labelMedium(foreground).copyWith(fontSize: 11, height: 1.4),
     );
 
     return base.copyWith(
@@ -83,14 +108,14 @@ class AppTheme {
       scaffoldBackgroundColor: Colors.transparent,
       canvasColor: AppColors.background,
       textTheme: textTheme,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+      iconTheme: IconThemeData(color: foreground),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: _displayBold.copyWith(fontSize: 22),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        titleTextStyle: _displayBold(foreground).copyWith(fontSize: 22),
+        iconTheme: IconThemeData(color: foreground),
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,
@@ -104,43 +129,43 @@ class AppTheme {
       dividerColor: AppColors.border,
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return AppColors.primary;
+          if (states.contains(WidgetState.selected)) return accent;
           return AppColors.textSecondary;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppColors.primaryMuted;
+            return accentMuted;
           }
           return AppColors.surface2;
         }),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: Colors.transparent,
-        selectedItemColor: AppColors.primary,
+        selectedItemColor: accent,
         unselectedItemColor: AppColors.textSecondary,
-        selectedLabelStyle: _labelMedium.copyWith(fontSize: 11),
-        unselectedLabelStyle: _labelMedium.copyWith(fontSize: 11),
+        selectedLabelStyle: _labelMedium(foreground).copyWith(fontSize: 11),
+        unselectedLabelStyle: _labelMedium(foreground).copyWith(fontSize: 11),
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.transparent,
-        indicatorColor: AppColors.primaryMuted,
+        indicatorColor: accentMuted,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return _labelMedium.copyWith(
+            return _labelMedium(foreground).copyWith(
               fontSize: 11,
-              color: AppColors.primary,
+              color: accent,
             );
           }
-          return _labelMedium.copyWith(
+          return _labelMedium(foreground).copyWith(
             fontSize: 11,
             color: AppColors.textSecondary,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: AppColors.primary, size: 24);
+            return IconThemeData(color: accent, size: 24);
           }
           return const IconThemeData(
             color: AppColors.textSecondary,
@@ -148,14 +173,14 @@ class AppTheme {
           );
         }),
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.primary,
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: accent,
         foregroundColor: AppColors.background,
         elevation: 0,
         focusElevation: 0,
         hoverElevation: 0,
         highlightElevation: 0,
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(AppColors.radiusMd)),
         ),
       ),
@@ -166,11 +191,11 @@ class AppTheme {
           horizontal: AppColors.space5,
           vertical: AppColors.space3,
         ),
-        hintStyle: _base.copyWith(
+        hintStyle: _base(foreground).copyWith(
           color: AppColors.textSecondary,
           fontSize: 15,
         ),
-        labelStyle: _base.copyWith(color: AppColors.textSecondary),
+        labelStyle: _base(foreground).copyWith(color: AppColors.textSecondary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppColors.radiusMd),
           borderSide: const BorderSide(color: AppColors.border, width: 1),
@@ -181,14 +206,14 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppColors.radiusMd),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: accent, width: 1.5),
         ),
       ),
       sliderTheme: SliderThemeData(
-        activeTrackColor: AppColors.primary,
+        activeTrackColor: accent,
         inactiveTrackColor: AppColors.border,
-        thumbColor: AppColors.primary,
-        overlayColor: AppColors.primaryMuted,
+        thumbColor: accent,
+        overlayColor: accentMuted,
         trackHeight: 4,
       ),
       dialogTheme: DialogThemeData(

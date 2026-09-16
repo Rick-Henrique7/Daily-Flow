@@ -152,13 +152,16 @@ class PomodoroTimerNotifier extends Notifier<PomodoroTimerState> {
     }
   }
 
+  /// Avança para o próximo modo do ciclo: Foco → Pausa Curta →
+  /// Pausa Longa → Foco. Usado pelo botão "próximo" (skip_next).
   void skip() {
     _ticker?.cancel();
-    if (state.type == PomodoroType.focus) {
-      _setType(PomodoroType.shortBreak);
-    } else {
-      _setType(PomodoroType.focus);
-    }
+    final nextType = switch (state.type) {
+      PomodoroType.focus => PomodoroType.shortBreak,
+      PomodoroType.shortBreak => PomodoroType.longBreak,
+      PomodoroType.longBreak => PomodoroType.focus,
+    };
+    _setType(nextType);
   }
 
   /// Para o timer e reseta o tempo do modo atual para zero (sem mudar modo).

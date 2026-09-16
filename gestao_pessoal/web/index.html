@@ -24,7 +24,13 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Daily Flow">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <!--
+    apple-touch-icon: iOS usa o maior que conseguir. Oferecemos 512
+    (~2.7× o 192 antigo) e 1024 para iPad Pro/alta densidade, evitando
+    upscaling pixelado na home screen do PWA.
+  -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-512.png">
+  <link rel="apple-touch-icon" sizes="1024x1024" href="icons/Icon-1024.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>

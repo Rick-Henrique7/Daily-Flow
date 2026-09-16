@@ -6,6 +6,7 @@ import '../../../core/utils/date_formatters.dart';
 import '../../../core/widgets/glass_input_field.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../data/tasks_controller.dart';
+import '../../settings/data/settings_controller.dart';
 import '../domain/subtask_model.dart';
 import '../domain/task_model.dart';
 
@@ -16,6 +17,7 @@ class TasksScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(taskFilterProvider);
     final tasks = ref.watch(filteredTasksProvider);
+    final accent = ref.watch(accentColorProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -35,7 +37,7 @@ class TasksScreen extends ConsumerWidget {
                       selected: filter == f,
                       onSelected: (_) =>
                           ref.read(taskFilterProvider.notifier).state = f,
-                      selectedColor: AppColors.purpleFluidStart,
+                      selectedColor: accent,
                       labelStyle: TextStyle(
                         color: filter == f
                             ? AppColors.textPrimary
@@ -79,6 +81,15 @@ class TasksScreen extends ConsumerWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
+                    if (filter == TaskFilter.all ||
+                        filter == TaskFilter.today) ...[
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () => _openTaskDialog(context, null),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Criar tarefa'),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -98,7 +109,7 @@ class TasksScreen extends ConsumerWidget {
                     direction: DismissDirection.endToStart,
                     background: const _DeleteBackground(),
                     confirmDismiss: (_) =>
-                        _confirmDelete(context, task),
+                        _confirmDelete(context, ref, task),
                     onDismissed: (_) =>
                         _onTaskDismissed(context, ref, task),
                     child: _TaskTile(
@@ -162,8 +173,9 @@ class TasksScreen extends ConsumerWidget {
 /// avisa explicitamente que **todas as ocorrências futuras derivadas
 /// desta tarefa também serão removidas** — porque uma `TaskModel`
 /// recorrente representa toda a cadeia, não só uma instância.
-  Future<bool?> _confirmDelete(BuildContext context, TaskModel task) {
+  Future<bool?> _confirmDelete(BuildContext context, WidgetRef ref, TaskModel task) {
     final recurring = _isRecurring(task);
+    final accent = ref.read(accentColorProvider);
     return showDialog<bool>(
       context: context,
       builder: (ctx) => Dialog(
@@ -213,8 +225,8 @@ class TasksScreen extends ConsumerWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.repeat_rounded,
-                          size: 18, color: AppColors.primary),
+                      Icon(Icons.repeat_rounded,
+                          size: 18, color: accent),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -316,6 +328,14 @@ class _TaskTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dueLine = _dueLine(task);
+    final accent = ref.watch(accentColorProvider);
+    // Mapeia prioridade para a cor — high usa accent (customizado),
+    // medium usa accent escurecido, low fica muted gray.
+    final Color priorityColor = switch (task.priority) {
+      TaskPriority.high => accent,
+      TaskPriority.medium => HSVColor.fromColor(accent).withValue(0.7).toColor(),
+      TaskPriority.low => AppColors.textSecondary,
+    };
     return LiquidGlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       child: InkWell(
@@ -332,7 +352,7 @@ class _TaskTile extends ConsumerWidget {
                     width: 4,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: task.priority.color,
+                      color: priorityColor,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -359,7 +379,7 @@ class _TaskTile extends ConsumerWidget {
                           ? Icons.check_circle
                           : Icons.radio_button_unchecked,
                       color: task.isCompleted
-                          ? AppColors.success
+                          ? accent
                           : AppColors.textTertiary,
                     ),
                     onPressed: () =>
@@ -453,9 +473,18 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
   late final TextEditingController _categoryCtrl;
 
   late TaskPriority _priority;
-  DateTime? _dueDate;
+  // _dueDate default = HOJE (meia-noite) p/ que toda tarefa nova já
+  // apareça em "Hoje" imediatamente. Mesmo se o usuário limpar com o
+  // × (ficando sem data), a tarefa ainda entra em "Hoje" como ad-hoc
+  // — ver `_isScheduledFor` no controller.
+  late DateTime? _dueDate;
   TimeOfDay? _dueTime;
   late final Set<int> _repeatDays;
+
+  static DateTime _todayMidnight() {
+    final n = DateTime.now();
+    return DateTime(n.year, n.month, n.day);
+  }
 
   @override
   void initState() {
@@ -464,7 +493,7 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
     _titleCtrl = TextEditingController(text: e?.title ?? '');
     _categoryCtrl = TextEditingController(text: e?.category ?? '');
     _priority = e?.priority ?? TaskPriority.medium;
-    _dueDate = e?.dueDate;
+    _dueDate = e?.dueDate ?? _todayMidnight();
     _dueTime = e?.dueTime;
     _repeatDays = {...?e?.repeatDays};
   }
@@ -529,6 +558,7 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final accent = ref.watch(accentColorProvider);
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(16),
@@ -593,7 +623,7 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
                         value: p,
                         child: Row(
                           children: [
-                            Icon(p.icon, color: p.color, size: 18),
+                            Icon(p.icon, color: p.colorAt(accent), size: 18),
                             const SizedBox(width: 8),
                             Text(p.label),
                           ],
@@ -725,6 +755,8 @@ class _GlassPickerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = ProviderScope.containerOf(context)
+        .read(accentColorProvider);
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
@@ -732,12 +764,12 @@ class _GlassPickerButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: active
-              ? AppColors.purpleFluidStart.withValues(alpha: 0.25)
+              ? accent.withValues(alpha: 0.25)
               : Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: active
-                ? AppColors.purpleFluidStart
+                ? accent
                 : Colors.white.withValues(alpha: 0.15),
             width: 1,
           ),
@@ -780,7 +812,7 @@ class _GlassPickerButton extends StatelessWidget {
 }
 
 /// Chip de dia da semana (1=S … 7=D) usado para repetição.
-class _DayChip extends StatelessWidget {
+class _DayChip extends ConsumerWidget {
   const _DayChip({
     required this.label,
     required this.active,
@@ -792,7 +824,9 @@ class _DayChip extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(accentColorProvider);
+    final accentDim = HSVColor.fromColor(accent).withValue(0.7).toColor();
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -800,7 +834,13 @@ class _DayChip extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          gradient: active ? AppColors.purpleFluid : null,
+          gradient: active
+              ? LinearGradient(
+                  colors: [accent, accentDim],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
           color: active ? null : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(

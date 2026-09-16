@@ -8,6 +8,7 @@ import '../../../core/widgets/liquid_glass_card.dart';
 import '../../habits/data/habits_controller.dart';
 import '../../pomodoro/controllers/pomodoro_controller.dart';
 import '../../pomodoro/data/pomodoro_session_model.dart';
+import '../../settings/data/settings_controller.dart';
 import '../../tasks/data/tasks_controller.dart';
 import '../../tasks/domain/task_model.dart';
 
@@ -24,6 +25,8 @@ class StatsScreen extends ConsumerWidget {
     final tasks = ref.watch(tasksProvider);
     final habits = ref.watch(habitsProvider);
     final sessions = ref.watch(pomodoroHistoryProvider);
+    final accent = ref.watch(accentColorProvider);
+    final accentDim = HSVColor.fromColor(accent).withValue(0.7).toColor();
 
     final completedTasks = tasks.where((t) => t.isCompleted).length;
     final totalMinutes = sessions
@@ -62,7 +65,7 @@ class StatsScreen extends ConsumerWidget {
                   label: 'Tarefas',
                   value: '$completedTasks',
                   icon: Icons.task_alt,
-                  color: AppColors.purpleFluidStart,
+                  color: accent,
                 ),
               ),
               const SizedBox(width: 12),
@@ -71,7 +74,7 @@ class StatsScreen extends ConsumerWidget {
                   label: 'Foco',
                   value: '${totalMinutes}min',
                   icon: Icons.bolt,
-                  color: AppColors.pinkIridescentStart,
+                  color: accentDim,
                 ),
               ),
               const SizedBox(width: 12),
@@ -80,7 +83,7 @@ class StatsScreen extends ConsumerWidget {
                   label: 'Streak',
                   value: '$streak',
                   icon: Icons.local_fire_department,
-                  color: AppColors.cyanWaterStart,
+                  color: accentDim,
                 ),
               ),
             ],
@@ -213,7 +216,7 @@ class _KpiCard extends StatelessWidget {
 /// SideTitles, a versão 0.68 ainda renderiza todos os labels
 /// sobrepostos em eixos categóricos. Aqui controlamos exatamente
 /// quantos labels aparecem com base no período selecionado.
-class _CustomBarChart extends StatelessWidget {
+class _CustomBarChart extends ConsumerWidget {
   const _CustomBarChart({required this.data, required this.period});
   final List<_DailyCount> data;
   final StatsPeriod period;
@@ -243,7 +246,7 @@ class _CustomBarChart extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (data.isEmpty) {
       return const Center(
         child: Text(
@@ -252,6 +255,8 @@ class _CustomBarChart extends StatelessWidget {
         ),
       );
     }
+    final accent = ref.watch(accentColorProvider);
+    final accentDim = HSVColor.fromColor(accent).withValue(0.7).toColor();
     final maxValue =
         data.fold<int>(0, (acc, e) => e.count > acc ? e.count : acc);
     final labelsToShow = _labelIndices().toSet();
@@ -276,25 +281,15 @@ class _CustomBarChart extends StatelessWidget {
                                   (constraints.maxHeight - 20) +
                                   4,
                           decoration: BoxDecoration(
+                            // Opacity fade (sem mudar de hue) — design system.
                             gradient: LinearGradient(
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
-                              colors: [
-                                AppColors.purpleFluidStart,
-                                AppColors.purpleFluidEnd,
-                              ],
+                              colors: [accentDim, accent],
                             ),
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(6),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.purpleFluidStart
-                                    .withValues(alpha: 0.4),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
                           ),
                         ),
                       ),
@@ -333,12 +328,13 @@ class _CustomBarChart extends StatelessWidget {
   }
 }
 
-class _Heatmap extends StatelessWidget {
+class _Heatmap extends ConsumerWidget {
   const _Heatmap({required this.habits});
   final List habits;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(accentColorProvider);
     final today = DateTime.now();
     final start = DateTime(today.year, today.month, today.day)
         .subtract(const Duration(days: 55));
@@ -360,7 +356,7 @@ class _Heatmap extends StatelessWidget {
           height: 14,
           decoration: BoxDecoration(
             color: completed
-                ? AppColors.success.withValues(alpha: 0.85)
+                ? accent.withValues(alpha: 0.85)
                 : AppColors.surfaceElevated,
             borderRadius: BorderRadius.circular(3),
           ),

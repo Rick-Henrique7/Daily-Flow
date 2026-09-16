@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/settings/data/settings_controller.dart';
 import '../constants/app_colors.dart';
 
 /// Campo de entrada flat dark do Daily Flow.
@@ -7,11 +9,11 @@ import '../constants/app_colors.dart';
 /// Design system "Financial App — Dark/Green":
 /// - Background: `#1C1C1C` (surface-2)
 /// - Border: 1px `#1E1E1E` (border)
-/// - Border focused: 1.5px `#00E676` (primary)
+/// - Border focused: 1.5px accent (configurável pelo usuário)
 /// - Radius: 16px (radius-md)
 /// - Texto: 15px, weight 400 (DM Sans via tema)
 /// - Hint: `#7A7A7A` (text-secondary)
-class GlassInputField extends StatelessWidget {
+class GlassInputField extends ConsumerWidget {
   const GlassInputField({
     super.key,
     required this.controller,
@@ -28,7 +30,8 @@ class GlassInputField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(accentColorProvider);
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
@@ -39,7 +42,7 @@ class GlassInputField extends StatelessWidget {
         fontSize: 15,
         fontWeight: FontWeight.w400,
       ),
-      cursorColor: AppColors.primary,
+      cursorColor: accent,
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: const TextStyle(
@@ -63,7 +66,7 @@ class GlassInputField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppColors.radiusMd),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: accent, width: 1.5),
         ),
       ),
     );

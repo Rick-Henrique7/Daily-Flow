@@ -1,13 +1,17 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../settings/data/settings_controller.dart';
 
 /// Anel de progresso diário (Daily Progress Ring).
 ///
 /// Mostra a porcentagem global de conclusão combinando hábitos e tarefas.
-class DailyProgressRing extends StatelessWidget {
+/// O gradiente é um **opacity fade** do accent configurado pelo usuário
+/// (sem mudança de hue — design system).
+class DailyProgressRing extends ConsumerWidget {
   const DailyProgressRing({
     super.key,
     required this.progress,
@@ -23,7 +27,8 @@ class DailyProgressRing extends StatelessWidget {
   final double strokeWidth;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(accentColorProvider);
     final clamped = progress.clamp(0.0, 1.0);
     return SizedBox(
       width: size,
@@ -41,7 +46,11 @@ class DailyProgressRing extends StatelessWidget {
               curve: Curves.easeOutCubic,
               builder: (context, value, _) {
                 return CustomPaint(
-                  painter: _RingPainter(value: value, strokeWidth: strokeWidth),
+                  painter: _RingPainter(
+                    value: value,
+                    strokeWidth: strokeWidth,
+                    color: accent,
+                  ),
                 );
               },
             ),
@@ -75,10 +84,15 @@ class DailyProgressRing extends StatelessWidget {
 }
 
 class _RingPainter extends CustomPainter {
-  _RingPainter({required this.value, required this.strokeWidth});
+  _RingPainter({
+    required this.value,
+    required this.strokeWidth,
+    required this.color,
+  });
 
   final double value;
   final double strokeWidth;
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -89,13 +103,14 @@ class _RingPainter extends CustomPainter {
     final start = -math.pi / 2;
     final sweep = 2 * math.pi * value;
 
+    // Opacity fade (sem mudar de hue) — design system compliance.
     final shader = SweepGradient(
       startAngle: 0,
       endAngle: 2 * math.pi,
-      colors: const [
-        AppColors.purpleFluidStart,
-        AppColors.pinkIridescentStart,
-        AppColors.cyanWaterStart,
+      colors: [
+        color.withValues(alpha: 0.4),
+        color,
+        color.withValues(alpha: 0.7),
       ],
     ).createShader(rect);
 
@@ -110,5 +125,5 @@ class _RingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _RingPainter oldDelegate) =>
-      oldDelegate.value != value;
+      oldDelegate.value != value || oldDelegate.color != color;
 }

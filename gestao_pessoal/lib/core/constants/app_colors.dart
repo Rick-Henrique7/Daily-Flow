@@ -18,8 +18,13 @@ class AppColors {
 
   /// Texto primário / foreground
   static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFF7A7A7A);
-  static const Color textTertiary = Color(0xFF525252);
+  // textSecondary e textTertiary clareados: os valores antigos (#7A7A7A
+  // e #525252) falhavam WCAG AA contra o fundo dark e sumiam nos
+  // gradientes coloridos do AnimatedBackground. Os novos (~9:1 e ~6:1
+  // de contraste) preservam a hierarquia primary > secondary > tertiary
+  // mas ficam legíveis em qualquer wallpaper do app.
+  static const Color textSecondary = Color(0xFFB0B0B0);
+  static const Color textTertiary = Color(0xFF8A8A8A);
 
   /// Accent único (neon green) — usar com parcimônia
   static const Color primary = Color(0xFF00E676);

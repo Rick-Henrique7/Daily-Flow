@@ -8,6 +8,7 @@ import '../../../core/widgets/glass_input_field.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../data/habits_controller.dart';
 import '../domain/habit_model.dart';
+import '../../settings/data/settings_controller.dart';
 
 /// Provider local do dia selecionado no calendário.
 final _selectedDayProvider = StateProvider<DateTime>((ref) {
@@ -57,6 +58,8 @@ class HabitsScreen extends ConsumerWidget {
     final selectedDay = ref.watch(_selectedDayProvider);
     final habits = ref.watch(habitsForDayProvider(selectedDay));
     final allHabits = ref.watch(habitsProvider);
+    final accent = ref.watch(accentColorProvider);
+    final accentDim = HSVColor.fromColor(accent).withValue(0.7).toColor();
 
     // Appointments por dia (syncfusion exige DateTime por evento).
     final appointments = <Appointment>[];
@@ -81,13 +84,6 @@ class HabitsScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Hábitos'),
-        actions: [
-          IconButton(
-            tooltip: 'Adicionar',
-            onPressed: () => _showCreateHabitDialog(context, ref),
-            icon: const Icon(Icons.add),
-          ),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 180),
@@ -98,6 +94,7 @@ class HabitsScreen extends ConsumerWidget {
               selectedDay: selectedDay,
               appointments: appointments,
               incompleteDays: incompleteDays,
+              accent: accent,
               onDaySelected: (day) =>
                   ref.read(_selectedDayProvider.notifier).state = day,
             ),
@@ -107,7 +104,11 @@ class HabitsScreen extends ConsumerWidget {
           // Streak Card
           RepaintBoundary(
             child: LiquidGlassCard(
-              gradient: AppColors.purpleFluid,
+              gradient: LinearGradient(
+                colors: [accent, accentDim],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               child: Row(
               children: [
                 const Icon(Icons.local_fire_department,
@@ -199,12 +200,18 @@ class HabitsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _showCreateHabitDialog(
-      BuildContext context, WidgetRef ref) async {
+  Future<void> _openHabitDialog(
+      BuildContext context, WidgetRef ref, HabitModel? existing) async {
     await showDialog<void>(
       context: context,
-      builder: (_) => const CreateHabitDialog(),
+      builder: (_) => CreateHabitDialog(existing: existing),
     );
+  }
+
+  /// Compat — abre dialog de criação (chamado pelo + do AppBar e FAB).
+  Future<void> _showCreateHabitDialog(
+      BuildContext context, WidgetRef ref) async {
+    await _openHabitDialog(context, ref, null);
   }
 
   /// Diálogo de confirmação antes de excluir um hábito (RF-HB-08).
@@ -336,11 +343,13 @@ class _SfCalendarCard extends StatelessWidget {
     required this.selectedDay,
     required this.appointments,
     required this.incompleteDays,
+    required this.accent,
     required this.onDaySelected,
   });
   final DateTime selectedDay;
   final List<Appointment> appointments;
   final Set<DateTime> incompleteDays;
+  final Color accent;
   final ValueChanged<DateTime> onDaySelected;
 
   @override
@@ -352,11 +361,11 @@ class _SfCalendarCard extends StatelessWidget {
         view: CalendarView.month,
         backgroundColor: Colors.transparent,
         selectionDecoration: BoxDecoration(
-          color: AppColors.purpleFluidStart.withValues(alpha: 0.25),
-          border: Border.all(color: AppColors.purpleFluidStart, width: 1.5),
+          color: accent.withValues(alpha: 0.25),
+          border: Border.all(color: accent, width: 1.5),
           borderRadius: BorderRadius.circular(8),
         ),
-        todayHighlightColor: AppColors.cyanWaterStart,
+        todayHighlightColor: accent,
         todayTextStyle: const TextStyle(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.w700,
@@ -490,80 +499,122 @@ class _HabitCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final done = habit.isCompletedOn(day);
+    final accent = ref.watch(accentColorProvider);
     return LiquidGlassCard(
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: habit.color.withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(habit.icon, color: habit.color),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  habit.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppColors.radiusMd),
+        onTap: () {
+          // Tap em qualquer parte do card abre o dialog de edição
+          // (mesmo padrão da tela de Tarefas).
+          showDialog<void>(
+            context: context,
+            builder: (_) => CreateHabitDialog(existing: habit),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: habit.color.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                Text(
-                  'Meta: ${habit.targetValue} ${habit.unit} • ${habit.category}'
-                  '${habit.durationMinutes != null ? ' • ${_cardDurationLabel(habit.durationMinutes!)}' : ''}',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
+                child: Icon(habit.icon, color: habit.color),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      habit.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Meta: ${habit.targetValue} ${habit.unit} • ${habit.category}'
+                      '${habit.durationMinutes != null ? ' • ${_cardDurationLabel(habit.durationMinutes!)}' : ''}',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              IconButton(
+                tooltip: done ? 'Reabrir' : 'Concluir',
+                icon: Icon(
+                  done ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: done ? accent : AppColors.textTertiary,
+                ),
+                onPressed: () {
+                  ref
+                      .read(habitsProvider.notifier)
+                      .toggleCompletionForDate(habit, day);
+                },
+              ),
+            ],
           ),
-          IconButton(
-            icon: Icon(
-              done ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: done ? AppColors.success : AppColors.textTertiary,
-            ),
-            onPressed: () {
-              ref
-                  .read(habitsProvider.notifier)
-                  .toggleCompletionForDate(habit, day);
-            },
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-/// Diálogo completo de criação de hábito.
+/// Diálogo completo de criação OU edição de hábito.
+///
+/// Quando [existing] é `null` é criação; quando é uma [HabitModel] é
+/// edição (campos pré-preenchidos) e o botão primário diz "Salvar".
 ///
 /// Inclui nome, categoria, grade de ícones, paleta de cores,
-/// frequência (dias da semana) e lembrete opcional.
+/// frequência (dias da semana), lembrete e estimativa de duração.
 class CreateHabitDialog extends ConsumerStatefulWidget {
-  const CreateHabitDialog({super.key});
+  const CreateHabitDialog({super.key, this.existing});
+
+  /// Se não-nulo, abre no modo edição com os campos preenchidos.
+  final HabitModel? existing;
+
+  bool get isEditing => existing != null;
 
   @override
   ConsumerState<CreateHabitDialog> createState() => _CreateHabitDialogState();
 }
 
 class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
-  final _titleCtrl = TextEditingController();
-  final _categoryCtrl = TextEditingController();
-  final _targetCtrl = TextEditingController(text: '1');
-  final _unitCtrl = TextEditingController(text: 'vez');
+  // Controllers com identidade única — NUNCA reaproveitar entre dois
+  // TextField (compartilham estado e a digitação vaza).
+  late final TextEditingController _titleCtrl;
+  late final TextEditingController _categoryCtrl;
+  late final TextEditingController _targetCtrl;
+  late final TextEditingController _unitCtrl;
 
-  String _iconKey = 'water';
-  String _colorHex = '#06B6D4';
+  late String _iconKey;
+  late String _colorHex;
   TimeOfDay? _reminder;
   int? _durationMinutes;
-  final Set<int> _frequency = {1, 2, 3, 4, 5, 6, 7};
+  late final Set<int> _frequency;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.existing;
+    _titleCtrl = TextEditingController(text: e?.title ?? '');
+    _categoryCtrl = TextEditingController(text: e?.category ?? '');
+    _targetCtrl = TextEditingController(text: '${e?.targetValue ?? 1}');
+    _unitCtrl = TextEditingController(text: e?.unit ?? 'vez');
+    _iconKey = e?.iconKey ?? 'water';
+    _colorHex = e?.colorHex ?? '#06B6D4';
+    _reminder = e?.reminderTime;
+    _durationMinutes = e?.durationMinutes;
+    _frequency = {...?e?.frequencyDays};
+  }
 
   static const _palette = [
     '#8B5CF6', // Roxo
@@ -671,25 +722,145 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
 
   Future<void> _submit() async {
     if (_titleCtrl.text.trim().isEmpty) return;
+    final notifier = ref.read(habitsProvider.notifier);
     final category = _categoryCtrl.text.trim().isEmpty
         ? 'Geral'
         : _categoryCtrl.text.trim();
-    await ref.read(habitsProvider.notifier).create(
-          title: _titleCtrl.text.trim(),
-          category: category,
-          iconKey: _iconKey,
-          colorHex: _colorHex,
-          frequencyDays: _frequency.toList()..sort(),
-          targetValue: int.tryParse(_targetCtrl.text) ?? 1,
-          unit: _unitCtrl.text.trim().isEmpty ? 'vez' : _unitCtrl.text.trim(),
-          reminderTime: _reminder,
-          durationMinutes: _durationMinutes,
-        );
+    final unit = _unitCtrl.text.trim().isEmpty
+        ? 'vez'
+        : _unitCtrl.text.trim();
+
+    if (widget.isEditing) {
+      final updated = widget.existing!.copyWith(
+        title: _titleCtrl.text.trim(),
+        category: category,
+        iconKey: _iconKey,
+        colorHex: _colorHex,
+        frequencyDays: _frequency.toList()..sort(),
+        targetValue: int.tryParse(_targetCtrl.text) ?? 1,
+        unit: unit,
+        reminderTime: _reminder,
+        clearReminderTime: _reminder == null,
+        durationMinutes: _durationMinutes,
+        clearDurationMinutes: _durationMinutes == null,
+      );
+      await notifier.update(updated);
+    } else {
+      await notifier.create(
+        title: _titleCtrl.text.trim(),
+        category: category,
+        iconKey: _iconKey,
+        colorHex: _colorHex,
+        frequencyDays: _frequency.toList()..sort(),
+        targetValue: int.tryParse(_targetCtrl.text) ?? 1,
+        unit: unit,
+        reminderTime: _reminder,
+        durationMinutes: _durationMinutes,
+      );
+    }
     if (mounted) Navigator.pop(context);
+  }
+
+  /// Confirma a exclusão do hábito a partir do diálogo de edição.
+  ///
+  /// Mesmo padrão Liquid Glass do `_confirmDelete` da lista: pergunta,
+  /// remove, fecha o diálogo de edição e oferece "Desfazer" via snackbar.
+  /// Sem isso, um hábito só podia ser excluído deslizando o card — quem
+  /// clica pra editar não tem caminho de saída.
+  Future<void> _confirmAndDelete() async {
+    final habit = widget.existing;
+    if (habit == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(24),
+        child: LiquidGlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: const [
+                  Icon(Icons.delete_outline, color: AppColors.textPrimary),
+                  SizedBox(width: 8),
+                  Text(
+                    'Excluir hábito?',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '"${habit.title}" e todo o seu histórico de conclusões '
+                'serão removidos. Essa ação pode ser desfeita na barra '
+                'inferior.',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Cancelar'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.surface2,
+                      foregroundColor: AppColors.textPrimary,
+                    ),
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('Excluir'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    // Captura o messenger ANTES de fechar o diálogo — depois do pop o
+    // `context` da árvore do diálogo já não tem Scaffold ancestral.
+    final messenger = ScaffoldMessenger.of(context);
+    final notifier = ref.read(habitsProvider.notifier);
+    final habitSnapshot = habit;
+
+    // Fecha o diálogo de edição.
+    Navigator.pop(context);
+
+    await notifier.remove(habitSnapshot.id);
+
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Hábito "${habitSnapshot.title}" excluído'),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Desfazer',
+          onPressed: () => notifier.add(habitSnapshot),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final accent = ref.watch(accentColorProvider);
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(16),
@@ -700,11 +871,11 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Novo Hábito',
-                style: TextStyle(
+              Text(
+                widget.isEditing ? 'Editar Hábito' : 'Novo Hábito',
+                style: const TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -839,12 +1010,12 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                   decoration: BoxDecoration(
                     color: _durationMinutes == null
                         ? Colors.white.withValues(alpha: 0.08)
-                        : AppColors.purpleFluidStart.withValues(alpha: 0.25),
+                        : accent.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: _durationMinutes == null
                           ? Colors.white.withValues(alpha: 0.15)
-                          : AppColors.purpleFluidStart,
+                          : accent,
                       width: 1,
                     ),
                   ),
@@ -937,6 +1108,37 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  // Excluir só aparece quando estamos editando um hábito
+                  // existente. Sem isso, o usuário não tem como remover
+                  // o hábito a partir do diálogo — só deslizando o card.
+                  if (widget.isEditing) ...[
+                    TextButton.icon(
+                      onPressed: _confirmAndDelete,
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        size: 18,
+                        color: AppColors.textPrimary,
+                      ),
+                      label: const Text(
+                        'Excluir',
+                        style: TextStyle(color: AppColors.textPrimary),
+                      ),
+                      style: TextButton.styleFrom(
+                        backgroundColor: AppColors.surface2,
+                        foregroundColor: AppColors.textPrimary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppColors.radiusSm,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: const Text('Cancelar'),
@@ -944,7 +1146,7 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: _submit,
-                    child: const Text('Criar'),
+                    child: Text(widget.isEditing ? 'Salvar' : 'Criar'),
                   ),
                 ],
               ),
@@ -961,14 +1163,16 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
   }
 }
 
-class _DayChip extends StatelessWidget {
+class _DayChip extends ConsumerWidget {
   const _DayChip({required this.label, required this.active, required this.onTap});
   final String label;
   final bool active;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(accentColorProvider);
+    final accentDim = HSVColor.fromColor(accent).withValue(0.7).toColor();
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -976,7 +1180,13 @@ class _DayChip extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          gradient: active ? AppColors.purpleFluid : null,
+          gradient: active
+              ? LinearGradient(
+                  colors: [accent, accentDim],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
           color: active ? null : AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(18),
         ),
@@ -994,7 +1204,7 @@ class _DayChip extends StatelessWidget {
 }
 
 /// Chip de duração para o picker de estimativa (5min, 10min, 1h...).
-class _DurationChip extends StatelessWidget {
+class _DurationChip extends ConsumerWidget {
   const _DurationChip({
     required this.label,
     required this.active,
@@ -1005,14 +1215,19 @@ class _DurationChip extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = ref.watch(accentColorProvider);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          gradient: active ? AppColors.purpleFluid : null,
+          gradient: active
+              ? LinearGradient(
+                  colors: [accent, HSVColor.fromColor(accent).withValue(0.7).toColor()],
+                )
+              : null,
           color: active ? null : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
