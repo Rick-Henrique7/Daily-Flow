@@ -1,9 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatters.dart';
@@ -60,6 +58,31 @@ class PomodoroTimerView extends ConsumerWidget {
       settings.pomodoroLongBreakColor,
     );
 
+    // Herda DM Sans já cacheado pelo tema (AppTheme.darkWith usa
+    // GoogleFonts.dmSans). Antes este widget usava GoogleFonts.spaceGrotesk
+    // / GoogleFonts.inter, que disparavam download sob demanda da CDN do
+    // Google Fonts (fonts.gstatic.com) na primeira vez que o usuário
+    // entrava na aba Foco — gerava um delay visível de 1–3s.
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.labelLarge!.copyWith(
+      fontWeight: FontWeight.w700,
+      letterSpacing: 3,
+      color: accent,
+    );
+    final timerStyle = theme.textTheme.displayLarge!.copyWith(
+      fontSize: 76,
+      fontWeight: FontWeight.w300,
+      letterSpacing: -2,
+      height: 1.0,
+      fontFeatures: const [FontFeature.tabularFigures()],
+      color: AppColors.textPrimary,
+    );
+    final percentStyle = theme.textTheme.labelLarge!.copyWith(
+      fontWeight: FontWeight.w500,
+      letterSpacing: 0.5,
+      color: AppColors.textSecondary,
+    );
+
     return Center(
       child: AspectRatio(
         aspectRatio: 1,
@@ -85,42 +108,19 @@ class PomodoroTimerView extends ConsumerWidget {
                   Text(
                     _label,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 13,
-                      letterSpacing: 3,
-                      fontWeight: FontWeight.w700,
-                      color: accent,
-                    ),
+                    style: labelStyle,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     DateFormatters.pomodoro(state.remainingSeconds),
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 76,
-                      fontWeight: FontWeight.w300,
-                      letterSpacing: -2,
-                      height: 1.0,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                      color: AppColors.textPrimary,
-                    ),
-                  )
-                      .animate(target: state.isRunning ? 1 : 0)
-                      .fadeIn(duration: 400.ms)
-                      .scale(
-                        begin: const Offset(1, 1),
-                        end: const Offset(1.02, 1.02),
-                      ),
+                    style: timerStyle,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     '${(state.progress * 100).round()}%',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.5,
-                      color: AppColors.textSecondary,
-                    ),
+                    style: percentStyle,
                   ),
                 ],
               ),

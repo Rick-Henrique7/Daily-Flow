@@ -1,0 +1,66 @@
+# EditorConfig is awesome: https://EditorConfig.org
+# Mantém estilo consistente entre editores (VS Code, IntelliJ, etc).
+
+# Top-level config — aplica a todos os arquivos.
+root = true
+
+# === Dart / Flutter ===
+[*.dart]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+max_line_length = 80
+
+# Imports muito longos podem precisar — desativa essa regra pra eles.
+[*.{dart,yml,yaml}]
+ij_dart_imports_relative_to_self = true
+
+# === JavaScript / Node (scripts de geração de ícones) ===
+[*.{js,cjs,mjs}]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# === JSON ===
+[*.json]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# === Markdown (README, docs) ===
+[*.md]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = false   # dois espaços = quebra de linha em MD
+insert_final_newline = true
+
+# === PowerShell (scripts de automação) ===
+[*.ps1]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# === Shell scripts ===
+[*.{sh,bash}]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+
+# === Makefile (TABS obrigatórios) ===
+[Makefile]
+indent_style = tab
