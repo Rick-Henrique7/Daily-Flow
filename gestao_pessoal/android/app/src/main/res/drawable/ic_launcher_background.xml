@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Background sólido do adaptive icon do Daily Flow.
+  Branco puro (#FFFFFF) — mesma cor do master p/ coerência visual
+  entre o ícone legacy e o adaptive no Android 8+ (API 26+).
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FFFFFF" />
+</shape>

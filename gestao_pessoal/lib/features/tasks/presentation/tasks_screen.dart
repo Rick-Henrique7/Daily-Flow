@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatters.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/glass_input_field.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../data/tasks_controller.dart';
@@ -295,26 +296,17 @@ class TasksScreen extends ConsumerWidget {
   /// Remove a tarefa e oferece "Desfazer" por 4s na snackbar.
   Future<void> _onTaskDismissed(
       BuildContext context, WidgetRef ref, TaskModel task) async {
-    final messenger = ScaffoldMessenger.of(context);
     await ref.read(tasksProvider.notifier).remove(task.id);
     if (!context.mounted) return;
-    messenger.hideCurrentSnackBar();
     final recurring = _isRecurring(task);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          recurring
-              ? 'Tarefa "${task.title}" e suas próximas ocorrências foram excluídas'
-              : 'Tarefa "${task.title}" excluída',
-        ),
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'Desfazer',
-          onPressed: () {
-            ref.read(tasksProvider.notifier).add(task);
-          },
-        ),
-      ),
+    AppUndoSnackBar.show(
+      context,
+      ref,
+      icon: recurring ? Icons.event_repeat_outlined : Icons.delete_outline,
+      message: recurring
+          ? 'Tarefa "${task.title}" e suas próximas ocorrências foram excluídas'
+          : 'Tarefa "${task.title}" excluída',
+      onUndo: () => ref.read(tasksProvider.notifier).add(task),
     );
   }
 }

@@ -1,17 +1,28 @@
 // generate_trident_icon.js
 //
-// Gera o ícone minimalista do Daily Flow a partir do tridente de
-// referência em `C:\Users\henri\Downloads\icono-tridente.avif`:
+// Gera o conjunto completo de assets de ícone para o Daily Flow a partir
+// do tridente de referência em `C:\Users\henri\Downloads\icono-tridente.avif`.
 //
-//   - Fundo branco puro (#FFFFFF)
-//   - Tridente em preto — apenas a parte superior:
-//       3 pontas (prongs) + parte do cabo (shaft).
-//       O terço inferior do cabo original é removido (crop).
-//   - Forma 1024×1024 PNG para casar com o pipeline
-//     `scripts/generate_icons.js` (que produz todas as variantes
-//     Android + Web a partir desse PNG).
+// Saída:
+//   - `assets/icons/daily_flow_icon.png`      (1024×1024 master — web/PWA)
+//   - `assets/icons/trident_foreground.png`   (1024×1024 fg transparente p/ adaptive icon)
 //
-// Rode com: `node scripts/generate_trident_icon.js`
+// Pipeline aplicado:
+//   1) Carrega AVIF 996×996
+//   2) Crop bottom 25% → mantém só os 3 prongs + ornamento + parte do cabo
+//   3) Threshold 200 → elimina marca d'água "Magnific" (cinzas → preto/branco puro)
+//   4) Trim do bounding box do tridente (recorta espaço vazio ao redor)
+//   5) Redimensiona p/ ~68% do canvas (deixa espaço p/ safe-zone do adaptive icon)
+//   6) Compõe no canvas 1024×1024 com fundo:
+//      - master (web/PWA): branco puro #FFFFFF
+//      - foreground (Android adaptive icon): transparente
+//
+// Adaptive icons no Android esperam:
+//   - Foreground 108×108 dp (com tridente centralizado em safe-zone 72dp)
+//   - Background 108×108 dp (sólido)
+// → O tridente preenche a safe-zone inteira sem precisar de inset extra
+//   do sistema, fazendo o ícone PARECER MAIOR no launcher (resolve o
+//   "ícone pequeno em relação aos outros apps").
 
 const sharp = require('sharp');
 const fs = require('fs');
@@ -19,29 +30,16 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const SRC = 'C:\\Users\\henri\\Downloads\\icono-tridente.avif';
-const PREVIEW = path.join(ROOT, '_trident_preview.png');
-const OUT = path.join(ROOT, 'assets/icons/daily_flow_icon.png');
+const OUT_MASTER = path.join(ROOT, 'assets/icons/daily_flow_icon.png');
+const OUT_FOREGROUND = path.join(ROOT, 'assets/icons/trident_foreground.png');
 
 // === Pipeline ===
-//
-// 1) Carrega o AVIF de referência (996×996, fundo claro, tridente
-//    escuro com marca d'água "Magnific" bem sutil no cinza claro).
-// 2) Corta a faixa inferior que continha o cabo cheio — mantém só
-//    os 3 prongs + parte superior do cabo + ornamento ("bulb").
-//    Mantém ~75% da altura original (descarta os últimos ~25%).
-// 3) Achata o alpha (se houver) em fundo branco puro.
-// 4) Redimensiona para 1024×1024 e centraliza num canvas 1024×1024
-//    com padding interno (margem segura para máscaras do Android
-//    adaptive icon e web maskable).
-
 async function generate() {
+  // 1) Ler o source.
   const srcMeta = await sharp(SRC).metadata();
   console.log(`source: ${srcMeta.width}×${srcMeta.height} (${srcMeta.format})`);
 
-  // 1) Ler o source.
-  // 2) Cortar o terço inferior do tridente: manter do topo até
-  //    75% da altura. Isso remove o segmento mais fino/longo do
-  //    cabo, mantendo os 3 prongs + ornamento + início do cabo.
+  // 2) Cortar o terço inferior: ficar do topo até 75% da altura.
   const cropHeight = Math.round(srcMeta.height * 0.75);
   const cropped = await sharp(SRC)
     .extract({
@@ -50,38 +48,46 @@ async function generate() {
       width: srcMeta.width,
       height: cropHeight,
     })
-    // Threshold agressivo para eliminar a marca d'água "Magnific"
-    // do arquivo fonte: qualquer pixel com luminância > 200 vira
-    // branco puro, o resto vira preto puro. Resultado: silhueta
-    // sólida do tridente em preto sobre fundo branco.
+    // Threshold agressivo para eliminar marca d'água
     .threshold(200)
-    // Achata em fundo branco para garantir uniformidade do bg.
-    .flatten({ background: { r: 255, g: 255, b: 255 } })
     .png()
     .toBuffer();
 
-  const croppedMeta = await sharp(cropped).metadata();
-  console.log(`cropped: ${croppedMeta.width}×${croppedMeta.height}`);
+  // 3) Calcular bounding box do tridente (remove padding transparente
+  //    inútil ao redor). O threshold gera pixels pretos no tridente
+  //    e brancos no fundo — `trim` recorta até o primeiro pixel não-
+  //    branco nas bordas.
+  const trimmed = await sharp(cropped)
+    .trim({ background: '#FFFFFF', threshold: 10 })
+    .png()
+    .toBuffer();
 
-  // 3) Compor num canvas 1024×1024 com padding interno generoso
-  //    (safe-area para máscaras circulares/adaptive icons).
-  //    Reservamos ~15% nas bordas como margem.
+  const trimmedMeta = await sharp(trimmed).metadata();
+  console.log(`trimmed trident: ${trimmedMeta.width}×${trimmedMeta.height}`);
+
+  // 4) Redimensionar o tridente p/ ~68% da área do canvas. Esse é o
+  //    "tamanho visível final" — o resto é padding p/ safe-zone do
+  //    adaptive icon (18 dp de inset deixa ~32 dp de respiro nos lados).
   const canvasSize = 1024;
-  const safeArea = Math.round(canvasSize * 0.15); // 15% de margem
-  const innerSize = canvasSize - safeArea * 2;
-
-  const resized = await sharp(cropped)
-    .resize(innerSize, Math.round((croppedMeta.height / croppedMeta.width) * innerSize), {
+  const targetWidth = Math.round(canvasSize * 0.68);
+  const targetHeight = Math.round(
+    (trimmedMeta.height / trimmedMeta.width) * targetWidth,
+  );
+  const resized = await sharp(trimmed)
+    .resize(targetWidth, targetHeight, {
       fit: 'contain',
-      background: { r: 255, g: 255, b: 255, alpha: 1 },
+      background: { r: 0, g: 0, b: 0, alpha: 0 }, // transparente p/ fg
     })
     .png()
     .toBuffer();
 
-  const resizedMeta = await sharp(resized).metadata();
-  const offsetTop = Math.round((canvasSize - resizedMeta.height) / 2);
+  const offsetTop = Math.round((canvasSize - targetHeight) / 2);
+  const offsetLeft = Math.round((canvasSize - targetWidth) / 2);
+  console.log(
+    `resized: ${targetWidth}×${targetHeight}, offset (${offsetLeft}, ${offsetTop})`,
+  );
 
-  // 4) Compor no canvas final 1024×1024, fundo branco puro.
+  // === 5a) MASTER: canvas branco + tridente (web/PWA e legacy mipmap) ===
   await sharp({
     create: {
       width: canvasSize,
@@ -90,22 +96,24 @@ async function generate() {
       background: { r: 255, g: 255, b: 255, alpha: 1 },
     },
   })
-    .composite([
-      {
-        input: resized,
-        top: offsetTop,
-        left: safeArea,
-      },
-    ])
+    .composite([{ input: resized, top: offsetTop, left: offsetLeft }])
     .png()
-    .toFile(OUT);
+    .toFile(OUT_MASTER);
+  console.log(`✓ Master: ${OUT_MASTER}`);
 
-  console.log(`✓ Tridente gerado: ${OUT}`);
-  // Cleanup do preview.
-  if (fs.existsSync(PREVIEW)) {
-    fs.unlinkSync(PREVIEW);
-    console.log('✓ Preview temporário removido');
-  }
+  // === 5b) FOREGROUND: canvas transparente + tridente (Android adaptive) ===
+  await sharp({
+    create: {
+      width: canvasSize,
+      height: canvasSize,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([{ input: resized, top: offsetTop, left: offsetLeft }])
+    .png()
+    .toFile(OUT_FOREGROUND);
+  console.log(`✓ Foreground: ${OUT_FOREGROUND}`);
 }
 
 generate().catch((e) => {

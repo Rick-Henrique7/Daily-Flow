@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../settings/data/settings_controller.dart';
 
 /// Anel de progresso diário (Daily Progress Ring).
@@ -29,6 +28,7 @@ class DailyProgressRing extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accent = ref.watch(accentColorProvider);
+    final foreground = ref.watch(textColorProvider);
     final clamped = progress.clamp(0.0, 1.0);
     return SizedBox(
       width: size,
@@ -61,18 +61,21 @@ class DailyProgressRing extends ConsumerWidget {
             children: [
               Text(
                 '${(clamped * 100).round()}%',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 38,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: foreground, // segue cor de texto customizada
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 label,
-                style: const TextStyle(
+                // Hierarquia preservada: mesmo hue do `foreground`,
+                // com 70% de opacidade — fica distinto do percentual
+                // sem trair a personalização do usuário.
+                style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.textSecondary,
+                  color: foreground.withValues(alpha: 0.7),
                 ),
               ),
             ],

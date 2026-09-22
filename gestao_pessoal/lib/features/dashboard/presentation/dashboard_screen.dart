@@ -19,6 +19,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
     final accent = ref.watch(accentColorProvider);
+    final foreground = ref.watch(textColorProvider);
     final habitsToday = ref.watch(habitsForDayProvider(now));
     final tasks = ref.watch(tasksProvider);
     final todayTasks = tasks.where((t) {
@@ -57,8 +58,11 @@ class DashboardScreen extends ConsumerWidget {
                       children: [
                         Text(
                           DateFormatters.greetingForHour(now.hour),
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          // Hierarquia: mesmo hue de `foreground`, com 70%
+                          // de opacidade — distinto do título sem trair
+                          // a cor customizada pelo usuário.
+                          style: TextStyle(
+                            color: foreground.withValues(alpha: 0.7),
                             fontSize: 14,
                           ),
                         ),
@@ -73,8 +77,8 @@ class DashboardScreen extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Text(
                           DateFormatters.fullDate(now),
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: foreground.withValues(alpha: 0.7),
                             fontSize: 13,
                           ),
                         ),

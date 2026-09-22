@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive icon configuration for Daily Flow.
+  Refs:
+    - foreground: tridente 108×108dp (ic_launcher_foreground.png)
+                  área visível segura: 72×72dp centralizado
+    - background: branco puro (#FFFFFF) via drawable/ic_launcher_background.xml
+
+  Sistema aplica máscara (círculo/squircle/teardrop) na área 108×108dp
+  inteira → o background branco preenche o ícone completo, dando a
+  sensação de "ícone grande" no launcher (vs legacy inset).
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>

@@ -4,6 +4,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatters.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/glass_input_field.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../data/habits_controller.dart';
@@ -281,21 +282,14 @@ class HabitsScreen extends ConsumerWidget {
   /// Remove o hábito e oferece "Desfazer" por 4 segundos na snackbar.
   Future<void> _onHabitDismissed(
       BuildContext context, WidgetRef ref, HabitModel habit) async {
-    final messenger = ScaffoldMessenger.of(context);
     await ref.read(habitsProvider.notifier).remove(habit.id);
     if (!context.mounted) return;
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('Hábito "${habit.title}" excluído'),
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'Desfazer',
-          onPressed: () {
-            ref.read(habitsProvider.notifier).add(habit);
-          },
-        ),
-      ),
+    AppUndoSnackBar.show(
+      context,
+      ref,
+      icon: Icons.delete_outline,
+      message: 'Hábito "${habit.title}" excluído',
+      onUndo: () => ref.read(habitsProvider.notifier).add(habit),
     );
   }
 }
@@ -834,27 +828,24 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
     if (confirmed != true) return;
     if (!mounted) return;
 
-    // Captura o messenger ANTES de fechar o diálogo — depois do pop o
-    // `context` da árvore do diálogo já não tem Scaffold ancestral.
-    final messenger = ScaffoldMessenger.of(context);
+    // Captura as dependências ANTES de fechar o diálogo — depois do pop
+    // o `context` da árvore do diálogo já não tem Scaffold ancestral.
     final notifier = ref.read(habitsProvider.notifier);
     final habitSnapshot = habit;
+    final outerContext = context; // contexto da árvore raiz (com Scaffold)
 
     // Fecha o diálogo de edição.
     Navigator.pop(context);
 
     await notifier.remove(habitSnapshot.id);
 
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('Hábito "${habitSnapshot.title}" excluído'),
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'Desfazer',
-          onPressed: () => notifier.add(habitSnapshot),
-        ),
-      ),
+    if (!outerContext.mounted) return;
+    AppUndoSnackBar.show(
+      outerContext,
+      ref,
+      icon: Icons.delete_outline,
+      message: 'Hábito "${habitSnapshot.title}" excluído',
+      onUndo: () => notifier.add(habitSnapshot),
     );
   }
 

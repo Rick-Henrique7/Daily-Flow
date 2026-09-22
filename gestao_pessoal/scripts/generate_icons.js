@@ -1,15 +1,41 @@
 // generate_icons.js
-// Gera todas as variantes do ícone do app (Android + Web) a partir do
-// PNG 1024×1024 em assets/icons/daily_flow_icon.png.
+//
+// Gera todas as variantes do ícone do app a partir de:
+//   - `assets/icons/daily_flow_icon.png`      (master, fundo branco — web/PWA)
+//   - `assets/icons/trident_foreground.png`   (foreground transparente — Android)
+//
+// Saídas:
+//   Android (em `android/app/src/main/res/`):
+//     - mipmap-{m,h,xh,xxh,xxxh}dpi/ic_launcher.png        (legacy + adaptive)
+//     - mipmap-{m,h,xh,xxh,xxxh}dpi/ic_launcher_round.png
+//     - mipmap-{m,h,xh,xxh,xxxh}dpi/ic_launcher_foreground.png (apenas adaptive)
+//     - drawable/ic_launcher_background.xml               (cor sólida branca)
+//     - mipmap-anydpi-v26/ic_launcher.xml                  (adaptive icon config)
+//     - mipmap-anydpi-v26/ic_launcher_round.xml
+//   Web (em `web/icons/`):
+//     - Icon-{192,512,1024}.png                           (regular)
+//     - Icon-maskable-{192,512,1024}.png                  (PWA com safe-area)
+//     - favicon.png (256×256)
+//
+// Por que adaptive icons:
+//   Sem `mipmap-anydpi-v26/ic_launcher.xml`, o launcher aplica um inset
+//   maior no ícone legacy → ele PARECE pequeno em relação aos outros
+//   apps no Android (que usam adaptive icons desde a API 26).
+//   Com adaptive icons configurados, o background branco preenche a
+//   área total do ícone e a única folga fica na safe-zone interna do
+//   foreground (~72dp dos 108dp).
 
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const SRC = path.join(ROOT, 'assets/icons/daily_flow_icon.png');
+const SRC_MASTER = path.join(ROOT, 'assets/icons/daily_flow_icon.png');
+const SRC_FOREGROUND = path.join(ROOT, 'assets/icons/trident_foreground.png');
 
-// Tamanhos Android (mdpi = 48, hdpi = 72, xhdpi = 96, xxhdpi = 144, xxxhdpi = 192)
+// Tamanhos Android (mdpi=48, hdpi=72, xhdpi=96, xxhdpi=144, xxxhdpi=192)
+// Para adaptive icons, o sistema renderiza o foreground em 108dp = 432px no
+// xxxhdpi. Geramos nessa escala pra cobrir o foreground adequadamente.
 const ANDROID_DENSITIES = {
   'mipmap-mdpi': 48,
   'mipmap-hdpi': 72,
@@ -18,64 +44,155 @@ const ANDROID_DENSITIES = {
   'mipmap-xxxhdpi': 192,
 };
 
-// Tamanhos Web (manifest.json). 1024 garante nitidez em telas
-// de altíssima densidade (iOS Pro, Android xxhdpi+) e satisfaz
-// o pedido de "pelo menos 2.5x" sobre o apple-touch-icon de 192.
+// Escala do foreground (108dp = 432px no xxxhdpi).
+const ADAPTIVE_FG_SIZE = {
+  'mipmap-mdpi': 108,
+  'mipmap-hdpi': 162,
+  'mipmap-xhdpi': 216,
+  'mipmap-xxhdpi': 324,
+  'mipmap-xxxhdpi': 432,
+};
+
 const WEB_SIZES = [192, 512, 1024];
 
 async function generate() {
-  if (!fs.existsSync(SRC)) {
-    console.error(`Ícone fonte não encontrado: ${SRC}`);
+  if (!fs.existsSync(SRC_MASTER) || !fs.existsSync(SRC_FOREGROUND)) {
+    console.error(
+      `Assets de ícone não encontrados. Rode antes: node scripts/generate_trident_icon.js`,
+    );
     process.exit(1);
   }
-  const base = sharp(SRC);
+  const master = sharp(SRC_MASTER);
+  const foreground = sharp(SRC_FOREGROUND);
 
-  // === Android ===
+  // === Android (legacy mipmap + adaptive foreground) ===
   for (const [dir, size] of Object.entries(ANDROID_DENSITIES)) {
     const outDir = path.join(ROOT, `android/app/src/main/res/${dir}`);
     fs.mkdirSync(outDir, { recursive: true });
 
-    // ic_launcher.png (ícone padrão)
-    await base
+    // ic_launcher.png (ícone padrão — Android pre-O cai nele).
+    await master
       .clone()
       .resize(size, size)
       .png()
       .toFile(path.join(outDir, 'ic_launcher.png'));
     console.log(`✓ ${dir}/ic_launcher.png (${size}×${size})`);
 
-    // ic_launcher_round.png (ícone circular)
-    await base
+    // ic_launcher_round.png (ícone circular).
+    await master
       .clone()
       .resize(size, size)
       .png()
       .toFile(path.join(outDir, 'ic_launcher_round.png'));
     console.log(`✓ ${dir}/ic_launcher_round.png (${size}×${size})`);
 
-    // ic_launcher_foreground.png (para adaptive icon)
-    const fgSize = Math.round(size * 2.5);
-    await base
+    // ic_launcher_foreground.png (apenas adaptive icon API 26+).
+    // 108dp visível — geramos no tamanho exato por densidade.
+    const fgSize = ADAPTIVE_FG_SIZE[dir];
+    await foreground
       .clone()
-      .resize(fgSize, fgSize)
+      .resize(fgSize, fgSize, {
+        fit: 'contain',
+        background: { r: 0, g: 0, b: 0, alpha: 0 }, // mantém transparente
+      })
       .png()
       .toFile(path.join(outDir, 'ic_launcher_foreground.png'));
     console.log(`✓ ${dir}/ic_launcher_foreground.png (${fgSize}×${fgSize})`);
+
+    // ic_launcher_round_foreground.png (referenciado pelo adaptive
+    // icon circular — sistema exige essa referência explícita quando
+    // mipmap-anydpi-v26/ic_launcher_round.xml existe).
+    await foreground
+      .clone()
+      .resize(fgSize, fgSize, {
+        fit: 'contain',
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .png()
+      .toFile(path.join(outDir, 'ic_launcher_round_foreground.png'));
+    console.log(`✓ ${dir}/ic_launcher_round_foreground.png (${fgSize}×${fgSize})`);
   }
 
-  // === Web ===
+  // === drawable: background branco sólido ===
+  // Define a cor de fundo do adaptive icon (camada visível atrás do
+  // foreground). Usado por mipmap-anydpi-v26/ic_launcher.xml.
+  const drawableDir = path.join(ROOT, 'android/app/src/main/res/drawable');
+  fs.mkdirSync(drawableDir, { recursive: true });
+  const backgroundXml = `<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Background sólido do adaptive icon do Daily Flow.
+  Branco puro (#FFFFFF) — mesma cor do master p/ coerência visual
+  entre o ícone legacy e o adaptive no Android 8+ (API 26+).
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FFFFFF" />
+</shape>
+`;
+  fs.writeFileSync(
+    path.join(drawableDir, 'ic_launcher_background.xml'),
+    backgroundXml,
+    'utf-8',
+  );
+  console.log('✓ drawable/ic_launcher_background.xml (solid white #FFFFFF)');
+
+  // === Adaptive icon config (Android 8.0 / API 26+) ===
+  // Sem este XML, o sistema cai no legacy mipmap e o launcher aplica
+  // inset maior → o ícone PARECE PEQUENO em relação aos outros apps.
+  const anydpiDir = path.join(
+    ROOT,
+    'android/app/src/main/res/mipmap-anydpi-v26',
+  );
+  fs.mkdirSync(anydpiDir, { recursive: true });
+
+  const adaptiveXml = (roundFlag) => {
+    const fgName = roundFlag ? 'ic_launcher_round_foreground' : 'ic_launcher_foreground';
+    return `<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive icon configuration for Daily Flow.
+  Refs:
+    - foreground: tridente 108×108dp (${fgName}.png)
+                  área visível segura: 72×72dp centralizado
+    - background: branco puro (#FFFFFF) via drawable/ic_launcher_background.xml
+
+  Sistema aplica máscara (círculo/squircle/teardrop) na área 108×108dp
+  inteira → o background branco preenche o ícone completo, dando a
+  sensação de "ícone grande" no launcher (vs legacy inset).
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/${fgName}" />
+</adaptive-icon>
+`;
+  };
+  fs.writeFileSync(
+    path.join(anydpiDir, 'ic_launcher.xml'),
+    adaptiveXml(false),
+    'utf-8',
+  );
+  fs.writeFileSync(
+    path.join(anydpiDir, 'ic_launcher_round.xml'),
+    adaptiveXml(true),
+    'utf-8',
+  );
+  console.log('✓ mipmap-anydpi-v26/ic_launcher.xml');
+  console.log('✓ mipmap-anydpi-v26/ic_launcher_round.xml');
+
+  // === Web (PWA) ===
   const webDir = path.join(ROOT, 'web/icons');
   fs.mkdirSync(webDir, { recursive: true });
   for (const size of WEB_SIZES) {
-    await base
+    await master
       .clone()
       .resize(size, size)
       .png()
       .toFile(path.join(webDir, `Icon-${size}.png`));
     console.log(`✓ web/icons/Icon-${size}.png`);
 
-    // Maskable (com padding extra nas bordas pra safe area)
+    // Maskable (com padding extra nas bordas pra safe area).
     const pad = Math.round(size * 0.18);
     const innerSize = size - pad * 2;
-    await sharp(SRC)
+    await sharp(SRC_MASTER)
       .resize(innerSize, innerSize)
       .extend({
         top: pad,
@@ -89,10 +206,8 @@ async function generate() {
     console.log(`✓ web/icons/Icon-maskable-${size}.png (com safe-area)`);
   }
 
-  // === favicon ===
-  // 64x64 ficava pixelado em telas Retina/HiDPI. Subimos para 256
-  // (4x maior — atende o "pelo menos 2.5x" e mantém o arquivo leve).
-  await base
+  // === favicon (256 — Retina/HiDPI friendly) ===
+  await master
     .clone()
     .resize(256, 256)
     .png()

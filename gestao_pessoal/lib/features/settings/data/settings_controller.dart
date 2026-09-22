@@ -108,3 +108,19 @@ final accentColorProvider = Provider<Color>((ref) {
   final clean = hex.replaceAll('#', '');
   return Color(int.parse('FF$clean', radix: 16));
 });
+
+/// Provider que resolve a cor de texto (foreground) configurada pelo
+/// usuário como `Color`. Widgets customizados que pintam texto
+/// específico (não via `Theme.of(context).textTheme`) consomem
+/// daqui para reagir à personalização.
+///
+/// Hierarquia recomendada ao usar:
+/// - foreground puro para texto primário (títulos, contadores)
+/// - foreground com `Color.withValues(alpha: 0.7)` para texto
+///   secundário (subtítulos, labels) — preserva hierarquia visual
+///   mantendo coerência com a cor escolhida.
+final textColorProvider = Provider<Color>((ref) {
+  final hex = ref.watch(settingsProvider).textColor;
+  final clean = hex.replaceAll('#', '');
+  return Color(int.parse('FF$clean', radix: 16));
+});
