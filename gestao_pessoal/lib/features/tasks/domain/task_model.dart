@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' show TimeOfDay;
 
+import '../../../core/utils/date_only.dart';
 import 'subtask_model.dart';
 
 class TaskModel {
@@ -16,6 +17,7 @@ class TaskModel {
     required this.completedAt,
     required this.subtasks,
     required this.orderIndex,
+    this.completedDates = const [],
   });
 
   final String id;
@@ -36,8 +38,16 @@ class TaskModel {
   /// repete semanalmente. Lista vazia = tarefa pontual.
   final List<int> repeatDays;
 
+  /// Concluída? Vale para tarefas **pontuais**. Tarefas recorrentes
+  /// usam [completedDates] (uma conclusão por dia) e mantêm isto `false`.
   final bool isCompleted;
+
+  /// Momento da última conclusão (pontual ou recorrente).
   final DateTime? completedAt;
+
+  /// Dias (sem hora) em que uma tarefa **recorrente** foi feita. Assim
+  /// "Correr" feito na terça volta a ficar pendente na quarta.
+  final List<DateTime> completedDates;
   final List<SubtaskModel> subtasks;
   final int orderIndex;
 
@@ -47,6 +57,12 @@ class TaskModel {
   bool get hasSubtasks => subtasks.isNotEmpty;
 
   bool get isRepeating => repeatDays.isNotEmpty;
+
+  /// Feita no [day]? Recorrente: olha [completedDates]. Pontual: a
+  /// conclusão vale para qualquer dia.
+  bool isCompletedOn(DateTime day) => isRepeating
+      ? completedDates.any((d) => isSameDay(d, day))
+      : isCompleted;
 
   TaskModel copyWith({
     String? id,
@@ -65,6 +81,7 @@ class TaskModel {
     bool clearCompletedAt = false,
     List<SubtaskModel>? subtasks,
     int? orderIndex,
+    List<DateTime>? completedDates,
   }) {
     return TaskModel(
       id: id ?? this.id,
@@ -80,6 +97,7 @@ class TaskModel {
           clearCompletedAt ? null : (completedAt ?? this.completedAt),
       subtasks: subtasks ?? this.subtasks,
       orderIndex: orderIndex ?? this.orderIndex,
+      completedDates: completedDates ?? this.completedDates,
     );
   }
 
@@ -98,6 +116,8 @@ class TaskModel {
         'completedAt': completedAt?.toIso8601String(),
         'subtasks': subtasks.map((s) => s.toJson()).toList(),
         'orderIndex': orderIndex,
+        'completedDates':
+            completedDates.map((d) => dateOnly(d).toIso8601String()).toList(),
       };
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
@@ -109,6 +129,25 @@ class TaskModel {
         minute: dueTimeJson['minute'] as int? ?? 0,
       );
     }
+    final repeatDays =
+        ((json['repeatDays'] as List<dynamic>?) ?? const <int>[]).cast<int>();
+    var isCompleted = json['isCompleted'] as bool;
+    final completedAt = json['completedAt'] == null
+        ? null
+        : DateTime.parse(json['completedAt'] as String);
+    var completedDates = ((json['completedDates'] as List<dynamic>?) ?? const [])
+        .map((e) => DateTime.parse(e as String))
+        .toList();
+
+    // Migração (v0.1 → v0.2): recorrentes guardavam um único
+    // `isCompleted`. Converte para uma conclusão no dia em que foi feita.
+    if (repeatDays.isNotEmpty && isCompleted) {
+      if (completedAt != null && completedDates.isEmpty) {
+        completedDates = [dateOnly(completedAt)];
+      }
+      isCompleted = false;
+    }
+
     return TaskModel(
       id: json['id'] as String,
       title: json['title'] as String,
@@ -122,12 +161,10 @@ class TaskModel {
           ? null
           : DateTime.parse(json['dueDate'] as String),
       dueTime: parsedTime,
-      repeatDays:
-          ((json['repeatDays'] as List<dynamic>?) ?? const <int>[]).cast<int>(),
-      isCompleted: json['isCompleted'] as bool,
-      completedAt: json['completedAt'] == null
-          ? null
-          : DateTime.parse(json['completedAt'] as String),
+      repeatDays: repeatDays,
+      isCompleted: isCompleted,
+      completedAt: completedAt,
+      completedDates: completedDates,
       subtasks: (json['subtasks'] as List<dynamic>)
           .map((e) => SubtaskModel.fromJson(e as Map<String, dynamic>))
           .toList(),

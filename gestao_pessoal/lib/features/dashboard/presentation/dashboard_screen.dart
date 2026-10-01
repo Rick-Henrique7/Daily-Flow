@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/providers/core_providers.dart';
 import '../../../core/utils/date_formatters.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../../../core/widgets/screen_header.dart';
@@ -20,28 +21,18 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
+    final today = ref.watch(todayProvider);
     final accent = ref.watch(accentColorProvider);
-    final habitsToday = ref.watch(habitsForDayProvider(now));
-    final tasks = ref.watch(tasksProvider);
-    final todayTasks = tasks.where((t) {
-      if (t.isCompleted) return false;
-      // Tarefa pontual com data == hoje
-      if (t.dueDate != null) {
-        final d = t.dueDate!;
-        if (d.year == now.year && d.month == now.month && d.day == now.day) {
-          return true;
-        }
-      }
-      // Tarefa recorrente em que o dia da semana atual bate
-      if (t.repeatDays.isNotEmpty && t.repeatDays.contains(now.weekday)) {
-        return true;
-      }
-      return false;
-    }).toList();
+    final habitsToday = ref.watch(habitsForDayProvider(today));
+    // Mesma regra da aba "Hoje" de Tarefas (TaskSchedule), incluindo as
+    // já feitas hoje — para riscar na lista e contar no progresso.
+    final todayTasks = ref.watch(todayTasksProvider);
 
-    final habitsDone = habitsToday.where((h) => h.isCompletedOn(now)).length;
+    final habitsDone = habitsToday.where((h) => h.isCompletedOn(today)).length;
+    final tasksDone =
+        todayTasks.where((t) => TaskSchedule.isDoneOn(t, today)).length;
     final totalItems = habitsToday.length + todayTasks.length;
-    final doneItems = habitsDone + todayTasks.where((t) => t.isCompleted).length;
+    final doneItems = habitsDone + tasksDone;
     final progress = totalItems == 0 ? 0.0 : doneItems / totalItems;
 
     final dateLabel = DateFormatters.fullDate(now);
@@ -100,16 +91,17 @@ class DashboardScreen extends ConsumerWidget {
                       for (var i = 0; i < habitsToday.length; i++)
                         _HabitRow(
                           habit: habitsToday[i],
-                          done: habitsToday[i].isCompletedOn(now),
+                          done: habitsToday[i].isCompletedOn(today),
                           accent: accent,
                           showDivider: i > 0,
                           onToggle: () => ref
                               .read(habitsProvider.notifier)
-                              .toggleCompletionForDate(habitsToday[i], now),
+                              .toggleCompletionForDate(habitsToday[i], today),
                         ).animate().fadeIn(delay: (60 * i).ms),
                       for (var i = 0; i < todayTasks.length; i++)
                         _TaskRow(
                           task: todayTasks[i],
+                          done: TaskSchedule.isDoneOn(todayTasks[i], today),
                           accent: accent,
                           showDivider: habitsToday.isNotEmpty || i > 0,
                           onToggle: () => ref
@@ -434,12 +426,14 @@ class _HabitRow extends StatelessWidget {
 class _TaskRow extends StatelessWidget {
   const _TaskRow({
     required this.task,
+    required this.done,
     required this.accent,
     required this.showDivider,
     required this.onToggle,
   });
 
   final TaskModel task;
+  final bool done;
   final Color accent;
   final bool showDivider;
   final VoidCallback onToggle;
@@ -466,7 +460,7 @@ class _TaskRow extends StatelessWidget {
       ),
       title: task.title,
       subtitle: 'Tarefa · ${task.category} · ${task.priority.label.toLowerCase()}',
-      done: task.isCompleted,
+      done: done,
       accent: accent,
       showDivider: showDivider,
       onToggle: onToggle,

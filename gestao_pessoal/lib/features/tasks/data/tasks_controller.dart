@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/providers/core_providers.dart';
+import '../../../core/utils/date_only.dart';
 import '../domain/subtask_model.dart';
 import '../domain/task_model.dart';
+import '../domain/task_schedule.dart';
+
+export '../domain/task_schedule.dart' show TaskFilter, TaskSchedule;
 import 'prefs_tasks_repository.dart';
 
 const _uuid = Uuid();
@@ -66,17 +70,41 @@ class TasksNotifier extends Notifier<List<TaskModel>> {
     await _persist();
   }
 
-  Future<void> toggleCompleted(TaskModel task) async {
-    final newCompleted = !task.isCompleted;
-    final updated = task.copyWith(
-      isCompleted: newCompleted,
-      completedAt: newCompleted ? DateTime.now() : null,
-      clearCompletedAt: !newCompleted,
-    );
+  /// Marca/desmarca a tarefa como feita (RF-TD-04).
+  ///
+  /// - Pontual: alterna `isCompleted`.
+  /// - Recorrente: alterna a conclusão **do dia** [on] (padrão: hoje), em
+  ///   `completedDates` — na próxima ocorrência ela volta a ficar pendente.
+  Future<void> toggleCompleted(TaskModel task, {DateTime? on}) async {
+    final day = dateOnly(on ?? ref.read(todayProvider));
+    final bool nowDone;
+    final TaskModel updated;
+
+    if (task.isRepeating) {
+      nowDone = !task.isCompletedOn(day);
+      final dates = [
+        for (final d in task.completedDates)
+          if (!isSameDay(d, day)) d,
+        if (nowDone) day,
+      ];
+      updated = task.copyWith(
+        completedDates: dates,
+        completedAt: nowDone ? DateTime.now() : null,
+        clearCompletedAt: !nowDone && dates.isEmpty,
+      );
+    } else {
+      nowDone = !task.isCompleted;
+      updated = task.copyWith(
+        isCompleted: nowDone,
+        completedAt: nowDone ? DateTime.now() : null,
+        clearCompletedAt: !nowDone,
+      );
+    }
+
     await update(updated);
     await ref.read(hapticsServiceProvider).light();
     // Som de sucesso só ao CONCLUIR (não ao reabrir)
-    if (newCompleted) {
+    if (nowDone) {
       await ref.read(soundServiceProvider).playSuccess();
     }
   }
@@ -125,126 +153,27 @@ class TasksNotifier extends Notifier<List<TaskModel>> {
 final tasksProvider =
     NotifierProvider<TasksNotifier, List<TaskModel>>(TasksNotifier.new);
 
-/// Filtros para a tela To-Do.
-enum TaskFilter { all, today, upcoming, completed }
-
+/// Aba selecionada na tela de Tarefas.
 final taskFilterProvider = StateProvider<TaskFilter>((ref) => TaskFilter.all);
 
-/// Lista filtrada derivada do filtro ativo.
-///
-/// Regras por aba (RF-TD-04):
-/// - **Todas**           → tarefas pendentes (qualquer data) + concluídas
-///                          agendadas para hoje ou no futuro. Concluídas
-///                          com `dueDate` no passado migram só para
-///                          "Concluídas" — sem poluir a lista principal.
-///                          Ordenadas por data/hora crescente.
-/// - **Hoje**             → tarefas pendentes com `dueDate == hoje` OU
-///                          recorrentes cujo `weekday` bate, OU
-///                          pendentes sem data e sem recorrência
-///                          (ad-hoc — criadas "pra hoje"). Exclui
-///                          concluídas.
-/// - **Próximas**         → pendentes que NÃO estão em "Hoje": futuras
-///                          e atrasadas (recorrentes sem data também
-///                          ficam aqui, conforme a definição acima de
-///                          ad-hoc). Ordenadas por data crescente
-///                          (atrasadas primeiro).
-/// - **Concluídas**       → todas as concluídas, mais recentes primeiro.
+/// Conteúdo da aba ativa — regras em [TaskSchedule.filter].
 final filteredTasksProvider = Provider<List<TaskModel>>((ref) {
-  final filter = ref.watch(taskFilterProvider);
-  final tasks = ref.watch(tasksProvider);
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-
-  switch (filter) {
-    case TaskFilter.all:
-      return tasks.where((t) {
-        // Pendente sempre aparece (mesmo atrasada — precisa de atenção).
-        if (!t.isCompleted) return true;
-        // Concluída sem data fica visível (não dá pra datar).
-        final due = t.dueDate;
-        if (due == null) return true;
-        // Concluída do passado → só "Concluídas". Hoje/futuro → "Todas".
-        return !due.isBefore(today);
-      }).toList()..sort(_compareBySchedule);
-
-    case TaskFilter.today:
-      return tasks
-          .where((t) => !t.isCompleted && _isScheduledFor(t, today))
-          .toList()
-        ..sort((a, b) {
-          final cmp = _compareBySchedule(a, b);
-          if (cmp != 0) return cmp;
-          return _dueMinutesOf(a).compareTo(_dueMinutesOf(b));
-        });
-
-    case TaskFilter.upcoming:
-      // "Próximas" = pendentes que NÃO estão em "Hoje". Como ad-hoc
-      // entra em "Hoje", aqui ficam só as pontuais com data futura e as
-      // atrasadas com data passada.
-      return tasks
-          .where((t) => !t.isCompleted && !_isScheduledFor(t, today))
-          .toList()
-        ..sort(_compareBySchedule);
-
-    case TaskFilter.completed:
-      return tasks.where((t) => t.isCompleted).toList()
-        ..sort((a, b) {
-          final ad = a.completedAt;
-          final bd = b.completedAt;
-          if (ad == null && bd == null) return 0;
-          if (ad == null) return 1;
-          if (bd == null) return -1;
-          return bd.compareTo(ad); // mais recente primeiro
-        });
-  }
+  return TaskSchedule.filter(
+    ref.watch(tasksProvider),
+    ref.watch(taskFilterProvider),
+    ref.watch(todayProvider),
+  );
 });
 
-/// Verifica se a tarefa deve aparecer em "Hoje" no dia [today].
-///
-/// Regras:
-/// 1) Pontual com `dueDate == hoje`.
-/// 2) Recorrente cujo `weekday` bate com hoje.
-/// 3) Ad-hoc: sem `dueDate` e sem `repeatDays` — tarefa criada sem
-///    agendamento explícito entra em "Hoje" por padrão (espera-se que
-///    o usuário a conclua hoje; sem isso, fica invisível).
-bool _isScheduledFor(TaskModel t, DateTime today) {
-  // 1) Pontual com data == hoje
-  final due = t.dueDate;
-  if (due != null) {
-    if (due.year == today.year &&
-        due.month == today.month &&
-        due.day == today.day) {
-      return true;
-    }
-  }
-  // 2) Recorrente em que o dia da semana bate
-  if (t.repeatDays.isNotEmpty && t.repeatDays.contains(today.weekday)) {
-    return true;
-  }
-  // 3) Ad-hoc (sem data e sem recorrência) — criada "pra hoje"
-  if (due == null && t.repeatDays.isEmpty) {
-    return true;
-  }
-  return false;
-}
+/// Tarefas de hoje (pendentes e já feitas) — usado pela tela Hoje.
+final todayTasksProvider = Provider<List<TaskModel>>((ref) {
+  return TaskSchedule.forDay(ref.watch(tasksProvider), ref.watch(todayProvider));
+});
 
-/// Minutos do dia da `dueTime` (00:00 → 0). Retorna -1 se sem hora.
-int _dueMinutesOf(TaskModel t) {
-  final time = t.dueTime;
-  if (time == null) return -1;
-  return time.hour * 60 + time.minute;
-}
-
-/// Compara tarefas por data (asc) + hora (asc). Sem data vai pro final.
-int _compareBySchedule(TaskModel a, TaskModel b) {
-  final ad = a.dueDate;
-  final bd = b.dueDate;
-  if (ad == null && bd == null) {
-    return _dueMinutesOf(a).compareTo(_dueMinutesOf(b));
-  }
-  if (ad == null) return 1;
-  if (bd == null) return -1;
-  final cmp = ad.compareTo(bd);
-  if (cmp != 0) return cmp;
-  return _dueMinutesOf(a).compareTo(_dueMinutesOf(b));
-}
+/// Quantas tarefas ainda pedem ação hoje.
+final pendingTasksCountProvider = Provider<int>((ref) {
+  return TaskSchedule.pendingCount(
+    ref.watch(tasksProvider),
+    ref.watch(todayProvider),
+  );
+});

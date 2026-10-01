@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/providers/core_providers.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../settings/data/settings_controller.dart';
@@ -18,9 +19,10 @@ class PomodoroScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final timer = ref.watch(pomodoroTimerProvider);
     final controller = ref.read(pomodoroTimerProvider.notifier);
+    final today = ref.watch(todayProvider);
     final pendingTasks = ref
         .watch(tasksProvider)
-        .where((t) => !t.isCompleted)
+        .where((t) => !t.isCompletedOn(today))
         .toList();
     final accent = ref.watch(accentColorProvider);
 

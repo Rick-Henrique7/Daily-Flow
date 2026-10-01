@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/providers/core_providers.dart';
 import '../../../core/utils/date_formatters.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/glass_input_field.dart';
@@ -21,7 +22,7 @@ class TasksScreen extends ConsumerWidget {
     final tasks = ref.watch(filteredTasksProvider);
     final accent = ref.watch(accentColorProvider);
 
-    final pending = ref.watch(tasksProvider).where((t) => !t.isCompleted).length;
+    final pending = ref.watch(pendingTasksCountProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -330,6 +331,8 @@ class _TaskTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dueLine = _dueLine(task);
     final accent = ref.watch(accentColorProvider);
+    // Recorrente: "feita" vale para hoje; pontual: concluída de vez.
+    final done = TaskSchedule.isDoneOn(task, ref.watch(todayProvider));
     // Mapeia prioridade para a cor — high usa accent (customizado),
     // medium usa accent escurecido, low fica muted gray.
     final Color priorityColor = switch (task.priority) {
@@ -364,22 +367,22 @@ class _TaskTile extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        decoration: task.isCompleted
+                        decoration: done
                             ? TextDecoration.lineThrough
                             : null,
-                        color: task.isCompleted
+                        color: done
                             ? AppColors.textSecondary
                             : AppColors.textPrimary,
                       ),
                     ),
                   ),
                   IconButton(
-                    tooltip: task.isCompleted ? 'Reabrir' : 'Concluir',
+                    tooltip: done ? 'Reabrir' : 'Concluir',
                     icon: Icon(
-                      task.isCompleted
+                      done
                           ? Icons.check_circle
                           : Icons.radio_button_unchecked,
-                      color: task.isCompleted
+                      color: done
                           ? accent
                           : AppColors.textTertiary,
                     ),
