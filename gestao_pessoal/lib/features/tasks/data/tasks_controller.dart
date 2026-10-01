@@ -2,18 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../core/services/sound_service.dart';
+import '../../../core/providers/core_providers.dart';
 import '../../../core/utils/json_coders.dart';
-import '../../habits/data/habits_controller.dart';
-import '../../settings/data/settings_controller.dart';
 import '../domain/subtask_model.dart';
 import '../domain/task_model.dart';
-
-/// Provider do [SoundService] que respeita a flag `soundEnabled`
-/// das configurações — quando desativado, todas as chamadas viram no-op.
-final soundServiceProvider = Provider<SoundService>((ref) {
-  return SoundService(enabled: ref.watch(settingsProvider).soundEnabled);
-});
 
 const _uuid = Uuid();
 

@@ -5,7 +5,8 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import 'app.dart';
 import 'core/database/prefs_store.dart';
-import 'features/habits/data/habits_controller.dart';
+import 'core/providers/core_providers.dart';
+import 'features/settings/data/settings_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,14 @@ Future<void> main() async {
     ProviderScope(
       overrides: [
         prefsStoreProvider.overrideWithValue(store),
+        // Liga a "porta" de feedback do core às configurações do usuário.
+        feedbackPreferencesProvider.overrideWith((ref) {
+          final s = ref.watch(settingsProvider);
+          return FeedbackPreferences(
+            haptics: s.hapticsEnabled,
+            sound: s.soundEnabled,
+          );
+        }),
       ],
       child: LiquidGlassWidgets.wrap(child: const DailyFlowApp()),
     ),

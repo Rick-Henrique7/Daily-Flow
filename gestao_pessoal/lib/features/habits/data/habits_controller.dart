@@ -2,31 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../core/database/prefs_store.dart';
-import '../../../core/services/haptics_service.dart';
-import '../../../core/services/sound_service.dart';
+import '../../../core/providers/core_providers.dart';
 import '../../../core/utils/date_formatters.dart';
 import '../../../core/utils/json_coders.dart';
-import '../../settings/data/settings_controller.dart';
 import '../domain/habit_model.dart';
-
-/// Provider do [PrefsStore] injetado pelo `main.dart`.
-final prefsStoreProvider = Provider<PrefsStore>((ref) {
-  throw UnimplementedError('PrefsStore must be overridden in main()');
-});
-
-/// Provider do [HapticsService] que respeita a flag `hapticsEnabled`
-/// das configurações — quando o usuário desativa vibração, todas as
-/// chamadas se tornam no-op.
-final hapticsServiceProvider = Provider<HapticsService>((ref) {
-  return HapticsService(enabled: ref.watch(settingsProvider).hapticsEnabled);
-});
-
-/// Provider do [SoundService] que respeita a flag `soundEnabled`
-/// das configurações.
-final soundServiceProvider = Provider<SoundService>((ref) {
-  return SoundService(enabled: ref.watch(settingsProvider).soundEnabled);
-});
 
 const _uuid = Uuid();
 

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/utils/json_coders.dart';
-import '../../habits/data/habits_controller.dart';
+import '../../../core/providers/core_providers.dart';
 import '../data/pomodoro_session_model.dart';
 
 const _uuid = Uuid();
