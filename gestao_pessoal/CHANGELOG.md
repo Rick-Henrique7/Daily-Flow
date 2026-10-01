@@ -28,6 +28,13 @@ e este projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Regras de negócio puras: `TaskSchedule`, `HabitStreak`, `HabitCalendar`, `StatsCalculator`.
 - 35 testes unitários.
 
+### Qualidade
+- Integração contínua no GitHub Actions: análise estática e testes a cada push e pull request.
+- 4 testes de widget do app real (tela Hoje, estado vazio, abas de Tarefas, Configurações).
+- Lints extras no `analysis_options.yaml`.
+- Números grandes da tela Hoje e de Hábitos encolhem em telas estreitas ou com fonte aumentada.
+- APK removido do controle de versão.
+
 ### Documentação
 - `docs/`: arquitetura, ADRs, ciclo de vida, estratégia de testes e registro
   da etapa 1, com diagramas (SVG e Mermaid).

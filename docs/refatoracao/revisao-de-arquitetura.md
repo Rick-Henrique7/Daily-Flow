@@ -19,6 +19,6 @@ Diagnóstico feito antes da etapa 1, comparando o código com SOLID e Clean Code
 | 3 | Providers de infraestrutura dentro de `habits`; ciclo `settings ↔ habits`; provider duplicado | Acoplamento | 1 ✅ |
 | 4 | Recorrentes com um único "concluída"; sequência gravada e desatualizada | Modelagem de domínio | 1 ✅ |
 | 5 | Timer por decremento (atrasa e para em segundo plano); histórico não reativo; dependências não usadas | Corretude | 1 (histórico) ✅ · 3 |
-| 6 | Nenhum teste real; lints padrão | Qualidade | 1 (unitários) ✅ · 2 |
+| 6 | Nenhum teste real; lints padrão | Qualidade | 1 (unitários) ✅ · 2 (widget, lints, CI) ✅ |
 | 7 | Arquivos de 900–1.250 linhas; código duplicado; `AppColors` global mutável | Clean Code | 3 |
-| 8 | APK versionado no git; docs desatualizados; sem CI | Processo | 2 · 4 |
+| 8 | APK versionado no git; docs desatualizados; sem CI | Processo | 2 (APK fora do git, CI) ✅ · 4 |

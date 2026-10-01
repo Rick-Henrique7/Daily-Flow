@@ -103,8 +103,8 @@ em "Fazendo" quando:
 - se mexe na arquitetura, há um ADR proposto.
 
 **Pronto** (Definition of Done) — uma mudança só vai para a `main` quando:
-- [ ] `flutter analyze` sem erros;
-- [ ] `flutter test` passando, com teste novo para regra nova ou bug corrigido;
+- [ ] CI verde (`flutter analyze` sem erros/avisos e `flutter test` passando);
+- [ ] teste novo para regra nova ou bug corrigido;
 - [ ] testada no aparelho nos dois estilos visuais (Editorial e Liquid Glass);
 - [ ] commits no padrão, diff revisado;
 - [ ] documentação afetada atualizada (ADR, arquitetura, CHANGELOG).
@@ -128,6 +128,7 @@ em "Fazendo" quando:
 | Framework | Flutter (Dart 3) |
 | Estado | Riverpod |
 | Testes | `flutter_test` |
+| Integração contínua | GitHub Actions ([`ci.yml`](../../.github/workflows/ci.yml)) |
 | Análise estática | `flutter analyze` + `flutter_lints` |
 | Diagramas | Mermaid (renderizado pelo GitHub) e SVG em `docs/assets/` |
 | Publicação | Google Play Console |

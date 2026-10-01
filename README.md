@@ -19,6 +19,7 @@
 
 <!-- =========================== BADGES ============================ -->
 
+[![CI](https://github.com/Rick-Henrique7/Daily-Flow/actions/workflows/ci.yml/badge.svg)](https://github.com/Rick-Henrique7/Daily-Flow/actions/workflows/ci.yml)
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.11+-0175C2?logo=dart&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platforms-Android%20%7C%20Web-FF6F61)
