@@ -106,11 +106,14 @@ class TasksScreen extends ConsumerWidget {
                 ),
               ),
             )
-          : ReorderableListView.builder(
+          // Lista simples: a ordem vem do agendamento (data + hora). O
+          // ReorderableListView antigo mostrava a alça "=" no desktop/web
+          // e o arrastar não funcionava de verdade — a lista é re-ordenada
+          // por data a cada build e os índices da aba filtrada não batiam
+          // com os da lista completa.
+          : ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
               itemCount: tasks.length,
-              onReorder: (oldI, newI) =>
-                  ref.read(tasksProvider.notifier).reorder(oldI, newI),
               itemBuilder: (context, index) {
                 final task = tasks[index];
                 return Padding(
