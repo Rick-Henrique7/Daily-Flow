@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/settings/data/settings_controller.dart';
 import 'animated_background.dart';
 import 'glass_nav_bar.dart';
 
 /// Shell padrão para todas as telas do app.
 ///
 /// Empilha:
-/// 1. `AnimatedBackground` (gradientes difusos em loop)
+/// 1. `AnimatedBackground` (composição editorial ou blobs do glass)
 /// 2. Conteúdo da rota atual
-/// 3. `GlassNavBar` no rodapé (3D com Liquid Glass)
-class AppShell extends StatelessWidget {
+/// 3. `GlassNavBar` flutuante no rodapé
+class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.child, required this.location});
   final Widget child;
   final String location;
 
   static const _items = [
     GlassNavItem(
-      icon: Icons.dashboard_outlined,
-      activeIcon: Icons.dashboard,
+      icon: Icons.wb_sunny_outlined,
+      activeIcon: Icons.wb_sunny,
       label: 'Hoje',
       route: '/',
     ),
@@ -48,19 +50,34 @@ class AppShell extends StatelessWidget {
     ),
   ];
 
+  /// Índice usado pelo fundo editorial para escolher a composição.
+  int get _routeIndex {
+    for (var i = 0; i < _items.length; i++) {
+      if (_items[i].route == location) return i;
+    }
+    return location == '/settings' ? 5 : 0;
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // As cores de `AppColors` são estáticas (trocadas pelo app ao mudar
+    // de estilo). A key força a reconstrução de toda a árvore da tela
+    // quando o estilo muda, para nenhum widget ficar com a paleta velha.
+    final style = ref.watch(settingsProvider.select((s) => s.style));
     return AnimatedBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        // Sem `extendBody: true` — assim o FAB respeita a nav bar 3D
-        // e fica visível acima dela. As telas usam `padding-bottom`
-        // grande pra não cortar o último conteúdo sob a nav.
-        body: child,
-        bottomNavigationBar: GlassNavBar(
-          items: _items,
-          currentRoute: location,
-          onTap: (route) => context.go(route),
+      routeIndex: _routeIndex,
+      child: KeyedSubtree(
+        key: ValueKey(style),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          // Sem `extendBody`: assim o FAB de cada tela fica acima da
+          // nav bar flutuante em vez de escondido atrás dela.
+          body: child,
+          bottomNavigationBar: GlassNavBar(
+            items: _items,
+            currentRoute: location,
+            onTap: (route) => context.go(route),
+          ),
         ),
       ),
     );

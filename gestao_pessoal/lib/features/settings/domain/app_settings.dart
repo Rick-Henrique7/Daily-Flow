@@ -1,5 +1,9 @@
 import 'dart:convert';
 
+import '../../../core/constants/app_style.dart';
+
+export '../../../core/constants/app_style.dart';
+
 /// Modo de renderização do fundo da tela.
 ///
 /// - [animated]: gradiente com blobs em loop infinito (default).
@@ -26,6 +30,7 @@ enum WallpaperMode {
 /// Persistido em `SharedPreferences` na chave [PrefsKeys.settings] como JSON.
 class AppSettings {
   const AppSettings({
+    required this.style,
     required this.wallpaperMode,
     required this.wallpaperSeed,
     required this.wallpaperSolidColor,
@@ -40,7 +45,10 @@ class AppSettings {
     required this.pomodoroLongBreakColor,
   });
 
-  /// Modo de fundo: animado (gradiente) ou sólido.
+  /// Estilo visual global (Editorial ou Liquid Glass).
+  final AppStyle style;
+
+  /// Modo de fundo do Liquid Glass: animado (gradiente) ou sólido.
   final WallpaperMode wallpaperMode;
 
   /// Cor-base dos blobs do background em HEX (ex: `#8B5CF6`).
@@ -59,14 +67,13 @@ class AppSettings {
   /// hábito, tap em botões). `false` desativa todo feedback tátil.
   final bool hapticsEnabled;
 
-  /// Cor das letras do app em HEX (ex: `#FFFFFF`). Default branco
-  /// puro (per design system). Pode ser customizada pelo usuário.
+  /// Cor das letras em HEX (ex: `#FFFFFF`). Só vale no Liquid Glass —
+  /// no editorial o texto é sempre grafite para contrastar com o creme.
   final String textColor;
 
-  /// Cor de destaque (accent) em HEX (ex: `#00E676` neon green).
-  /// Default verde neon. Substitui todas as referências que usariam
-  /// `AppColors.primary` — filtro selecionado, FAB, check button,
-  /// priority bar, item ativo da nav bar, etc.
+  /// Cor de destaque (accent) em HEX. Padrão depende do estilo: coral
+  /// (`#E4553F`) no editorial, lilás (`#A78BFA`) no Liquid Glass. Usada
+  /// no FAB, números grandes, check buttons, prioridade, aba ativa etc.
   final String accentColor;
 
   /// Se `true`, toca som de "ding" ao concluir tarefa/hábito.
@@ -82,21 +89,23 @@ class AppSettings {
   final String pomodoroLongBreakColor;
 
   static const defaults = AppSettings(
-    wallpaperMode: WallpaperMode.solid,
-    wallpaperSeed: '#00E676',
-    wallpaperSolidColor: '#0D0D0D',
+    style: AppStyle.editorial,
+    wallpaperMode: WallpaperMode.animated,
+    wallpaperSeed: '#7C5CFF',
+    wallpaperSolidColor: '#0B0D1A',
     wallpaperSaturation: 1.0,
-    blobIntensity: 0.0,
+    blobIntensity: 0.35,
     hapticsEnabled: true,
     textColor: '#FFFFFF',
-    accentColor: '#00E676',
+    accentColor: '#E4553F',
     soundEnabled: true,
-    pomodoroFocusColor: '#00E676',
-    pomodoroShortBreakColor: '#00B85A',
-    pomodoroLongBreakColor: '#1A4D2E',
+    pomodoroFocusColor: '#E4553F',
+    pomodoroShortBreakColor: '#4F8A83',
+    pomodoroLongBreakColor: '#D9A441',
   );
 
   AppSettings copyWith({
+    AppStyle? style,
     WallpaperMode? wallpaperMode,
     String? wallpaperSeed,
     String? wallpaperSolidColor,
@@ -111,6 +120,7 @@ class AppSettings {
     String? pomodoroLongBreakColor,
   }) {
     return AppSettings(
+      style: style ?? this.style,
       wallpaperMode: wallpaperMode ?? this.wallpaperMode,
       wallpaperSeed: wallpaperSeed ?? this.wallpaperSeed,
       wallpaperSolidColor: wallpaperSolidColor ?? this.wallpaperSolidColor,
@@ -129,6 +139,7 @@ class AppSettings {
   }
 
   Map<String, dynamic> toJson() => {
+        'style': style.name,
         'wallpaperMode': wallpaperMode.name,
         'wallpaperSeed': wallpaperSeed,
         'wallpaperSolidColor': wallpaperSolidColor,
@@ -144,29 +155,53 @@ class AppSettings {
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
+    const d = AppSettings.defaults;
     final modeName = json['wallpaperMode'] as String?;
     final mode = WallpaperMode.values.firstWhere(
       (m) => m.name == modeName,
-      orElse: () => WallpaperMode.animated,
+      orElse: () => d.wallpaperMode,
     );
+    final styleName = json['style'] as String?;
+    final style = AppStyle.values.firstWhere(
+      (s) => s.name == styleName,
+      orElse: () => AppStyle.editorial,
+    );
+
+    // Migração do visual antigo "Dark/Green": cores que eram o padrão
+    // antigo viram o novo padrão (quem personalizou mantém a escolha).
+    String migrate(String? value, List<String> oldDefaults, String fallback) {
+      if (value == null) return fallback;
+      return oldDefaults.contains(value.toUpperCase()) ? fallback : value;
+    }
+
+    final isLegacy = styleName == null;
     return AppSettings(
+      style: style,
       wallpaperMode: mode,
-      wallpaperSeed: json['wallpaperSeed'] as String? ?? '#8B5CF6',
-      wallpaperSolidColor:
-          json['wallpaperSolidColor'] as String? ?? '#0F172A',
+      wallpaperSeed: migrate(json['wallpaperSeed'] as String?,
+          isLegacy ? ['#00E676', '#8B5CF6'] : [], d.wallpaperSeed),
+      wallpaperSolidColor: migrate(json['wallpaperSolidColor'] as String?,
+          isLegacy ? ['#0D0D0D', '#0F172A'] : [], d.wallpaperSolidColor),
       wallpaperSaturation:
           (json['wallpaperSaturation'] as num?)?.toDouble() ?? 1.0,
-      blobIntensity: (json['blobIntensity'] as num?)?.toDouble() ?? 0.35,
+      blobIntensity: isLegacy
+          ? d.blobIntensity
+          : (json['blobIntensity'] as num?)?.toDouble() ?? d.blobIntensity,
       hapticsEnabled: json['hapticsEnabled'] as bool? ?? true,
       soundEnabled: json['soundEnabled'] as bool? ?? true,
-      textColor: json['textColor'] as String? ?? '#FFFFFF',
-      accentColor: json['accentColor'] as String? ?? '#00E676',
-      pomodoroFocusColor:
-          json['pomodoroFocusColor'] as String? ?? '#F43F5E',
-      pomodoroShortBreakColor:
-          json['pomodoroShortBreakColor'] as String? ?? '#06B6D4',
-      pomodoroLongBreakColor:
-          json['pomodoroLongBreakColor'] as String? ?? '#34D399',
+      textColor: json['textColor'] as String? ?? d.textColor,
+      accentColor: migrate(json['accentColor'] as String?,
+          isLegacy ? ['#00E676'] : [], style.defaultAccentHex),
+      pomodoroFocusColor: migrate(json['pomodoroFocusColor'] as String?,
+          isLegacy ? ['#00E676', '#F43F5E'] : [], d.pomodoroFocusColor),
+      pomodoroShortBreakColor: migrate(
+          json['pomodoroShortBreakColor'] as String?,
+          isLegacy ? ['#00B85A', '#06B6D4'] : [],
+          d.pomodoroShortBreakColor),
+      pomodoroLongBreakColor: migrate(
+          json['pomodoroLongBreakColor'] as String?,
+          isLegacy ? ['#1A4D2E', '#34D399'] : [],
+          d.pomodoroLongBreakColor),
     );
   }
 

@@ -68,3 +68,21 @@ flutter:
 
   assets:
     - assets/sounds/success.mp3
+
+  # Jost — fonte geométrica do estilo Editorial (embutida, funciona
+  # offline e sem atraso de download). Licença OFL em assets/fonts/OFL.txt.
+  fonts:
+    - family: Jost
+      fonts:
+        - asset: assets/fonts/Jost-200-Thin.ttf
+          weight: 200
+        - asset: assets/fonts/Jost-300-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Jost-400-Book.ttf
+          weight: 400
+        - asset: assets/fonts/Jost-500-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Jost-600-Semi.ttf
+          weight: 600
+        - asset: assets/fonts/Jost-700-Bold.ttf
+          weight: 700

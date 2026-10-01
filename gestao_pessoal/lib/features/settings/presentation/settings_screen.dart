@@ -1,10 +1,11 @@
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_theme.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
+import '../../../core/widgets/screen_header.dart';
 import '../data/settings_controller.dart';
 import '../domain/app_settings.dart';
 
@@ -55,26 +56,51 @@ class SettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
     final seedColor = _hexToColor(settings.wallpaperSeed);
+    final glass = settings.style.isGlass;
 
-    return Theme(
-      data: AppTheme.dark,
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const Text('Configurações'),
-          iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      body: SafeArea(
+        bottom: false,
+        child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
         children: [
-          const _SectionHeader('Aparência'),
+          ScreenHeader(
+            eyebrow: 'Ajuste do seu jeito',
+            title: 'Configurações',
+            onBack: () => context.go('/'),
+            padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
+          ),
+          const _SectionHeader('Estilo visual'),
+          Row(
+            children: [
+              for (final style in AppStyle.values) ...[
+                if (style != AppStyle.values.first) const SizedBox(width: 12),
+                Expanded(
+                  child: _StylePreview(
+                    style: style,
+                    selected: settings.style == style,
+                    onTap: () => notifier.updateStyle(style),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            settings.style.description,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
+
+          if (glass) ...[
+          const _SectionHeader('Fundo'),
           // Modo do fundo (animado / sólido)
           LiquidGlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Estilo do Fundo',
+                Text(
+                  'Estilo do fundo',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -83,7 +109,7 @@ class SettingsScreen extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   settings.wallpaperMode.description,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
@@ -117,15 +143,15 @@ class SettingsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Cor do Papel de Parede',
+                  Text(
+                    'Cor do papel de parede',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Define a cor-base dos blobs animados no fundo.',
                     style: TextStyle(
                       color: AppColors.textSecondary,
@@ -154,7 +180,7 @@ class SettingsScreen extends ConsumerWidget {
                           children: [
                             Text(
                               settings.wallpaperSeed,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -187,8 +213,8 @@ class SettingsScreen extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Intensidade dos Blobs',
+                      Text(
+                        'Intensidade dos blobs',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
@@ -196,7 +222,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       Text(
                         '${(settings.blobIntensity * 100).round()}%',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -218,15 +244,15 @@ class SettingsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Cor do Fundo',
+                  Text(
+                    'Cor do fundo',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Escolha uma cor única sólida para todo o fundo da tela.',
                     style: TextStyle(
                       color: AppColors.textSecondary,
@@ -255,7 +281,7 @@ class SettingsScreen extends ConsumerWidget {
                           children: [
                             Text(
                               settings.wallpaperSolidColor,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -287,20 +313,20 @@ class SettingsScreen extends ConsumerWidget {
           ],
           const SizedBox(height: 12),
 
-          // === Cor do texto (customizada pelo usuário) ===
+          // === Cor do texto (só no Liquid Glass) ===
           LiquidGlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Cor do Texto',
+                Text(
+                  'Cor do texto',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'Personaliza a cor das letras do app inteiro.',
                   style: TextStyle(
                     color: AppColors.textSecondary,
@@ -329,7 +355,7 @@ class SettingsScreen extends ConsumerWidget {
                         children: [
                           Text(
                             settings.textColor,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w500,
                             ),
@@ -369,9 +395,9 @@ class SettingsScreen extends ConsumerWidget {
                         );
                       }
                     },
-                    icon: const Icon(Icons.restart_alt,
+                    icon: Icon(Icons.restart_alt,
                         color: AppColors.textSecondary, size: 18),
-                    label: const Text(
+                    label: Text(
                       'Restaurar padrão',
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
@@ -380,24 +406,25 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          ],
+          const _SectionHeader('Cores'),
 
           // === Cor de destaque (accent) — customizada pelo usuário ===
           LiquidGlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Cor de Destaque',
+                Text(
+                  'Cor de destaque',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Cor neon usada em FAB, filtros, prioridade alta, '
-                  'check buttons, item ativo da nav bar, switches, sliders.',
+                Text(
+                  'Usada no botão +, números grandes, prioridade alta, '
+                  'conclusões, aba ativa e formas do fundo.',
                   style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
@@ -425,7 +452,7 @@ class SettingsScreen extends ConsumerWidget {
                         children: [
                           Text(
                             settings.accentColor,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w500,
                             ),
@@ -465,9 +492,9 @@ class SettingsScreen extends ConsumerWidget {
                         );
                       }
                     },
-                    icon: const Icon(Icons.restart_alt,
+                    icon: Icon(Icons.restart_alt,
                         color: AppColors.textSecondary, size: 18),
-                    label: const Text(
+                    label: Text(
                       'Restaurar padrão',
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
@@ -476,8 +503,6 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 24),
-
           const _SectionHeader('Geral'),
           LiquidGlassCard(
             child: Column(
@@ -485,27 +510,27 @@ class SettingsScreen extends ConsumerWidget {
                 SwitchListTile.adaptive(
                   value: settings.hapticsEnabled,
                   onChanged: notifier.updateHapticsEnabled,
-                  title: const Text(
+                  title: Text(
                     'Vibração ao tocar',
                     style: TextStyle(color: AppColors.textPrimary),
                   ),
-                  subtitle: const Text(
+                  subtitle: Text(
                     'Feedback tátil em cliques e conclusões de tarefa/hábito',
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ),
-                const Divider(
+                Divider(
                   height: 1,
                   color: AppColors.glassBorder,
                 ),
                 SwitchListTile.adaptive(
                   value: settings.soundEnabled,
                   onChanged: notifier.updateSoundEnabled,
-                  title: const Text(
+                  title: Text(
                     'Som de conclusão',
                     style: TextStyle(color: AppColors.textPrimary),
                   ),
-                  subtitle: const Text(
+                  subtitle: Text(
                     'Toca um "ding" ao concluir uma tarefa ou hábito',
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
@@ -513,22 +538,20 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-
-          const _SectionHeader('Timer de Foco'),
+          const _SectionHeader('Timer de foco'),
           LiquidGlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Cores do Ciclo Pomodoro',
+                Text(
+                  'Cores do ciclo Pomodoro',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'Toque para personalizar o anel de cada modo.',
                   style: TextStyle(
                     color: AppColors.textSecondary,
@@ -548,7 +571,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 _ColorRow(
-                  label: 'Pausa Curta',
+                  label: 'Pausa curta',
                   color: settings.pomodoroShortBreakColor,
                   onTap: () => _openColorPickerForField(
                     context,
@@ -559,7 +582,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 _ColorRow(
-                  label: 'Pausa Longa',
+                  label: 'Pausa longa',
                   color: settings.pomodoroLongBreakColor,
                   onTap: () => _openColorPickerForField(
                     context,
@@ -586,8 +609,8 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 }
               },
-              icon: const Icon(Icons.restart_alt, color: AppColors.textSecondary),
-              label: const Text(
+              icon: Icon(Icons.restart_alt, color: AppColors.textSecondary),
+              label: Text(
                 'Restaurar padrões',
                 style: TextStyle(color: AppColors.textSecondary),
               ),
@@ -598,6 +621,195 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Miniatura clicável de um estilo visual (Editorial / Liquid Glass).
+class _StylePreview extends StatelessWidget {
+  const _StylePreview({
+    required this.style,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final AppStyle style;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = AppPalette.of(style);
+    final accent = Color(
+      int.parse('FF${style.defaultAccentHex.replaceAll('#', '')}', radix: 16),
+    );
+    final t = Theme.of(context).textTheme;
+    final ring = selected
+        ? Theme.of(context).colorScheme.primary
+        : AppColors.border;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: 'Estilo ${style.label}',
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: ring, width: selected ? 2 : 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: AspectRatio(
+                  aspectRatio: 0.82,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: ColoredBox(color: p.background)),
+                      if (style.isGlass) ...[
+                        Positioned(
+                          left: -30,
+                          top: -20,
+                          child: _Blob(color: accent, size: 120),
+                        ),
+                        Positioned(
+                          right: -40,
+                          bottom: -10,
+                          child: _Blob(
+                            color: const Color(0xFF38BDF8),
+                            size: 120,
+                          ),
+                        ),
+                      ] else ...[
+                        Positioned(
+                          right: -36,
+                          top: -30,
+                          child: _Disc(color: accent, size: 110),
+                        ),
+                        Positioned(
+                          left: -24,
+                          bottom: -24,
+                          child: _Disc(color: accent, size: 64),
+                        ),
+                      ],
+                      // Mini "card" com linhas de texto
+                      Positioned(
+                        left: 12,
+                        right: 12,
+                        bottom: 14,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: style.isGlass
+                                ? Colors.white.withValues(alpha: 0.14)
+                                : p.panel,
+                            borderRadius: BorderRadius.circular(12),
+                            border: style.isGlass
+                                ? Border.all(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                  )
+                                : null,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '07',
+                                style: TextStyle(
+                                  color: accent,
+                                  fontSize: 26,
+                                  height: 1,
+                                  fontWeight: style.isGlass
+                                      ? FontWeight.w700
+                                      : FontWeight.w300,
+                                  fontFamily: style.isGlass ? null : 'Jost',
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              for (final w in const [0.9, 0.6])
+                                FractionallySizedBox(
+                                  widthFactor: w,
+                                  child: Container(
+                                    height: 4,
+                                    margin: const EdgeInsets.only(bottom: 4),
+                                    decoration: BoxDecoration(
+                                      color: p.onPanel.withValues(alpha: 0.6),
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 10, 8, 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        style.label,
+                        style: t.titleSmall?.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: selected ? 1 : 0,
+                      child: Icon(
+                        Icons.check_circle,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Disc extends StatelessWidget {
+  const _Disc({required this.color, required this.size});
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      );
+}
+
+class _Blob extends StatelessWidget {
+  const _Blob({required this.color, required this.size});
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [color.withValues(alpha: 0.75), color.withValues(alpha: 0)],
+          ),
+        ),
+      );
 }
 
 class _ColorRow extends StatelessWidget {
@@ -640,13 +852,13 @@ class _ColorRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            const Icon(Icons.tune, color: AppColors.textTertiary, size: 18),
+            Icon(Icons.tune, color: AppColors.textTertiary, size: 18),
           ],
         ),
       ),
@@ -661,15 +873,12 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 16, 4, 12),
+      padding: const EdgeInsets.fromLTRB(4, 28, 4, 12),
       child: Text(
-        title.toUpperCase(),
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 2,
-          color: AppColors.textSecondary,
-        ),
+        title,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppColors.textPrimary,
+            ),
       ),
     );
   }
@@ -702,7 +911,7 @@ class _PickerDialogState extends State<_PickerDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Escolha uma cor',
               style: TextStyle(
                 fontWeight: FontWeight.w600,

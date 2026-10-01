@@ -41,11 +41,11 @@ class PomodoroTimerView extends ConsumerWidget {
   String get _label {
     switch (state.type) {
       case PomodoroType.focus:
-        return 'FOCO';
+        return AppColors.isGlass ? 'FOCO' : 'Foco';
       case PomodoroType.shortBreak:
-        return 'PAUSA CURTA';
+        return AppColors.isGlass ? 'PAUSA CURTA' : 'Pausa curta';
       case PomodoroType.longBreak:
-        return 'PAUSA LONGA';
+        return AppColors.isGlass ? 'PAUSA LONGA' : 'Pausa longa';
     }
   }
 
@@ -58,20 +58,23 @@ class PomodoroTimerView extends ConsumerWidget {
       settings.pomodoroLongBreakColor,
     );
 
-    // Herda DM Sans já cacheado pelo tema (AppTheme.darkWith usa
+    // Herda a fonte do tema (Jost embutida no editorial; DM Sans no glass, via
     // GoogleFonts.dmSans). Antes este widget usava GoogleFonts.spaceGrotesk
     // / GoogleFonts.inter, que disparavam download sob demanda da CDN do
     // Google Fonts (fonts.gstatic.com) na primeira vez que o usuário
     // entrava na aba Foco — gerava um delay visível de 1–3s.
     final theme = Theme.of(context);
-    final labelStyle = theme.textTheme.labelLarge!.copyWith(
-      fontWeight: FontWeight.w700,
-      letterSpacing: 3,
-      color: accent,
-    );
+    final glass = AppColors.isGlass;
+    final labelStyle = glass
+        ? theme.textTheme.labelLarge!.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 3,
+            color: accent,
+          )
+        : theme.textTheme.titleMedium!.copyWith(color: accent);
     final timerStyle = theme.textTheme.displayLarge!.copyWith(
       fontSize: 76,
-      fontWeight: FontWeight.w300,
+      fontWeight: glass ? FontWeight.w300 : FontWeight.w200,
       letterSpacing: -2,
       height: 1.0,
       fontFeatures: const [FontFeature.tabularFigures()],
@@ -97,6 +100,10 @@ class PomodoroTimerView extends ConsumerWidget {
                   painter: _TimerPainter(
                     progress: state.progress,
                     color: accent,
+                    track: glass
+                        ? AppColors.surfaceElevated
+                        : AppColors.textPrimary.withValues(alpha: 0.35),
+                    editorial: !glass,
                   ),
                 ),
               ),
@@ -133,10 +140,20 @@ class PomodoroTimerView extends ConsumerWidget {
 }
 
 class _TimerPainter extends CustomPainter {
-  _TimerPainter({required this.progress, required this.color});
+  _TimerPainter({
+    required this.progress,
+    required this.color,
+    required this.track,
+    required this.editorial,
+  });
 
   final double progress;
   final Color color;
+  final Color track;
+
+  /// Editorial: trilho de 1px + arco sólido fino com ponto na ponta.
+  /// Glass: trilho grosso + arco com gradiente.
+  final bool editorial;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -144,12 +161,43 @@ class _TimerPainter extends CustomPainter {
     final radius = math.min(size.width, size.height) / 2 - 14;
     final rect = Rect.fromCircle(center: center, radius: radius);
 
+    if (editorial) {
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..color = track
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2,
+      );
+      final sweep = 2 * math.pi * progress;
+      canvas.drawArc(
+        rect,
+        -math.pi / 2,
+        sweep,
+        false,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 6
+          ..strokeCap = StrokeCap.round,
+      );
+      // Ponto na ponta do arco — marca o "agora".
+      final angle = -math.pi / 2 + sweep;
+      canvas.drawCircle(
+        center + Offset(math.cos(angle), math.sin(angle)) * radius,
+        9,
+        Paint()..color = color,
+      );
+      return;
+    }
+
     // Track
-    final track = Paint()
-      ..color = AppColors.surfaceElevated
+    final trackPaint = Paint()
+      ..color = track
       ..style = PaintingStyle.stroke
       ..strokeWidth = 12;
-    canvas.drawCircle(center, radius, track);
+    canvas.drawCircle(center, radius, trackPaint);
 
     // Progress
     final shader = SweepGradient(
@@ -168,5 +216,8 @@ class _TimerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _TimerPainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.color != color;
+      oldDelegate.progress != progress ||
+      oldDelegate.color != color ||
+      oldDelegate.track != track ||
+      oldDelegate.editorial != editorial;
 }

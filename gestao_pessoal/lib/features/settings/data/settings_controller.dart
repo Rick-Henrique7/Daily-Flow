@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../habits/data/habits_controller.dart';
+import '../../../core/constants/app_colors.dart';
 import '../domain/app_settings.dart';
 
 /// Notifier que mantém as configurações do app em memória e persiste
@@ -16,6 +17,25 @@ class SettingsNotifier extends Notifier<AppSettings> {
   Future<void> _persist() async {
     final store = ref.read(prefsStoreProvider);
     await store.setSettings(state.toJsonString());
+  }
+
+  /// Troca o estilo visual. Ao trocar, a cor de destaque volta para o
+  /// padrão do novo estilo (coral no editorial, lilás no glass) — uma
+  /// cor escolhida para fundo escuro raramente funciona no creme.
+  Future<void> updateStyle(AppStyle style) async {
+    if (style == state.style) return;
+    var next = state.copyWith(
+      style: style,
+      accentColor: style.defaultAccentHex,
+    );
+    if (style.isGlass && next.blobIntensity < 0.1) {
+      next = next.copyWith(
+        blobIntensity: AppSettings.defaults.blobIntensity,
+        wallpaperMode: WallpaperMode.animated,
+      );
+    }
+    state = next;
+    await _persist();
   }
 
   Future<void> updateWallpaperSeed(String hex) async {
@@ -69,9 +89,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
     await _persist();
   }
 
-  /// Restaura a cor de destaque para o default (`#00E676` neon green).
+  /// Restaura a cor de destaque para o padrão do estilo atual.
   Future<void> resetAccentColor() async {
-    state = state.copyWith(accentColor: AppSettings.defaults.accentColor);
+    state = state.copyWith(accentColor: state.style.defaultAccentHex);
     await _persist();
   }
 
@@ -91,7 +111,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
   }
 
   Future<void> resetDefaults() async {
-    state = AppSettings.defaults;
+    // Mantém o estilo escolhido; restaura o resto.
+    final style = state.style;
+    state = AppSettings.defaults.copyWith(
+      style: style,
+      accentColor: style.defaultAccentHex,
+    );
     await _persist();
   }
 }
@@ -120,7 +145,10 @@ final accentColorProvider = Provider<Color>((ref) {
 ///   secundário (subtítulos, labels) — preserva hierarquia visual
 ///   mantendo coerência com a cor escolhida.
 final textColorProvider = Provider<Color>((ref) {
-  final hex = ref.watch(settingsProvider).textColor;
+  final settings = ref.watch(settingsProvider);
+  // No editorial o texto é sempre tinta grafite (contraste no creme).
+  if (!settings.style.isGlass) return AppPalette.editorial.textPrimary;
+  final hex = settings.textColor;
   final clean = hex.replaceAll('#', '');
   return Color(int.parse('FF$clean', radix: 16));
 });

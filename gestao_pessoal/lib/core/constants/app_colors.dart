@@ -1,102 +1,143 @@
 import 'package:flutter/material.dart';
 
-/// Paleta de cores do Daily Flow.
+import 'app_style.dart';
+
+/// Paleta de cores de um estilo visual.
+@immutable
+class AppPalette {
+  const AppPalette({
+    required this.background,
+    required this.surface,
+    required this.surface2,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textTertiary,
+    required this.border,
+    required this.panel,
+    required this.onPanel,
+    required this.onPanelMuted,
+    required this.decoration,
+    required this.isDark,
+  });
+
+  /// Fundo da tela.
+  final Color background;
+
+  /// Superfície padrão de cards.
+  final Color surface;
+
+  /// Superfície elevada (chips, campos, trilhas de progresso).
+  final Color surface2;
+
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textTertiary;
+
+  /// Linhas finas, bordas e divisores.
+  final Color border;
+
+  /// Painel de destaque (grafite no editorial, vidro forte no glass).
+  final Color panel;
+  final Color onPanel;
+  final Color onPanelMuted;
+
+  /// Cor do traço das formas decorativas (círculos, hachuras).
+  final Color decoration;
+
+  final bool isDark;
+
+  /// Editorial — papel creme, tinta grafite, painéis escuros.
+  static const editorial = AppPalette(
+    background: Color(0xFFEDE5D8),
+    surface: Color(0xFFF6F0E6),
+    surface2: Color(0xFFE3D9CA),
+    textPrimary: Color(0xFF2E2D2B),
+    textSecondary: Color(0xFF6E685F),
+    textTertiary: Color(0xFF9C958A),
+    border: Color(0xFFD3C8B8),
+    panel: Color(0xFF3B3A39),
+    onPanel: Color(0xFFF2EBE0),
+    onPanelMuted: Color(0xFFB5AEA3),
+    decoration: Color(0xFF2E2D2B),
+    isDark: false,
+  );
+
+  /// Liquid Glass — noite azulada com vidro translúcido.
+  static const liquidGlass = AppPalette(
+    background: Color(0xFF0B0D1A),
+    surface: Color(0x1AFFFFFF),
+    surface2: Color(0x24FFFFFF),
+    textPrimary: Color(0xFFFFFFFF),
+    textSecondary: Color(0xFFBFC3DD),
+    textTertiary: Color(0xFF8E93B5),
+    border: Color(0x33FFFFFF),
+    panel: Color(0x2EFFFFFF),
+    onPanel: Color(0xFFFFFFFF),
+    onPanelMuted: Color(0xFFBFC3DD),
+    decoration: Color(0xFFFFFFFF),
+    isDark: true,
+  );
+
+  static AppPalette of(AppStyle style) => switch (style) {
+        AppStyle.editorial => editorial,
+        AppStyle.liquidGlass => liquidGlass,
+      };
+}
+
+/// Tokens de cor e espaçamento do Daily Flow.
 ///
-/// Baseada no design system "Financial App — Dark/Green":
-/// - Background quase-preto (#0D0D0D) — nunca puro
-/// - Accent único neon green (#00E676) — usado com parcimônia
-/// - Borders low-contrast (#1E1E1E) — estrutura via profundidade, não linhas
-/// - Sem gradientes entre hues — apenas opacity fades
-/// - Sem drop shadows
+/// As cores dependem do [AppStyle] ativo e são trocadas por
+/// [AppColors.use] (chamado pelo `DailyFlowApp` a cada build). Por isso
+/// são *getters* e não `const` — não use `AppColors.<cor>` dentro de
+/// expressões `const`.
 class AppColors {
   AppColors._();
 
-  // === Tokens base (do design system) ===
-  static const Color background = Color(0xFF0D0D0D);
-  static const Color surface = Color(0xFF141414);
-  static const Color surface2 = Color(0xFF1C1C1C);
+  static AppStyle _style = AppStyle.editorial;
+  static AppPalette _p = AppPalette.editorial;
 
-  /// Texto primário / foreground
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  // textSecondary e textTertiary clareados: os valores antigos (#7A7A7A
-  // e #525252) falhavam WCAG AA contra o fundo dark e sumiam nos
-  // gradientes coloridos do AnimatedBackground. Os novos (~9:1 e ~6:1
-  // de contraste) preservam a hierarquia primary > secondary > tertiary
-  // mas ficam legíveis em qualquer wallpaper do app.
-  static const Color textSecondary = Color(0xFFB0B0B0);
-  static const Color textTertiary = Color(0xFF8A8A8A);
+  /// Ativa a paleta do [style]. Seguro chamar a cada build.
+  static void use(AppStyle style) {
+    _style = style;
+    _p = AppPalette.of(style);
+  }
 
-  /// Accent único (neon green) — usar com parcimônia
-  static const Color primary = Color(0xFF00E676);
-  static const Color primaryMuted = Color(0xFF1A3D2B);
-  static const Color accentDim = Color(0xFF00B85A);
+  static AppStyle get style => _style;
+  static bool get isGlass => _style == AppStyle.liquidGlass;
+  static AppPalette get palette => _p;
 
-  /// Border low-contrast (1px)
-  static const Color border = Color(0xFF1E1E1E);
+  // === Superfícies ===
+  static Color get background => _p.background;
+  static Color get surface => _p.surface;
+  static Color get surface2 => _p.surface2;
+  static Color get surfaceElevated => _p.surface2;
 
-  /// Chart bars
-  static const Color chartBar1 = Color(0xFF0D2B1A);
-  static const Color chartBar2 = Color(0xFF1A4D2E);
+  // === Texto ===
+  static Color get textPrimary => _p.textPrimary;
+  static Color get textSecondary => _p.textSecondary;
+  static Color get textTertiary => _p.textTertiary;
 
-  // === Aliases de compatibilidade com código existente ===
-  // (mantidos até refactor completo das telas)
-  static const Color surfaceElevated = surface2;
-  static const Color glassBorder = border;
-  static const Color success = primary;
+  // === Linhas ===
+  static Color get border => _p.border;
+  static Color get glassBorder => _p.border;
 
-  /// Primary color era chamado `purpleFluidStart` — agora aponta pra
-  /// neon green (single accent).
-  static const Color purpleFluidStart = primary;
-  static const Color purpleFluidEnd = primary;
+  // === Painel de destaque ===
+  static Color get panel => _p.panel;
+  static Color get onPanel => _p.onPanel;
+  static Color get onPanelMuted => _p.onPanelMuted;
+  static Color get decoration => _p.decoration;
 
-  /// `cyanWaterStart` apontava para ciano — agora accent-dim.
-  static const Color cyanWaterStart = accentDim;
-  static const Color cyanWaterEnd = accentDim;
+  /// Véu translúcido no sentido do texto (escurece no claro, clareia
+  /// no escuro). Substitui `Colors.white.withValues(alpha: x)`, que
+  /// some no estilo editorial.
+  static Color veil(double alpha) =>
+      _p.textPrimary.withValues(alpha: alpha);
 
-  /// `pinkIridescentStart` apontava para rosa — agora primary-muted.
-  static const Color pinkIridescentStart = primaryMuted;
-  static const Color pinkIridescentMid = primaryMuted;
-  static const Color pinkIridescentEnd = primaryMuted;
+  /// Texto legível sobre uma cor sólida qualquer (ex.: accent).
+  static Color onColor(Color c) =>
+      c.computeLuminance() > 0.55 ? const Color(0xFF2E2D2B) : Colors.white;
 
-  // === Estados funcionais (sem red/orange — spec) ===
-  static const Color warning = Color(0xFFB0B0B0); // muted gray
-  static const Color danger = Color(0xFF6E6E6E); // muted gray
-  static const Color info = primaryMuted;
-
-  // === Prioridade de tarefas (escala verde→cinza) ===
-  static const Color priorityHigh = primary;
-  static const Color priorityMedium = accentDim;
-  static const Color priorityLow = textSecondary;
-
-  // === Vidro (não usado no novo design, mantido p/ compat) ===
-  static const Color glassFill = Color(0x00000000); // transparente
-  static const Color glassFillStrong = Color(0x00000000);
-  static const Color glassShadow = Color(0x00000000);
-
-  // === Gradientes (apenas opacity fades — spec) ===
-  /// Gradiente "primary" — fade de opacity (sem mudar de hue).
-  static const LinearGradient purpleFluid = LinearGradient(
-    colors: [Color(0xFF00E676), Color(0xFF00B85A)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  /// "cyanWater" — mesmo hue, opacity fade.
-  static const LinearGradient cyanWater = LinearGradient(
-    colors: [Color(0xFF00B85A), Color(0xFF1A3D2B)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  /// "pinkIridescent" — descontinuado (sem segundo hue no design system).
-  /// Mantido como fallback apontando para tons verdes.
-  static const LinearGradient pinkIridescent = LinearGradient(
-    colors: [Color(0xFF1A3D2B), Color(0xFF0D2B1A)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  // === Spacing scale (4px base unit — design system) ===
+  // === Spacing scale (4px base) ===
   static const double space1 = 4;
   static const double space2 = 8;
   static const double space3 = 12;
@@ -106,7 +147,7 @@ class AppColors {
   static const double space8 = 32;
   static const double space10 = 40;
 
-  // === Border radius scale (design system) ===
+  // === Border radius scale ===
   static const double radiusSm = 8;
   static const double radiusMd = 16;
   static const double radiusLg = 24;

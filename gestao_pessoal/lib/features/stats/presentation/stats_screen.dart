@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatters.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
+import '../../../core/widgets/screen_header.dart';
 import '../../habits/data/habits_controller.dart';
 import '../../pomodoro/controllers/pomodoro_controller.dart';
 import '../../pomodoro/data/pomodoro_session_model.dart';
@@ -26,7 +27,6 @@ class StatsScreen extends ConsumerWidget {
     final habits = ref.watch(habitsProvider);
     final sessions = ref.watch(pomodoroHistoryProvider);
     final accent = ref.watch(accentColorProvider);
-    final accentDim = HSVColor.fromColor(accent).withValue(0.7).toColor();
 
     final completedTasks = tasks.where((t) => t.isCompleted).length;
     final totalMinutes = sessions
@@ -40,10 +40,17 @@ class StatsScreen extends ConsumerWidget {
     final dailyBars = _dailyBars(tasks, period);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Estatísticas')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        bottom: false,
+        child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
         children: [
+          const ScreenHeader(
+            eyebrow: 'Seu progresso',
+            title: 'Estatísticas',
+            padding: EdgeInsets.fromLTRB(4, 12, 4, 16),
+          ),
           // Filtro de período (RF-ST-01)
           SegmentedButton<StatsPeriod>(
             segments: const [
@@ -57,36 +64,53 @@ class StatsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          // KPIs
-          Row(
-            children: [
-              Expanded(
-                child: _KpiCard(
-                  label: 'Tarefas',
-                  value: '$completedTasks',
-                  icon: Icons.task_alt,
-                  color: accent,
+          // KPIs — painel com número grande + dois secundários
+          LiquidGlassCard(
+            panel: true,
+            borderRadius: 28,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tarefas concluídas',
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelLarge
+                      ?.copyWith(color: accent),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _KpiCard(
-                  label: 'Foco',
-                  value: '${totalMinutes}min',
-                  icon: Icons.bolt,
-                  color: accentDim,
+                Text(
+                  completedTasks.toString().padLeft(2, '0'),
+                  style: Theme.of(context)
+                      .textTheme
+                      .displayLarge
+                      ?.copyWith(color: accent, fontSize: 80),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _KpiCard(
-                  label: 'Streak',
-                  value: '$streak',
-                  icon: Icons.local_fire_department,
-                  color: accentDim,
+                const SizedBox(height: 12),
+                Container(
+                  height: 1,
+                  color: AppColors.onPanel.withValues(alpha: 0.15),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _KpiCard(
+                        label: 'Minutos de foco',
+                        value: '$totalMinutes',
+                        icon: Icons.timer_outlined,
+                      ),
+                    ),
+                    Expanded(
+                      child: _KpiCard(
+                        label: 'Maior sequência',
+                        value: '$streak ${streak == 1 ? 'dia' : 'dias'}',
+                        icon: Icons.local_fire_department_outlined,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -96,8 +120,8 @@ class StatsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Produtividade Diária',
+                Text(
+                  'Produtividade diária',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -121,7 +145,7 @@ class StatsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Consistência',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
@@ -134,6 +158,7 @@ class StatsScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -173,39 +198,34 @@ class _KpiCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
-    required this.color,
   });
   final String label;
   final String value;
   final IconData icon;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return LiquidGlassCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
+    final t = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.onPanelMuted, size: 20),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: t.titleLarge?.copyWith(color: AppColors.onPanel),
+              ),
+              Text(
+                label,
+                style: t.labelMedium?.copyWith(color: AppColors.onPanelMuted),
+              ),
+            ],
           ),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -248,7 +268,7 @@ class _CustomBarChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (data.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'Sem dados',
           style: TextStyle(color: AppColors.textSecondary),
@@ -274,6 +294,9 @@ class _CustomBarChart extends ConsumerWidget {
                       child: Align(
                         alignment: Alignment.bottomCenter,
                         child: AnimatedContainer(
+                          margin: EdgeInsets.symmetric(
+                            horizontal: data.length > 12 ? 1 : 6,
+                          ),
                           duration: const Duration(milliseconds: 400),
                           height: maxValue == 0
                               ? 4
@@ -281,14 +304,23 @@ class _CustomBarChart extends ConsumerWidget {
                                   (constraints.maxHeight - 20) +
                                   4,
                           decoration: BoxDecoration(
-                            // Opacity fade (sem mudar de hue) — design system.
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [accentDim, accent],
-                            ),
+                            // Editorial: barras grafite e o melhor dia em
+                            // accent. Glass: fade de opacidade do accent.
+                            color: AppColors.isGlass
+                                ? null
+                                : (data[i].count == maxValue && maxValue > 0
+                                    ? accent
+                                    : AppColors.textPrimary
+                                        .withValues(alpha: 0.75)),
+                            gradient: AppColors.isGlass
+                                ? LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [accentDim, accent],
+                                  )
+                                : null,
                             borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(6),
+                              top: Radius.circular(999),
                             ),
                           ),
                         ),
@@ -309,7 +341,7 @@ class _CustomBarChart extends ConsumerWidget {
                         child: labelsToShow.contains(i)
                             ? Text(
                                 _labelFor(data[i].day),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.textTertiary,
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
@@ -357,8 +389,8 @@ class _Heatmap extends ConsumerWidget {
           decoration: BoxDecoration(
             color: completed
                 ? accent.withValues(alpha: 0.85)
-                : AppColors.surfaceElevated,
-            borderRadius: BorderRadius.circular(3),
+                : AppColors.veil(0.08),
+            borderRadius: BorderRadius.circular(7),
           ),
         );
       }),

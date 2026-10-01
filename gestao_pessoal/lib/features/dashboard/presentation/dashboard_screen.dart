@@ -6,11 +6,13 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatters.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
+import '../../../core/widgets/screen_header.dart';
 import '../../habits/data/habits_controller.dart';
+import '../../habits/domain/habit_model.dart';
 import '../../settings/data/settings_controller.dart';
 import '../../tasks/data/tasks_controller.dart';
 import '../../tasks/domain/subtask_model.dart';
-import 'daily_progress_ring.dart';
+import '../../tasks/domain/task_model.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -19,7 +21,6 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
     final accent = ref.watch(accentColorProvider);
-    final foreground = ref.watch(textColorProvider);
     final habitsToday = ref.watch(habitsForDayProvider(now));
     final tasks = ref.watch(tasksProvider);
     final todayTasks = tasks.where((t) {
@@ -43,193 +44,99 @@ class DashboardScreen extends ConsumerWidget {
     final doneItems = habitsDone + todayTasks.where((t) => t.isCompleted).length;
     final progress = totalItems == 0 ? 0.0 : doneItems / totalItems;
 
+    final dateLabel = DateFormatters.fullDate(now);
+    final capitalizedDate =
+        dateLabel.isEmpty ? dateLabel : dateLabel[0].toUpperCase() + dateLabel.substring(1);
+
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 32, 20, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 120),
+          children: [
+            ScreenHeader(
+              eyebrow: capitalizedDate,
+              title: DateFormatters.greetingForHour(now.hour),
+              actions: [
+                HeaderAction(
+                  icon: Icons.tune,
+                  tooltip: 'Configurações',
+                  onTap: () => context.go('/settings'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _ProgressHero(
+                done: doneItems,
+                total: totalItems,
+                progress: progress,
+                accent: accent,
+              ),
+            ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.08),
+            const SizedBox(height: 28),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: LiquidGlassCard(
+                panel: true,
+                borderRadius: 28,
+                padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          DateFormatters.greetingForHour(now.hour),
-                          // Hierarquia: mesmo hue de `foreground`, com 70%
-                          // de opacidade — distinto do título sem trair
-                          // a cor customizada pelo usuário.
-                          style: TextStyle(
-                            color: foreground.withValues(alpha: 0.7),
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Daily Flow',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormatters.fullDate(now),
-                          style: TextStyle(
-                            color: foreground.withValues(alpha: 0.7),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
+                    SectionLabel(
+                      'Hoje no radar',
+                      trailing: totalItems == 0
+                          ? null
+                          : '$totalItems ${totalItems == 1 ? 'item' : 'itens'}',
+                      color: AppColors.onPanel,
                     ),
-                    IconButton(
-                      tooltip: 'Configurações',
-                      icon: const Icon(Icons.tune,
-                          color: AppColors.textPrimary),
-                      onPressed: () => context.go('/settings'),
-                    ),
+                    const SizedBox(height: 10),
+                    if (totalItems == 0)
+                      _EmptyRadar(accent: accent)
+                    else ...[
+                      for (var i = 0; i < habitsToday.length; i++)
+                        _HabitRow(
+                          habit: habitsToday[i],
+                          done: habitsToday[i].isCompletedOn(now),
+                          accent: accent,
+                          showDivider: i > 0,
+                          onToggle: () => ref
+                              .read(habitsProvider.notifier)
+                              .toggleCompletionForDate(habitsToday[i], now),
+                        ).animate().fadeIn(delay: (60 * i).ms),
+                      for (var i = 0; i < todayTasks.length; i++)
+                        _TaskRow(
+                          task: todayTasks[i],
+                          accent: accent,
+                          showDivider: habitsToday.isNotEmpty || i > 0,
+                          onToggle: () => ref
+                              .read(tasksProvider.notifier)
+                              .toggleCompleted(todayTasks[i]),
+                        ).animate().fadeIn(
+                            delay: (60 * (habitsToday.length + i)).ms),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: ArrowCta(
+                          label: 'Ver tarefas',
+                          color: AppColors.onPanelMuted,
+                          accent: accent,
+                          onTap: () => context.go('/tasks'),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
-            // Espaçamento para centralizar verticalmente o anel no espaço
-            // disponível entre o header e a próxima seção.
-            const SliverToBoxAdapter(child: SizedBox(height: 48)),
-            SliverToBoxAdapter(
-              child: Center(
-                child: RepaintBoundary(
-                  child: DailyProgressRing(
-                    progress: progress,
-                    label: '$doneItems/$totalItems concluídos',
-                  )
-                      .animate()
-                      .fadeIn(duration: 600.ms)
-                      .scale(begin: const Offset(.9, .9)),
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 48)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'Hoje no Radar',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            if (habitsToday.isEmpty && todayTasks.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 32),
-                  child: LiquidGlassCard(
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.celebration_outlined,
-                          color: accent,
-                        ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Tudo vazio por hoje. Crie um hábito ou tarefa pelo botão +.',
-                            style: TextStyle(color: AppColors.textSecondary),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              )
-            else
-              SliverList.builder(
-                itemCount: habitsToday.length + todayTasks.length,
-                itemBuilder: (context, index) {
-                  if (index < habitsToday.length) {
-                    final habit = habitsToday[index];
-                    final done = habit.isCompletedOn(now);
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                      child: RepaintBoundary(
-                        child: LiquidGlassCard(
-                          child: ListTile(
-                            leading: Icon(habit.icon, color: habit.color),
-                            title: Text(habit.title),
-                            trailing: IconButton(
-                              tooltip: done ? 'Reabrir' : 'Concluir',
-                              icon: Icon(
-                                done
-                                    ? Icons.check_circle
-                                    : Icons.radio_button_unchecked,
-                                color: done
-                                    ? accent
-                                    : AppColors.textTertiary,
-                              ),
-                              onPressed: () {
-                                ref
-                                    .read(habitsProvider.notifier)
-                                    .toggleCompletionForDate(habit, now);
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                    ).animate().fadeIn(delay: (50 * index).ms).slideX(begin: .1);
-                  }
-                  final task = todayTasks[index - habitsToday.length];
-                  final taskDone = task.isCompleted;
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                    child: RepaintBoundary(
-                      child: LiquidGlassCard(
-                        child: ListTile(
-                          leading: Icon(task.priority.icon, color: task.priority.colorAt(accent)),
-                          title: Text(
-                            task.title,
-                            style: TextStyle(
-                              decoration: taskDone
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                              color: taskDone
-                                  ? AppColors.textSecondary
-                                  : AppColors.textPrimary,
-                            ),
-                          ),
-                          subtitle: Text(
-                            task.category,
-                            style: const TextStyle(color: AppColors.textSecondary),
-                          ),
-                          trailing: IconButton(
-                            tooltip: taskDone ? 'Reabrir' : 'Concluir',
-                            icon: Icon(
-                              taskDone
-                                  ? Icons.check_circle
-                                  : Icons.radio_button_unchecked,
-                              color: taskDone
-                                  ? accent
-                                  : AppColors.textTertiary,
-                            ),
-                            onPressed: () {
-                              ref.read(tasksProvider.notifier).toggleCompleted(task);
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ).animate().fadeIn(delay: (50 * index).ms).slideX(begin: .1);
-                },
-              ),
-            const SliverToBoxAdapter(child: SizedBox(height: 120)),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        tooltip: 'Criar',
         onPressed: () => _showCreateSheet(context, ref),
         child: const Icon(Icons.add),
       ),
@@ -240,32 +147,146 @@ class DashboardScreen extends ConsumerWidget {
     final accent = ref.read(accentColorProvider);
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 20, 12, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.water_drop_outlined, color: accent),
+                title: const Text('Novo hábito'),
+                trailing: Icon(Icons.east, color: AppColors.textTertiary),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  context.go('/habits');
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.task_alt, color: accent),
+                title: const Text('Nova tarefa'),
+                trailing: Icon(Icons.east, color: AppColors.textTertiary),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  context.go('/tasks');
+                },
+              ),
+            ],
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      ),
+    );
+  }
+}
+
+/// Bloco de progresso em números grandes ("03 / 07"), no espírito
+/// das capas editoriais.
+class _ProgressHero extends StatelessWidget {
+  const _ProgressHero({
+    required this.done,
+    required this.total,
+    required this.progress,
+    required this.accent,
+  });
+
+  final int done;
+  final int total;
+  final double progress;
+  final Color accent;
+
+  String _two(int n) => n.toString().padLeft(2, '0');
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final remaining = total - done;
+    final big = t.displayLarge?.copyWith(
+      fontSize: 92,
+      height: 0.95,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Feitos hoje',
+          style: t.labelLarge?.copyWith(color: accent),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            ListTile(
-              leading: Icon(Icons.water_drop_outlined,
-                  color: accent),
-              title: const Text('Novo Hábito'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/habits');
-              },
+            Text(_two(done), style: big?.copyWith(color: accent)),
+            const SizedBox(width: 10),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                '/ ${_two(total)}',
+                style: t.displaySmall?.copyWith(color: AppColors.textTertiary),
+              ),
             ),
-            ListTile(
-              leading: Icon(Icons.task_alt, color: accent),
-              title: const Text('Nova Tarefa'),
-              onTap: () {
-                Navigator.pop(context);
-                context.go('/tasks');
-              },
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${(progress * 100).round()}%',
+                    style: t.headlineSmall?.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    total == 0
+                        ? 'nada agendado'
+                        : remaining == 0
+                            ? 'dia completo'
+                            : 'faltam $remaining',
+                    style: t.labelMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        _ThinProgress(value: progress, accent: accent),
+      ],
+    );
+  }
+}
+
+/// Barra de progresso fina: trilho de 1px + preenchimento de 4px.
+class _ThinProgress extends StatelessWidget {
+  const _ThinProgress({required this.value, required this.accent});
+
+  final double value;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 6,
+      child: LayoutBuilder(
+        builder: (context, c) => Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            Container(height: 1, color: AppColors.textPrimary.withValues(alpha: 0.5)),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: value.clamp(0.0, 1.0)),
+              duration: const Duration(milliseconds: 900),
+              curve: Curves.easeOutCubic,
+              builder: (context, v, _) => Container(
+                width: c.maxWidth * v,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: accent,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
           ],
         ),
@@ -274,4 +295,208 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-// Stub legado removido — navegação agora é responsabilidade do AppShell.
+class _EmptyRadar extends StatelessWidget {
+  const _EmptyRadar({required this.accent});
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Dia livre por enquanto. Crie um hábito ou uma tarefa para '
+            'começar a preencher o radar.',
+            style: t.bodyMedium?.copyWith(color: AppColors.onPanelMuted),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ArrowCta(
+              label: 'Criar hábito',
+              color: AppColors.onPanelMuted,
+              accent: accent,
+              onTap: () => context.go('/habits'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Linha base do painel "Hoje no radar".
+class _RadarRow extends StatelessWidget {
+  const _RadarRow({
+    required this.leading,
+    required this.title,
+    required this.subtitle,
+    required this.done,
+    required this.accent,
+    required this.showDivider,
+    required this.onToggle,
+  });
+
+  final Widget leading;
+  final String title;
+  final String? subtitle;
+  final bool done;
+  final Color accent;
+  final bool showDivider;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Column(
+      children: [
+        if (showDivider)
+          Container(height: 1, color: AppColors.onPanel.withValues(alpha: 0.12)),
+        InkWell(
+          onTap: onToggle,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              children: [
+                leading,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: t.bodyLarge?.copyWith(
+                          color: done ? AppColors.onPanelMuted : AppColors.onPanel,
+                          decoration: done ? TextDecoration.lineThrough : null,
+                          decorationColor: AppColors.onPanelMuted,
+                        ),
+                      ),
+                      if (subtitle != null && subtitle!.isNotEmpty)
+                        Text(
+                          subtitle!,
+                          style: t.bodySmall?.copyWith(color: AppColors.onPanelMuted),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _CheckDot(done: done, accent: accent),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HabitRow extends StatelessWidget {
+  const _HabitRow({
+    required this.habit,
+    required this.done,
+    required this.accent,
+    required this.showDivider,
+    required this.onToggle,
+  });
+
+  final HabitModel habit;
+  final bool done;
+  final Color accent;
+  final bool showDivider;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return _RadarRow(
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: habit.color.withValues(alpha: 0.22),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(habit.icon, color: habit.color, size: 19),
+      ),
+      title: habit.title,
+      subtitle: 'Hábito · ${habit.category}',
+      done: done,
+      accent: accent,
+      showDivider: showDivider,
+      onToggle: onToggle,
+    );
+  }
+}
+
+class _TaskRow extends StatelessWidget {
+  const _TaskRow({
+    required this.task,
+    required this.accent,
+    required this.showDivider,
+    required this.onToggle,
+  });
+
+  final TaskModel task;
+  final Color accent;
+  final bool showDivider;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = task.priority == TaskPriority.low
+        ? AppColors.onPanelMuted
+        : task.priority.colorAt(accent);
+    return _RadarRow(
+      leading: SizedBox(
+        width: 36,
+        height: 36,
+        child: Center(
+          child: Container(
+            width: 4,
+            height: 26,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+      ),
+      title: task.title,
+      subtitle: 'Tarefa · ${task.category} · ${task.priority.label.toLowerCase()}',
+      done: task.isCompleted,
+      accent: accent,
+      showDivider: showDivider,
+      onToggle: onToggle,
+    );
+  }
+}
+
+/// Marcador redondo de concluído (cheio em accent quando feito).
+class _CheckDot extends StatelessWidget {
+  const _CheckDot({required this.done, required this.accent});
+  final bool done;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      width: 26,
+      height: 26,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: done ? accent : Colors.transparent,
+        border: Border.all(
+          color: done ? accent : AppColors.onPanelMuted,
+          width: 1.4,
+        ),
+      ),
+      child: done
+          ? Icon(Icons.check, size: 16, color: AppColors.onColor(accent))
+          : null,
+    );
+  }
+}

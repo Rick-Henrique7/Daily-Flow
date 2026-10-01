@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,15 +20,12 @@ class GlassNavItem {
   final String route;
 }
 
-/// Barra de navegação inferior flat dark.
+/// Barra de navegação inferior flutuante (pílula).
 ///
-/// Design system "Financial App — Dark/Green":
-/// - Background: `#141414` (surface)
-/// - Border: 1px `#1E1E1E`
-/// - Radius: 24px (radius-lg)
-/// - Item ativo: ícone + label em accent (configurável pelo usuário)
-/// - Item inativo: ícone + label em `#7A7A7A` (text-secondary)
-/// - Sem drop shadow — depth via surface vs background
+/// - **Editorial**: pílula grafite, ícones creme, item ativo em accent
+///   com um ponto embaixo (sem rótulo — o ponto já indica a aba).
+/// - **Liquid Glass**: pílula de vidro fosco com blur, item ativo com
+///   bolha translúcida.
 class GlassNavBar extends StatelessWidget {
   const GlassNavBar({
     super.key,
@@ -43,38 +42,56 @@ class GlassNavBar extends StatelessWidget {
     for (var i = 0; i < items.length; i++) {
       if (items[i].route == currentRoute) return i;
     }
-    return 0;
+    return -1;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppColors.space5, 0, AppColors.space5, AppColors.space4),
-      child: SafeArea(
-        top: false,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppColors.radiusLg),
-            border: Border.all(color: AppColors.border, width: 1),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppColors.space2,
-            vertical: AppColors.space2 + 2,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              for (var i = 0; i < items.length; i++)
-                _NavButton(
-                  item: items[i],
-                  active: i == _activeIndex,
-                  onTap: () => onTap(items[i].route),
-                ),
-            ],
-          ),
-        ),
+    final glass = AppColors.isGlass;
+    final radius = BorderRadius.circular(999);
+
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      child: Row(
+        children: [
+          for (var i = 0; i < items.length; i++)
+            _NavButton(
+              item: items[i],
+              active: i == _activeIndex,
+              onTap: () => onTap(items[i].route),
+            ),
+        ],
       ),
+    );
+
+    final Widget bar = glass
+        ? ClipRRect(
+            borderRadius: radius,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: radius,
+                  color: Colors.white.withValues(alpha: 0.10),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.22),
+                  ),
+                ),
+                child: row,
+              ),
+            ),
+          )
+        : DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              color: AppColors.panel,
+            ),
+            child: row,
+          );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+      child: SafeArea(top: false, child: bar),
     );
   }
 }
@@ -92,34 +109,51 @@ class _NavButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accent = ref.watch(accentColorProvider);
-    final color = active ? accent : AppColors.textSecondary;
+    final glass = AppColors.isGlass;
+    final idle = glass ? AppColors.textSecondary : AppColors.onPanelMuted;
+    final color = active ? (glass ? AppColors.textPrimary : accent) : idle;
 
     return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: AppColors.space2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                active ? item.activeIcon : item.icon,
-                size: 22,
-                color: color,
+      child: Semantics(
+        button: true,
+        selected: active,
+        label: item.label,
+        child: Tooltip(
+          message: item.label,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              height: 50,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                color: glass && active
+                    ? accent.withValues(alpha: 0.28)
+                    : Colors.transparent,
               ),
-              const SizedBox(height: 4),
-              Text(
-                item.label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                  color: color,
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    active ? item.activeIcon : item.icon,
+                    size: 23,
+                    color: color,
+                  ),
+                  const SizedBox(height: 4),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    width: active ? 5 : 0,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: glass ? AppColors.textPrimary : accent,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

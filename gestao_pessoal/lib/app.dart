@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/constants/app_colors.dart';
 import 'core/constants/app_theme.dart';
 import 'features/settings/data/settings_controller.dart';
 import 'routing/app_router.dart';
@@ -11,21 +12,21 @@ class DailyFlowApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Assiste as cores configuradas p/ repassar pro tema — assim
+    // Assiste estilo + cores configuradas p/ repassar pro tema — assim
     // todo o app (texto, accent, FAB, nav bar, switches) acompanha.
     final settings = ref.watch(settingsProvider);
+    AppColors.use(settings.style);
+    final theme = AppTheme.build(
+      style: settings.style,
+      textColorHex: settings.textColor,
+      accentColorHex: settings.accentColor,
+    );
     return MaterialApp.router(
       title: 'Daily Flow',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkWith(
-        textColorHex: settings.textColor,
-        accentColorHex: settings.accentColor,
-      ),
-      darkTheme: AppTheme.darkWith(
-        textColorHex: settings.textColor,
-        accentColorHex: settings.accentColor,
-      ),
-      themeMode: ThemeMode.dark,
+      theme: theme,
+      darkTheme: theme,
+      themeMode: settings.style.isGlass ? ThemeMode.dark : ThemeMode.light,
       routerConfig: AppRouter.config,
       locale: const Locale('pt', 'BR'),
       supportedLocales: const [

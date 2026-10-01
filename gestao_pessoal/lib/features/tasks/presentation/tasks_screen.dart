@@ -6,6 +6,7 @@ import '../../../core/utils/date_formatters.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/glass_input_field.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
+import '../../../core/widgets/screen_header.dart';
 import '../data/tasks_controller.dart';
 import '../../settings/data/settings_controller.dart';
 import '../domain/subtask_model.dart';
@@ -20,38 +21,48 @@ class TasksScreen extends ConsumerWidget {
     final tasks = ref.watch(filteredTasksProvider);
     final accent = ref.watch(accentColorProvider);
 
+    final pending = ref.watch(tasksProvider).where((t) => !t.isCompleted).length;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tarefas'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              children: [
-                for (final f in TaskFilter.values)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ChoiceChip(
-                      label: Text(_label(f)),
-                      selected: filter == f,
-                      onSelected: (_) =>
-                          ref.read(taskFilterProvider.notifier).state = f,
-                      selectedColor: accent,
-                      labelStyle: TextStyle(
-                        color: filter == f
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-              ],
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ScreenHeader(
+              eyebrow: pending == 0
+                  ? 'Tudo em dia'
+                  : '$pending ${pending == 1 ? 'pendente' : 'pendentes'}',
+              title: 'Tarefas',
             ),
-          ),
+            _FilterTabs(
+              current: filter,
+              accent: accent,
+              labelFor: _label,
+              onChanged: (f) =>
+                  ref.read(taskFilterProvider.notifier).state = f,
+            ),
+            const SizedBox(height: 8),
+            Expanded(child: _body(context, ref, filter, tasks)),
+          ],
         ),
       ),
-      body: tasks.isEmpty
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Nova tarefa',
+        onPressed: () => _openTaskDialog(context, null),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _body(
+    BuildContext context,
+    WidgetRef ref,
+    TaskFilter filter,
+    List<TaskModel> tasks,
+  ) {
+    return tasks.isEmpty
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -66,7 +77,7 @@ class TasksScreen extends ConsumerWidget {
                     const SizedBox(height: 12),
                     Text(
                       _emptyTitleFor(filter),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -76,7 +87,7 @@ class TasksScreen extends ConsumerWidget {
                     const SizedBox(height: 6),
                     Text(
                       _emptyHintFor(filter),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 13,
                       ),
@@ -120,12 +131,7 @@ class TasksScreen extends ConsumerWidget {
                   ),
                 );
               },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openTaskDialog(context, null),
-        child: const Icon(Icons.add),
-      ),
-    );
+            );
   }
 
   String _label(TaskFilter f) => switch (f) {
@@ -189,7 +195,7 @@ class TasksScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                children: const [
+                children: [
                   Icon(Icons.delete_outline, color: AppColors.textPrimary),
                   SizedBox(width: 8),
                   Text(
@@ -206,7 +212,7 @@ class TasksScreen extends ConsumerWidget {
               Text(
                 '"${task.title}" será removida permanentemente.'
                 ' Essa ação pode ser desfeita na barra inferior.',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,
                 ),
@@ -232,7 +238,7 @@ class TasksScreen extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           _recurrenceWarning(task),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -384,13 +390,13 @@ class _TaskTile extends ConsumerWidget {
                   padding: const EdgeInsets.only(top: 6, left: 16),
                   child: Row(
                     children: [
-                      const Icon(Icons.event_outlined,
+                      Icon(Icons.event_outlined,
                           size: 14, color: AppColors.textSecondary),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           dueLine,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12,
                           ),
@@ -404,7 +410,7 @@ class _TaskTile extends ConsumerWidget {
                   padding: const EdgeInsets.only(top: 8, left: 16),
                   child: Text(
                     'Sub-tarefas: ${task.completedSubtasksCount}/${task.subtasks.length}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,
                     ),
@@ -562,8 +568,8 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.isEditing ? 'Editar Tarefa' : 'Nova Tarefa',
-                style: const TextStyle(
+                widget.isEditing ? 'Editar tarefa' : 'Nova tarefa',
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -582,17 +588,16 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
               // Prioridade
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: AppColors.veil(0.06),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: AppColors.veil(0.18),
                     width: 1,
                   ),
                 ),
                 child: DropdownButtonFormField<TaskPriority>(
                   initialValue: _priority,
                   isExpanded: true,
-                  dropdownColor: AppColors.surfaceElevated,
                   decoration: const InputDecoration(
                     hintText: 'Prioridade',
                     contentPadding: EdgeInsets.symmetric(
@@ -604,7 +609,7 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
                     focusedBorder: InputBorder.none,
                   ),
                   iconEnabledColor: AppColors.textPrimary,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -637,7 +642,7 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
               const SizedBox(height: 16),
 
               // Data + Hora
-              const Text(
+              Text(
                 'Quando',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
@@ -679,7 +684,7 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
               const SizedBox(height: 16),
 
               // Repetição (dias da semana)
-              const Text(
+              Text(
                 'Repetir',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
@@ -757,12 +762,12 @@ class _GlassPickerButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: active
               ? accent.withValues(alpha: 0.25)
-              : Colors.white.withValues(alpha: 0.08),
+              : AppColors.veil(0.06),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: active
                 ? accent
-                : Colors.white.withValues(alpha: 0.15),
+                : AppColors.veil(0.18),
             width: 1,
           ),
         ),
@@ -790,7 +795,7 @@ class _GlassPickerButton extends StatelessWidget {
             if (onClear != null)
               GestureDetector(
                 onTap: onClear,
-                child: const Icon(
+                child: Icon(
                   Icons.close,
                   size: 16,
                   color: AppColors.textSecondary,
@@ -818,7 +823,9 @@ class _DayChip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accent = ref.watch(accentColorProvider);
-    final accentDim = HSVColor.fromColor(accent).withValue(0.7).toColor();
+    final activeBg = AppColors.isGlass ? accent : AppColors.panel;
+    final activeFg =
+        AppColors.isGlass ? AppColors.onColor(accent) : AppColors.onPanel;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -826,19 +833,10 @@ class _DayChip extends ConsumerWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          gradient: active
-              ? LinearGradient(
-                  colors: [accent, accentDim],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: active ? null : Colors.white.withValues(alpha: 0.06),
+          color: active ? activeBg : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: active
-                ? Colors.transparent
-                : Colors.white.withValues(alpha: 0.15),
+            color: active ? activeBg : AppColors.border,
             width: 1,
           ),
         ),
@@ -846,7 +844,7 @@ class _DayChip extends ConsumerWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: active ? activeFg : AppColors.textPrimary,
             fontSize: 13,
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
           ),
@@ -866,7 +864,7 @@ class _DeleteBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [Colors.transparent, AppColors.surface2],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
@@ -875,7 +873,7 @@ class _DeleteBackground extends StatelessWidget {
       ),
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -889,6 +887,63 @@ class _DeleteBackground extends StatelessWidget {
           ),
           SizedBox(width: 8),
           Icon(Icons.delete_outline, color: AppColors.textPrimary, size: 22),
+        ],
+      ),
+    );
+  }
+}
+/// Abas de filtro em texto, com sublinhado no accent (estilo editorial).
+class _FilterTabs extends StatelessWidget {
+  const _FilterTabs({
+    required this.current,
+    required this.accent,
+    required this.labelFor,
+    required this.onChanged,
+  });
+
+  final TaskFilter current;
+  final Color accent;
+  final String Function(TaskFilter) labelFor;
+  final ValueChanged<TaskFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          for (final f in TaskFilter.values)
+            InkWell(
+              onTap: () => onChanged(f),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(6, 8, 14, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      labelFor(f),
+                      style: t.titleSmall?.copyWith(
+                        color: f == current
+                            ? AppColors.textPrimary
+                            : AppColors.textTertiary,
+                        fontWeight:
+                            f == current ? FontWeight.w500 : FontWeight.w400,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      height: 2,
+                      width: f == current ? 22 : 0,
+                      color: accent,
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );

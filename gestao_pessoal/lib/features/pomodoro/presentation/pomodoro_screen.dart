@@ -4,6 +4,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
+import '../../../core/widgets/screen_header.dart';
 import '../../settings/data/settings_controller.dart';
 import '../../tasks/data/tasks_controller.dart';
 import '../controllers/pomodoro_controller.dart';
@@ -24,93 +25,121 @@ class PomodoroScreen extends ConsumerWidget {
     final accent = ref.watch(accentColorProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Timer de Foco')),
-      body: Column(
-        children: [
-          Expanded(child: PomodoroTimerView(state: timer)),
-
-          // Seletor de modo (Foco / Pausa Curta / Pausa Longa)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: _ModeSelector(
-              current: timer.type,
-              accent: accent,
-              onChanged: controller.setType,
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            const ScreenHeader(
+              eyebrow: 'Uma coisa de cada vez',
+              title: 'Foco',
             ),
-          ),
-          const SizedBox(height: 16),
+            Expanded(child: PomodoroTimerView(state: timer)),
 
-          // Vincular a uma tarefa (RF-PO-03)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: LiquidGlassCard(
-              child: Row(
-                children: [
-                  const Icon(Icons.bolt_outlined,
-                      color: AppColors.textSecondary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String?>(
-                        isExpanded: true,
-                        value: timer.taskId,
-                        hint: const Text('Vincular a uma tarefa'),
-                        items: [
-                          const DropdownMenuItem<String?>(
-                            value: null,
-                            child: Text('Nenhuma'),
+            // Seletor de modo (Foco / Pausa Curta / Pausa Longa)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: AppColors.isGlass
+                  ? _GlassModeSelector(
+                      current: timer.type,
+                      accent: accent,
+                      onChanged: controller.setType,
+                    )
+                  : _EditorialModeSelector(
+                      current: timer.type,
+                      accent: accent,
+                      onChanged: controller.setType,
+                    ),
+            ),
+            const SizedBox(height: 14),
+
+            // Vincular a uma tarefa (RF-PO-03)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: LiquidGlassCard(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                borderRadius: 999,
+                child: Row(
+                  children: [
+                    Icon(Icons.link, color: AppColors.textSecondary, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String?>(
+                          isExpanded: true,
+                          value: timer.taskId,
+                          borderRadius: BorderRadius.circular(16),
+                          hint: Text(
+                            'Vincular a uma tarefa',
+                            style: TextStyle(color: AppColors.textSecondary),
                           ),
-                          for (final t in pendingTasks)
-                            DropdownMenuItem<String?>(
-                              value: t.id,
-                              child: Text(
-                                t.title,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                          items: [
+                            const DropdownMenuItem<String?>(
+                              value: null,
+                              child: Text('Nenhuma'),
                             ),
-                        ],
-                        onChanged: controller.selectTask,
+                            for (final t in pendingTasks)
+                              DropdownMenuItem<String?>(
+                                value: t.id,
+                                child: Text(
+                                  t.title,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
+                          onChanged: controller.selectTask,
+                        ),
                       ),
                     ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Controles (RF-PO-01)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _CircleButton(
+                    icon: Icons.stop_rounded,
+                    tooltip: 'Parar',
+                    onPressed: controller.stop,
+                  ),
+                  _CircleButton(
+                    icon: timer.isRunning ? Icons.pause : Icons.play_arrow,
+                    tooltip: timer.isRunning ? 'Pausar' : 'Iniciar',
+                    color: accent,
+                    size: 84,
+                    onPressed: controller.toggle,
+                  ),
+                  _CircleButton(
+                    icon: Icons.skip_next_rounded,
+                    tooltip: 'Pular',
+                    onPressed: controller.skip,
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-
-          // Controles (RF-PO-01)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _GlassCircleButton(
-                  icon: Icons.stop_rounded,
-                  onPressed: controller.stop,
-                ),
-                _GlassCircleButton(
-                  icon: timer.isRunning ? Icons.pause : Icons.play_arrow,
-                  color: accent,
-                  size: 84,
-                  onPressed: controller.toggle,
-                ),
-                _GlassCircleButton(
-                  icon: Icons.skip_next_rounded,
-                  onPressed: controller.skip,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-        ],
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _ModeSelector extends StatelessWidget {
-  const _ModeSelector({
+String _modeLabel(PomodoroType type) => switch (type) {
+      PomodoroType.focus => 'Foco',
+      PomodoroType.shortBreak => 'Pausa curta',
+      PomodoroType.longBreak => 'Pausa longa',
+    };
+
+/// Editorial: três rótulos em texto com sublinhado no accent.
+class _EditorialModeSelector extends StatelessWidget {
+  const _EditorialModeSelector({
     required this.current,
     required this.accent,
     required this.onChanged,
@@ -121,14 +150,62 @@ class _ModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentDim = HSVColor.fromColor(accent).withValue(0.7).toColor();
+    final t = Theme.of(context).textTheme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (final type in PomodoroType.values)
+          InkWell(
+            onTap: () => onChanged(type),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Column(
+                children: [
+                  Text(
+                    _modeLabel(type),
+                    style: t.titleSmall?.copyWith(
+                      color: current == type
+                          ? AppColors.textPrimary
+                          : AppColors.textTertiary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: current == type ? 22 : 0,
+                    height: 2,
+                    color: accent,
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Liquid Glass: segmented control em vidro.
+class _GlassModeSelector extends StatelessWidget {
+  const _GlassModeSelector({
+    required this.current,
+    required this.accent,
+    required this.onChanged,
+  });
+  final PomodoroType current;
+  final Color accent;
+  final ValueChanged<PomodoroType> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
     return RepaintBoundary(
       child: GlassContainer(
         shape: LiquidRoundedSuperellipse(borderRadius: 20),
         settings: LiquidGlassSettings(
-          thickness: 10, // era 18
-          blur: 8, // era 14
-          glassColor: Colors.white.withValues(alpha: 0.18),
+          thickness: 10,
+          blur: 8,
+          glassColor: Colors.white.withValues(alpha: 0.14),
           lightIntensity: 0.5,
           glowIntensity: 0.5,
           fresnelStrength: 0.8,
@@ -140,15 +217,33 @@ class _ModeSelector extends StatelessWidget {
           children: [
             for (final type in PomodoroType.values)
               Expanded(
-                child: _ModeChip(
-                  label: _label(type),
-                  active: current == type,
-                  gradient: LinearGradient(
-                    colors: [accent, accentDim],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                child: GestureDetector(
                   onTap: () => onChanged(type),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: current == type
+                          ? accent.withValues(alpha: 0.85)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      _modeLabel(type),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight:
+                            current == type ? FontWeight.w700 : FontWeight.w500,
+                        color: current == type
+                            ? AppColors.onColor(accent)
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -156,93 +251,70 @@ class _ModeSelector extends StatelessWidget {
       ),
     );
   }
-
-  String _label(PomodoroType type) => switch (type) {
-        PomodoroType.focus => 'Foco',
-        PomodoroType.shortBreak => 'Pausa Curta',
-        PomodoroType.longBreak => 'Pausa Longa',
-      };
 }
 
-class _ModeChip extends StatelessWidget {
-  const _ModeChip({
-    required this.label,
-    required this.active,
-    required this.gradient,
-    required this.onTap,
-  });
-  final String label;
-  final bool active;
-  final LinearGradient gradient;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: BoxDecoration(
-          gradient: active ? gradient : null,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GlassCircleButton extends StatelessWidget {
-  const _GlassCircleButton({
+/// Botão circular. Com [color] vira o botão principal (cheio no accent);
+/// sem cor é secundário (aro fino no editorial / vidro no glass).
+class _CircleButton extends StatelessWidget {
+  const _CircleButton({
     required this.icon,
     required this.onPressed,
-    this.color = AppColors.surfaceElevated,
+    required this.tooltip,
+    this.color,
     this.size = 56,
   });
   final IconData icon;
   final VoidCallback onPressed;
-  final Color color;
+  final String tooltip;
+  final Color? color;
   final double size;
 
   @override
   Widget build(BuildContext context) {
+    final primary = color != null;
+    final iconColor = primary ? AppColors.onColor(color!) : AppColors.textPrimary;
     final child = SizedBox(
       width: size,
       height: size,
-      child: Icon(icon, color: AppColors.textPrimary, size: size * 0.45),
+      child: Icon(icon, color: iconColor, size: size * 0.45),
     );
 
-    return RepaintBoundary(
-      child: AnimatedScale(
-        duration: const Duration(milliseconds: 200),
-        scale: 1.0,
+    if (!AppColors.isGlass) {
+      return Tooltip(
+        message: tooltip,
+        child: Material(
+          color: primary ? color : Colors.transparent,
+          shape: CircleBorder(
+            side: primary
+                ? BorderSide.none
+                : BorderSide(color: AppColors.textPrimary, width: 1.1),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(onTap: onPressed, child: child),
+        ),
+      );
+    }
+
+    final glassTint = color ?? Colors.white;
+    return Tooltip(
+      message: tooltip,
+      child: RepaintBoundary(
         child: GlassContainer(
           shape: const LiquidOval(),
           settings: LiquidGlassSettings(
-            thickness: 14, // era 26
-            blur: 10, // era 20
-            glassColor: color.withValues(alpha: 0.45),
+            thickness: 14,
+            blur: 10,
+            glassColor: glassTint.withValues(alpha: primary ? 0.55 : 0.12),
             lightIntensity: 0.6,
             glowIntensity: 0.7,
-            fresnelStrength: 1.0, // era 1.4
-            chromaticAberration: 0.015, // era 0.03
+            fresnelStrength: 1.0,
+            chromaticAberration: 0.015,
             ambientRim: 0.5,
             shadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.4),
+                color: glassTint.withValues(alpha: primary ? 0.4 : 0.1),
                 offset: const Offset(0, 6),
-                blurRadius: 16, // era 24
+                blurRadius: 16,
               ),
             ],
           ),

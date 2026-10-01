@@ -8,8 +8,8 @@ import '../../features/settings/data/settings_controller.dart';
 /// de hábitos/tarefas.
 ///
 /// Visual:
-/// - Fundo `surface` (#141414) com borda 1px `border` (#1E1E1E)
-/// - Texto `textPrimary` (#FFFFFF)
+/// - Fundo grafite (editorial) ou vidro escuro opaco (glass)
+/// - Texto `onPanel`
 /// - Ícone à esquerda em `accent` (configurável pelo usuário)
 /// - Ação "Desfazer" em `accent` (configurável pelo usuário)
 /// - `behavior: floating` com margem inferior para não cobrir a nav bar
@@ -49,8 +49,8 @@ class AppUndoSnackBar {
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: AppColors.onPanel,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   height: 1.3,
@@ -59,14 +59,17 @@ class AppUndoSnackBar {
             ),
           ],
         ),
-        backgroundColor: AppColors.surface,
+        backgroundColor:
+            AppColors.isGlass ? const Color(0xF0161930) : AppColors.panel,
         elevation: 0,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 84), // 84px = nav bar safe-area
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: AppColors.border, width: 1),
+          side: AppColors.isGlass
+              ? BorderSide(color: AppColors.border, width: 1)
+              : BorderSide.none,
         ),
         duration: const Duration(seconds: 4),
         dismissDirection: DismissDirection.up,

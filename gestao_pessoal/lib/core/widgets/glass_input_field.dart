@@ -37,7 +37,7 @@ class GlassInputField extends ConsumerWidget {
       keyboardType: keyboardType,
       maxLines: maxLines,
       onChanged: onChanged,
-      style: const TextStyle(
+      style: TextStyle(
         color: AppColors.textPrimary,
         fontSize: 15,
         fontWeight: FontWeight.w400,
@@ -45,7 +45,7 @@ class GlassInputField extends ConsumerWidget {
       cursorColor: accent,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
           color: AppColors.textSecondary,
           fontSize: 15,
           fontWeight: FontWeight.w400,
@@ -58,11 +58,11 @@ class GlassInputField extends ConsumerWidget {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppColors.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border, width: 1),
+          borderSide: BorderSide(color: AppColors.border, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppColors.radiusMd),
-          borderSide: const BorderSide(color: AppColors.border, width: 1),
+          borderSide: BorderSide(color: AppColors.border, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppColors.radiusMd),
