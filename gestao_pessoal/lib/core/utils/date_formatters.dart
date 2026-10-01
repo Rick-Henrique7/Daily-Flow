@@ -42,23 +42,4 @@ class DateFormatters {
   static bool isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
-
-  /// Número de dias seguidos (streak) entre uma lista de datas e hoje.
-  static int currentStreak(List<DateTime> dates, {DateTime? reference}) {
-    if (dates.isEmpty) return 0;
-    final today = reference ?? DateTime.now();
-    final todayKey = DateTime(today.year, today.month, today.day);
-    final sorted = dates
-        .map((d) => DateTime(d.year, d.month, d.day))
-        .toSet()
-        .toList()
-      ..sort((a, b) => b.compareTo(a));
-    var streak = 0;
-    var cursor = todayKey;
-    while (sorted.contains(cursor)) {
-      streak++;
-      cursor = cursor.subtract(const Duration(days: 1));
-    }
-    return streak;
-  }
 }

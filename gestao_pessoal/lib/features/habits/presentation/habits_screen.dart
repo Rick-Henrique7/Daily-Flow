@@ -30,30 +30,21 @@ String _cardDurationLabel(int minutes) {
   return '${h}h${m.toString().padLeft(2, '0')}';
 }
 
-/// Itera os últimos 90 dias (incluindo hoje) e retorna um set de
-/// dias em que pelo menos um hábito previsto (que contenha o
-/// `weekday` em `frequencyDays`) não foi concluído. Dias futuros são
-/// ignorados — não fazem sentido.
-Set<DateTime> _buildIncompleteDaySet(List<HabitModel> habits) {
-  if (habits.isEmpty) return <DateTime>{};
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-
-  final result = <DateTime>{};
-  for (int i = 0; i <= 90; i++) {
-    final day = today.subtract(Duration(days: i));
-    final weekday = day.weekday;
-
-    for (final habit in habits) {
-      if (habit.frequencyDays.contains(weekday) &&
-          !habit.isCompletedOn(day)) {
-        result.add(day);
-        break;
-      }
-    }
-  }
-  return result;
-}
+/// Marcadores do calendário (um por conclusão). Memoizado: só refaz a
+/// lista quando os hábitos mudam — antes era recriada a cada build.
+final _appointmentsProvider = Provider.autoDispose<List<Appointment>>((ref) {
+  return [
+    for (final habit in ref.watch(habitsProvider))
+      for (final date in habit.completedDates)
+        Appointment(
+          startTime: date,
+          endTime: date.add(const Duration(hours: 1)),
+          subject: habit.title,
+          color: habit.color,
+          id: '${habit.id}-${date.toIso8601String()}',
+        ),
+  ];
+});
 
 class HabitsScreen extends ConsumerWidget {
   const HabitsScreen({super.key});
@@ -64,29 +55,11 @@ class HabitsScreen extends ConsumerWidget {
     final habits = ref.watch(habitsForDayProvider(selectedDay));
     final allHabits = ref.watch(habitsProvider);
     final accent = ref.watch(accentColorProvider);
-    final bestStreak = allHabits.isEmpty
-        ? 0
-        : allHabits.map((h) => h.streakCount).reduce((a, b) => a > b ? a : b);
+    final bestStreak = ref.watch(bestStreakProvider);
     final doneOnDay = habits.where((h) => h.isCompletedOn(selectedDay)).length;
-
-    // Appointments por dia (syncfusion exige DateTime por evento).
-    final appointments = <Appointment>[];
-    for (final habit in allHabits) {
-      for (final date in habit.completedDates) {
-        appointments.add(Appointment(
-          startTime: date,
-          endTime: date.add(const Duration(hours: 1)),
-          subject: habit.title,
-          color: habit.color,
-          id: '${habit.id}-${date.toIso8601String()}',
-        ));
-      }
-    }
-
-    // Dias com pelo menos 1 hábito previsto **não** concluído
-    // (passados + hoje). O calendário pinta esses dias em vermelho via
-    // `monthCellBuilder`.
-    final incompleteDays = _buildIncompleteDaySet(allHabits);
+    final appointments = ref.watch(_appointmentsProvider);
+    // Dias com hábito previsto não concluído (pintados no calendário).
+    final incompleteDays = ref.watch(incompleteDaysProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,

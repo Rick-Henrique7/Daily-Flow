@@ -3,41 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/date_formatters.dart';
+import '../../../core/providers/core_providers.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../../../core/widgets/screen_header.dart';
-import '../../habits/data/habits_controller.dart';
-import '../../pomodoro/data/pomodoro_controller.dart';
-import '../../pomodoro/domain/pomodoro_session_model.dart';
 import '../../settings/data/settings_controller.dart';
-import '../../tasks/data/tasks_controller.dart';
-import '../../tasks/domain/task_model.dart';
-
-enum StatsPeriod { weekly, monthly, yearly }
-
-final _statsPeriodProvider = StateProvider<StatsPeriod>((ref) => StatsPeriod.weekly);
+import '../data/stats_providers.dart';
 
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final period = ref.watch(_statsPeriodProvider);
-    final tasks = ref.watch(tasksProvider);
-    final habits = ref.watch(habitsProvider);
-    final sessions = ref.watch(pomodoroHistoryProvider);
+    final period = ref.watch(statsPeriodProvider);
     final accent = ref.watch(accentColorProvider);
-
-    final completedTasks = tasks.where((t) => t.isCompleted).length;
-    final totalMinutes = sessions
-        .where((s) => s.isCompleted && s.type == PomodoroType.focus)
-        .fold<int>(0, (acc, s) => acc + s.durationMinutes);
-    final streak = habits.isEmpty
-        ? 0
-        : habits.map((h) => h.streakCount).reduce((a, b) => a > b ? a : b);
-
-    // Agrupamento para gráfico de barras (produtividade diária)
-    final dailyBars = _dailyBars(tasks, period);
+    // Todas as contas vêm prontas do domínio (StatsCalculator).
+    final summary = ref.watch(statsSummaryProvider);
+    final completedTasks = summary.completedTasks;
+    final totalMinutes = summary.focusMinutes;
+    final streak = summary.bestStreak;
+    final dailyBars = summary.bars;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -60,7 +44,7 @@ class StatsScreen extends ConsumerWidget {
             ],
             selected: {period},
             onSelectionChanged: (s) =>
-                ref.read(_statsPeriodProvider.notifier).state = s.first,
+                ref.read(statsPeriodProvider.notifier).state = s.first,
           ),
           const SizedBox(height: 16),
 
@@ -153,7 +137,7 @@ class StatsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _Heatmap(habits: habits),
+                _Heatmap(days: summary.habitDays),
               ],
             ),
           ),
@@ -162,35 +146,6 @@ class StatsScreen extends ConsumerWidget {
       ),
     );
   }
-
-  List<_DailyCount> _dailyBars(List<TaskModel> tasks, StatsPeriod period) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final days = switch (period) {
-      StatsPeriod.weekly => 7,
-      StatsPeriod.monthly => 30,
-      StatsPeriod.yearly => 12,
-    };
-    return List.generate(days, (i) {
-      final day = switch (period) {
-        StatsPeriod.yearly =>
-          DateTime(today.year, today.month - (days - 1 - i), today.day),
-        _ => today.subtract(Duration(days: days - 1 - i)),
-      };
-      final count = tasks.where((t) {
-        final c = t.completedAt;
-        if (c == null) return false;
-        return DateFormatters.isSameDay(c, day);
-      }).length;
-      return _DailyCount(day: day, count: count);
-    });
-  }
-}
-
-class _DailyCount {
-  _DailyCount({required this.day, required this.count});
-  final DateTime day;
-  final int count;
 }
 
 class _KpiCard extends StatelessWidget {
@@ -238,7 +193,7 @@ class _KpiCard extends StatelessWidget {
 /// quantos labels aparecem com base no período selecionado.
 class _CustomBarChart extends ConsumerWidget {
   const _CustomBarChart({required this.data, required this.period});
-  final List<_DailyCount> data;
+  final List<DailyCount> data;
   final StatsPeriod period;
 
   /// Quais índices de data devem mostrar label no eixo X.
@@ -360,29 +315,23 @@ class _CustomBarChart extends ConsumerWidget {
   }
 }
 
+/// Últimas 8 semanas; cada bolinha é um dia com algum hábito feito.
 class _Heatmap extends ConsumerWidget {
-  const _Heatmap({required this.habits});
-  final List habits;
+  const _Heatmap({required this.days});
+
+  /// Dias (sem hora) com pelo menos um hábito concluído.
+  final Set<DateTime> days;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accent = ref.watch(accentColorProvider);
-    final today = DateTime.now();
-    final start = DateTime(today.year, today.month, today.day)
-        .subtract(const Duration(days: 55));
-    final completedDays = <DateTime>{};
-    for (final h in habits) {
-      for (final d in h.completedDates as List) {
-        completedDays.add(DateTime(d.year, d.month, d.day));
-      }
-    }
-
+    final today = ref.watch(todayProvider);
     return Wrap(
       spacing: 3,
       runSpacing: 3,
       children: List.generate(56, (i) {
-        final day = start.add(Duration(days: i));
-        final completed = completedDays.contains(day);
+        final day = DateTime(today.year, today.month, today.day - 55 + i);
+        final completed = days.contains(day);
         return Container(
           width: 14,
           height: 14,

@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/providers/core_providers.dart';
-import '../../../core/utils/date_formatters.dart';
+import '../../../core/utils/date_only.dart';
 import '../domain/habit_model.dart';
+import '../domain/habit_rules.dart';
 import 'prefs_habits_repository.dart';
 
 const _uuid = Uuid();
@@ -38,20 +39,12 @@ class HabitsNotifier extends Notifier<List<HabitModel>> {
   /// Marca/Desmarca o hábito para o dia (RF-HB-02).
   Future<void> toggleCompletionForDate(HabitModel habit, DateTime day) async {
     final isCompleted = habit.isCompletedOn(day);
-    final updatedDates = [...habit.completedDates];
-    if (isCompleted) {
-      updatedDates.removeWhere(
-        (d) => d.year == day.year && d.month == day.month && d.day == day.day,
-      );
-    } else {
-      updatedDates.add(DateTime(day.year, day.month, day.day));
-    }
-
-    final newStreak = DateFormatters.currentStreak(updatedDates, reference: day);
-    final updated = habit.copyWith(
-      completedDates: updatedDates,
-      streakCount: newStreak,
-    );
+    final updatedDates = [
+      for (final d in habit.completedDates)
+        if (!isSameDay(d, day)) d,
+      if (!isCompleted) dateOnly(day),
+    ];
+    final updated = habit.copyWith(completedDates: updatedDates);
     await update(updated);
     await ref.read(hapticsServiceProvider).light();
     // Som de sucesso só ao MARCAR (não ao desmarcar)
@@ -82,7 +75,6 @@ class HabitsNotifier extends Notifier<List<HabitModel>> {
       targetValue: targetValue,
       unit: unit,
       completedDates: const [],
-      streakCount: 0,
       reminderTime: reminderTime,
       durationMinutes: durationMinutes,
     );
@@ -94,10 +86,28 @@ class HabitsNotifier extends Notifier<List<HabitModel>> {
 final habitsProvider =
     NotifierProvider<HabitsNotifier, List<HabitModel>>(HabitsNotifier.new);
 
-/// Lista filtrada pelos hábitos previstos para o dia selecionado.
-final habitsForDayProvider = Provider.family<List<HabitModel>, DateTime>(
-  (ref, day) {
-    final all = ref.watch(habitsProvider);
-    return all.where((h) => h.isScheduledFor(day)).toList();
-  },
-);
+/// Hábitos previstos para o dia [day] (passe uma data **sem hora**).
+///
+/// `autoDispose`: antes a tela Hoje passava `DateTime.now()` (com
+/// segundos) como chave — cada rebuild criava um provider novo que nunca
+/// era descartado. Agora a chave é estável (`todayProvider`) e instâncias
+/// sem uso são liberadas.
+final habitsForDayProvider =
+    Provider.autoDispose.family<List<HabitModel>, DateTime>((ref, day) {
+  final all = ref.watch(habitsProvider);
+  return all.where((h) => h.isScheduledFor(day)).toList();
+});
+
+/// Maior sequência atual entre os hábitos (calculada, nunca gravada).
+final bestStreakProvider = Provider<int>((ref) {
+  return HabitStreak.best(ref.watch(habitsProvider), ref.watch(todayProvider));
+});
+
+/// Dias dos últimos 90 com hábito previsto não concluído — memoizado:
+/// só recalcula quando os hábitos ou o dia mudam (antes, a cada build).
+final incompleteDaysProvider = Provider<Set<DateTime>>((ref) {
+  return HabitCalendar.incompleteDays(
+    ref.watch(habitsProvider),
+    ref.watch(todayProvider),
+  );
+});

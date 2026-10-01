@@ -38,7 +38,6 @@ class HabitModel {
     required this.targetValue,
     required this.unit,
     required this.completedDates,
-    required this.streakCount,
     this.reminderTime,
     this.durationMinutes,
   });
@@ -59,9 +58,9 @@ class HabitModel {
   final int targetValue;
   final String unit;
 
-  /// Datas em que o hábito foi marcado como concluído.
+  /// Datas em que o hábito foi marcado como concluído. A sequência
+  /// (streak) é calculada a partir daqui por `HabitStreak.current`.
   final List<DateTime> completedDates;
-  final int streakCount;
 
   /// Horário do lembrete opcional (HH:mm).
   final TimeOfDay? reminderTime;
@@ -98,7 +97,6 @@ class HabitModel {
     int? targetValue,
     String? unit,
     List<DateTime>? completedDates,
-    int? streakCount,
     TimeOfDay? reminderTime,
     bool clearReminderTime = false,
     int? durationMinutes,
@@ -114,7 +112,6 @@ class HabitModel {
       targetValue: targetValue ?? this.targetValue,
       unit: unit ?? this.unit,
       completedDates: completedDates ?? this.completedDates,
-      streakCount: streakCount ?? this.streakCount,
       reminderTime:
           clearReminderTime ? null : (reminderTime ?? this.reminderTime),
       durationMinutes:
@@ -133,7 +130,6 @@ class HabitModel {
         'unit': unit,
         'completedDates':
             completedDates.map((d) => d.toIso8601String()).toList(),
-        'streakCount': streakCount,
         'reminderHour': reminderTime?.hour,
         'reminderMinute': reminderTime?.minute,
         'durationMinutes': durationMinutes,
@@ -158,7 +154,6 @@ class HabitModel {
       completedDates: (json['completedDates'] as List<dynamic>)
           .map((e) => DateTime.parse(e as String))
           .toList(),
-      streakCount: json['streakCount'] as int,
       reminderTime: (reminderHour != null && reminderMinute != null)
           ? TimeOfDay(hour: reminderHour, minute: reminderMinute)
           : null,
