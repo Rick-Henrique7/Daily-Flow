@@ -88,6 +88,11 @@ void main() {
     expect(find.text('Pagar conta'), findsOneWidget);
     expect(find.text('Dentista'), findsNothing);
 
+    // As abas rolam na horizontal: "Concluídas" pode estar fora da tela
+    // (a fonte de teste é mais larga que a real). Rola até ela, como o
+    // usuário faria, antes de tocar.
+    await tester.ensureVisible(find.text('Concluídas'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Concluídas'));
     await tester.pumpAndSettle();
     expect(find.text('Nenhuma concluída ainda'), findsOneWidget);
