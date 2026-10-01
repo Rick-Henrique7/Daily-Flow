@@ -8,7 +8,7 @@ import '../constants/app_colors.dart';
 ///
 /// - **Editorial**: papel um tom mais claro que o fundo, borda fina de
 ///   tinta, cantos generosos. Com [panel] = `true` vira um painel
-///   grafite (como os blocos escuros de revista) — use [AppColors.onPanel]
+///   grafite (como os blocos escuros de revista) — use [context.palette.onPanel]
 ///   para o texto dentro dele.
 /// - **Liquid Glass**: vidro fosco (`BackdropFilter`), preenchimento
 ///   translúcido, borda com reflexo de luz e sombra suave.
@@ -37,15 +37,15 @@ class LiquidGlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(borderRadius);
-    if (AppColors.isGlass) return _glass(radius);
+    if (context.palette.isGlass) return _glass(radius);
 
     final Color? fill = gradient != null
         ? null
         : panel
-            ? AppColors.panel
+            ? context.palette.panel
             : intensity == GlassIntensity.subtle
                 ? Colors.transparent
-                : AppColors.surface;
+                : context.palette.surface;
     return RepaintBoundary(
       child: Container(
         padding: padding,
@@ -55,7 +55,7 @@ class LiquidGlassCard extends StatelessWidget {
           borderRadius: radius,
           border: panel || gradient != null
               ? null
-              : Border.all(color: AppColors.border, width: 1),
+              : Border.all(color: context.palette.border, width: 1),
         ),
         child: child,
       ),

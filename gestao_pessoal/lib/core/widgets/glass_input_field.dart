@@ -38,27 +38,27 @@ class GlassInputField extends ConsumerWidget {
       maxLines: maxLines,
       onChanged: onChanged,
       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppColors.textPrimary,
+            color: context.palette.textPrimary,
           ),
       cursorColor: accent,
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textTertiary,
+              color: context.palette.textTertiary,
             ),
         filled: true,
-        fillColor: AppColors.surface2,
+        fillColor: context.palette.surface2,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppColors.space5,
           vertical: AppColors.space3 + 2,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppColors.radiusMd),
-          borderSide: BorderSide(color: AppColors.border, width: 1),
+          borderSide: BorderSide(color: context.palette.border, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppColors.radiusMd),
-          borderSide: BorderSide(color: AppColors.border, width: 1),
+          borderSide: BorderSide(color: context.palette.border, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppColors.radiusMd),

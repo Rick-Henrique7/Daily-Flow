@@ -112,7 +112,7 @@ class _AnimatedBackgroundState extends ConsumerState<AnimatedBackground>
 
     return Stack(
       children: [
-        Positioned.fill(child: ColoredBox(color: AppColors.background)),
+        Positioned.fill(child: ColoredBox(color: context.palette.background)),
         Positioned.fill(
           child: AnimatedBuilder(
             animation: _controller,
@@ -183,7 +183,7 @@ class _EditorialBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: AppColors.background,
+      color: context.palette.background,
       child: TweenAnimationBuilder<_EditorialLayout>(
         tween: _LayoutTween(begin: layout, end: layout),
         duration: const Duration(milliseconds: 700),
@@ -192,7 +192,7 @@ class _EditorialBackdrop extends StatelessWidget {
           painter: _EditorialPainter(
             layout: value,
             accent: accent,
-            ink: AppColors.decoration,
+            ink: context.palette.decoration,
           ),
           size: Size.infinite,
         ),

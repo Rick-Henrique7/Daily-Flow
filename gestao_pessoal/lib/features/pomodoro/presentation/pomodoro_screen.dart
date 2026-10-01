@@ -41,7 +41,7 @@ class PomodoroScreen extends ConsumerWidget {
             // Seletor de modo (Foco / Pausa Curta / Pausa Longa)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: AppColors.isGlass
+              child: context.palette.isGlass
                   ? _GlassModeSelector(
                       current: timer.type,
                       accent: accent,
@@ -63,7 +63,7 @@ class PomodoroScreen extends ConsumerWidget {
                 borderRadius: 999,
                 child: Row(
                   children: [
-                    Icon(Icons.link, color: AppColors.textSecondary, size: 20),
+                    Icon(Icons.link, color: context.palette.textSecondary, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonHideUnderline(
@@ -73,7 +73,7 @@ class PomodoroScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(16),
                           hint: Text(
                             'Vincular a uma tarefa',
-                            style: TextStyle(color: AppColors.textSecondary),
+                            style: TextStyle(color: context.palette.textSecondary),
                           ),
                           items: [
                             const DropdownMenuItem<String?>(
@@ -168,8 +168,8 @@ class _EditorialModeSelector extends StatelessWidget {
                     _modeLabel(type),
                     style: t.titleSmall?.copyWith(
                       color: current == type
-                          ? AppColors.textPrimary
-                          : AppColors.textTertiary,
+                          ? context.palette.textPrimary
+                          : context.palette.textTertiary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -242,7 +242,7 @@ class _GlassModeSelector extends StatelessWidget {
                             current == type ? FontWeight.w700 : FontWeight.w500,
                         color: current == type
                             ? AppColors.onColor(accent)
-                            : AppColors.textPrimary,
+                            : context.palette.textPrimary,
                       ),
                     ),
                   ),
@@ -274,14 +274,14 @@ class _CircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = color != null;
-    final iconColor = primary ? AppColors.onColor(color!) : AppColors.textPrimary;
+    final iconColor = primary ? AppColors.onColor(color!) : context.palette.textPrimary;
     final child = SizedBox(
       width: size,
       height: size,
       child: Icon(icon, color: iconColor, size: size * 0.45),
     );
 
-    if (!AppColors.isGlass) {
+    if (!context.palette.isGlass) {
       return Tooltip(
         message: tooltip,
         child: Material(
@@ -289,7 +289,7 @@ class _CircleButton extends StatelessWidget {
           shape: CircleBorder(
             side: primary
                 ? BorderSide.none
-                : BorderSide(color: AppColors.textPrimary, width: 1.1),
+                : BorderSide(color: context.palette.textPrimary, width: 1.1),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(onTap: onPressed, child: child),

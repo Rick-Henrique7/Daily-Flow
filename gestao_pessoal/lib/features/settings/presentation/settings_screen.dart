@@ -89,7 +89,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             settings.style.description,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style: TextStyle(color: context.palette.textSecondary, fontSize: 13),
           ),
 
           if (glass) ...[
@@ -103,14 +103,14 @@ class SettingsScreen extends ConsumerWidget {
                   'Estilo do fundo',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.palette.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   settings.wallpaperMode.description,
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: context.palette.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -147,14 +147,14 @@ class SettingsScreen extends ConsumerWidget {
                     'Cor do papel de parede',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Define a cor-base dos blobs animados no fundo.',
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: context.palette.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -168,7 +168,7 @@ class SettingsScreen extends ConsumerWidget {
                           color: seedColor,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: AppColors.glassBorder,
+                            color: context.palette.glassBorder,
                             width: 1.5,
                           ),
                         ),
@@ -181,14 +181,14 @@ class SettingsScreen extends ConsumerWidget {
                             Text(
                               settings.wallpaperSeed,
                               style: TextStyle(
-                                color: AppColors.textPrimary,
+                                color: context.palette.textPrimary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             Text(
                               'Toque para alterar',
                               style: TextStyle(
-                                color: AppColors.textSecondary,
+                                color: context.palette.textSecondary,
                                 fontSize: 12,
                               ),
                             ),
@@ -217,13 +217,13 @@ class SettingsScreen extends ConsumerWidget {
                         'Intensidade dos blobs',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: context.palette.textPrimary,
                         ),
                       ),
                       Text(
                         '${(settings.blobIntensity * 100).round()}%',
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: context.palette.textSecondary,
                         ),
                       ),
                     ],
@@ -248,14 +248,14 @@ class SettingsScreen extends ConsumerWidget {
                     'Cor do fundo',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Escolha uma cor única sólida para todo o fundo da tela.',
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: context.palette.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -269,7 +269,7 @@ class SettingsScreen extends ConsumerWidget {
                           color: _hexToColor(settings.wallpaperSolidColor),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: AppColors.glassBorder,
+                            color: context.palette.glassBorder,
                             width: 1.5,
                           ),
                         ),
@@ -282,14 +282,14 @@ class SettingsScreen extends ConsumerWidget {
                             Text(
                               settings.wallpaperSolidColor,
                               style: TextStyle(
-                                color: AppColors.textPrimary,
+                                color: context.palette.textPrimary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             Text(
                               'Toque para alterar',
                               style: TextStyle(
-                                color: AppColors.textSecondary,
+                                color: context.palette.textSecondary,
                                 fontSize: 12,
                               ),
                             ),
@@ -322,14 +322,14 @@ class SettingsScreen extends ConsumerWidget {
                   'Cor do texto',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.palette.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Personaliza a cor das letras do app inteiro.',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: context.palette.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -343,7 +343,7 @@ class SettingsScreen extends ConsumerWidget {
                         color: _hexToColor(settings.textColor),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppColors.glassBorder,
+                          color: context.palette.glassBorder,
                           width: 1.5,
                         ),
                       ),
@@ -356,14 +356,14 @@ class SettingsScreen extends ConsumerWidget {
                           Text(
                             settings.textColor,
                             style: TextStyle(
-                              color: AppColors.textPrimary,
+                              color: context.palette.textPrimary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           Text(
                             'Toque para alterar',
                             style: TextStyle(
-                              color: AppColors.textSecondary,
+                              color: context.palette.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -396,10 +396,10 @@ class SettingsScreen extends ConsumerWidget {
                       }
                     },
                     icon: Icon(Icons.restart_alt,
-                        color: AppColors.textSecondary, size: 18),
+                        color: context.palette.textSecondary, size: 18),
                     label: Text(
                       'Restaurar padrão',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      style: TextStyle(color: context.palette.textSecondary),
                     ),
                   ),
                 ),
@@ -418,7 +418,7 @@ class SettingsScreen extends ConsumerWidget {
                   'Cor de destaque',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.palette.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -426,7 +426,7 @@ class SettingsScreen extends ConsumerWidget {
                   'Usada no botão +, números grandes, prioridade alta, '
                   'conclusões, aba ativa e formas do fundo.',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: context.palette.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -440,7 +440,7 @@ class SettingsScreen extends ConsumerWidget {
                         color: _hexToColor(settings.accentColor),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppColors.glassBorder,
+                          color: context.palette.glassBorder,
                           width: 1.5,
                         ),
                       ),
@@ -453,14 +453,14 @@ class SettingsScreen extends ConsumerWidget {
                           Text(
                             settings.accentColor,
                             style: TextStyle(
-                              color: AppColors.textPrimary,
+                              color: context.palette.textPrimary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           Text(
                             'Toque para alterar',
                             style: TextStyle(
-                              color: AppColors.textSecondary,
+                              color: context.palette.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -493,10 +493,10 @@ class SettingsScreen extends ConsumerWidget {
                       }
                     },
                     icon: Icon(Icons.restart_alt,
-                        color: AppColors.textSecondary, size: 18),
+                        color: context.palette.textSecondary, size: 18),
                     label: Text(
                       'Restaurar padrão',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      style: TextStyle(color: context.palette.textSecondary),
                     ),
                   ),
                 ),
@@ -512,27 +512,27 @@ class SettingsScreen extends ConsumerWidget {
                   onChanged: notifier.updateHapticsEnabled,
                   title: Text(
                     'Vibração ao tocar',
-                    style: TextStyle(color: AppColors.textPrimary),
+                    style: TextStyle(color: context.palette.textPrimary),
                   ),
                   subtitle: Text(
                     'Feedback tátil em cliques e conclusões de tarefa/hábito',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: context.palette.textSecondary),
                   ),
                 ),
                 Divider(
                   height: 1,
-                  color: AppColors.glassBorder,
+                  color: context.palette.glassBorder,
                 ),
                 SwitchListTile.adaptive(
                   value: settings.soundEnabled,
                   onChanged: notifier.updateSoundEnabled,
                   title: Text(
                     'Som de conclusão',
-                    style: TextStyle(color: AppColors.textPrimary),
+                    style: TextStyle(color: context.palette.textPrimary),
                   ),
                   subtitle: Text(
                     'Toca um "ding" ao concluir uma tarefa ou hábito',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: context.palette.textSecondary),
                   ),
                 ),
               ],
@@ -547,14 +547,14 @@ class SettingsScreen extends ConsumerWidget {
                   'Cores do ciclo Pomodoro',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.palette.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Toque para personalizar o anel de cada modo.',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: context.palette.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -609,10 +609,10 @@ class SettingsScreen extends ConsumerWidget {
                   );
                 }
               },
-              icon: Icon(Icons.restart_alt, color: AppColors.textSecondary),
+              icon: Icon(Icons.restart_alt, color: context.palette.textSecondary),
               label: Text(
                 'Restaurar padrões',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.palette.textSecondary),
               ),
             ),
           ),
@@ -637,14 +637,14 @@ class _StylePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = AppPalette.of(style);
+    final p = AppPalette.forStyle(style);
     final accent = Color(
       int.parse('FF${style.defaultAccentHex.replaceAll('#', '')}', radix: 16),
     );
     final t = Theme.of(context).textTheme;
     final ring = selected
         ? Theme.of(context).colorScheme.primary
-        : AppColors.border;
+        : context.palette.border;
 
     return Semantics(
       button: true,
@@ -757,7 +757,7 @@ class _StylePreview extends StatelessWidget {
                       child: Text(
                         style.label,
                         style: t.titleSmall?.copyWith(
-                          color: AppColors.textPrimary,
+                          color: context.palette.textPrimary,
                         ),
                       ),
                     ),
@@ -843,7 +843,7 @@ class _ColorRow extends StatelessWidget {
                 color: _hexToColor(color),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: AppColors.glassBorder,
+                  color: context.palette.glassBorder,
                   width: 1.5,
                 ),
               ),
@@ -853,12 +853,12 @@ class _ColorRow extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  color: AppColors.textPrimary,
+                  color: context.palette.textPrimary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            Icon(Icons.tune, color: AppColors.textTertiary, size: 18),
+            Icon(Icons.tune, color: context.palette.textTertiary, size: 18),
           ],
         ),
       ),
@@ -877,7 +877,7 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: AppColors.textPrimary,
+              color: context.palette.textPrimary,
             ),
       ),
     );
@@ -916,7 +916,7 @@ class _PickerDialogState extends State<_PickerDialog> {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 18,
-                color: AppColors.textPrimary,
+                color: context.palette.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
@@ -938,19 +938,19 @@ class _PickerDialogState extends State<_PickerDialog> {
                   heading: Text(
                     'Selecione',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.palette.textSecondary,
                         ),
                   ),
                   subheading: Text(
                     'Cor',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.palette.textSecondary,
                         ),
                   ),
                   wheelSubheading: Text(
                     'Tom',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: context.palette.textSecondary,
                         ),
                   ),
                   showMaterialName: false,

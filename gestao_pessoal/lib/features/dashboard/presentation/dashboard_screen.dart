@@ -82,7 +82,7 @@ class DashboardScreen extends ConsumerWidget {
                       trailing: totalItems == 0
                           ? null
                           : '$totalItems ${totalItems == 1 ? 'item' : 'itens'}',
-                      color: AppColors.onPanel,
+                      color: context.palette.onPanel,
                     ),
                     const SizedBox(height: 10),
                     if (totalItems == 0)
@@ -114,7 +114,7 @@ class DashboardScreen extends ConsumerWidget {
                         alignment: Alignment.centerRight,
                         child: ArrowCta(
                           label: 'Ver tarefas',
-                          color: AppColors.onPanelMuted,
+                          color: context.palette.onPanelMuted,
                           accent: accent,
                           onTap: () => context.go('/tasks'),
                         ),
@@ -148,7 +148,7 @@ class DashboardScreen extends ConsumerWidget {
               ListTile(
                 leading: Icon(Icons.water_drop_outlined, color: accent),
                 title: const Text('Novo hábito'),
-                trailing: Icon(Icons.east, color: AppColors.textTertiary),
+                trailing: Icon(Icons.east, color: context.palette.textTertiary),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   context.go('/habits');
@@ -157,7 +157,7 @@ class DashboardScreen extends ConsumerWidget {
               ListTile(
                 leading: Icon(Icons.task_alt, color: accent),
                 title: const Text('Nova tarefa'),
-                trailing: Icon(Icons.east, color: AppColors.textTertiary),
+                trailing: Icon(Icons.east, color: context.palette.textTertiary),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   context.go('/tasks');
@@ -224,7 +224,7 @@ class _ProgressHero extends StatelessWidget {
                       child: Text(
                         '/ ${_two(total)}',
                         style: t.displaySmall
-                            ?.copyWith(color: AppColors.textTertiary),
+                            ?.copyWith(color: context.palette.textTertiary),
                       ),
                     ),
                   ],
@@ -240,7 +240,7 @@ class _ProgressHero extends StatelessWidget {
                   Text(
                     '${(progress * 100).round()}%',
                     style: t.headlineSmall?.copyWith(
-                      color: AppColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                   ),
                   Text(
@@ -250,7 +250,7 @@ class _ProgressHero extends StatelessWidget {
                             ? 'dia completo'
                             : 'faltam $remaining',
                     style: t.labelMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.palette.textSecondary,
                     ),
                   ),
                 ],
@@ -280,7 +280,7 @@ class _ThinProgress extends StatelessWidget {
         builder: (context, c) => Stack(
           alignment: Alignment.centerLeft,
           children: [
-            Container(height: 1, color: AppColors.textPrimary.withValues(alpha: 0.5)),
+            Container(height: 1, color: context.palette.textPrimary.withValues(alpha: 0.5)),
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: value.clamp(0.0, 1.0)),
               duration: const Duration(milliseconds: 900),
@@ -316,13 +316,13 @@ class _EmptyRadar extends StatelessWidget {
           Text(
             'Dia livre por enquanto. Crie um hábito ou uma tarefa para '
             'começar a preencher o radar.',
-            style: t.bodyMedium?.copyWith(color: AppColors.onPanelMuted),
+            style: t.bodyMedium?.copyWith(color: context.palette.onPanelMuted),
           ),
           Align(
             alignment: Alignment.centerRight,
             child: ArrowCta(
               label: 'Criar hábito',
-              color: AppColors.onPanelMuted,
+              color: context.palette.onPanelMuted,
               accent: accent,
               onTap: () => context.go('/habits'),
             ),
@@ -359,7 +359,7 @@ class _RadarRow extends StatelessWidget {
     return Column(
       children: [
         if (showDivider)
-          Container(height: 1, color: AppColors.onPanel.withValues(alpha: 0.12)),
+          Container(height: 1, color: context.palette.onPanel.withValues(alpha: 0.12)),
         InkWell(
           onTap: onToggle,
           borderRadius: BorderRadius.circular(12),
@@ -376,15 +376,15 @@ class _RadarRow extends StatelessWidget {
                       Text(
                         title,
                         style: t.bodyLarge?.copyWith(
-                          color: done ? AppColors.onPanelMuted : AppColors.onPanel,
+                          color: done ? context.palette.onPanelMuted : context.palette.onPanel,
                           decoration: done ? TextDecoration.lineThrough : null,
-                          decorationColor: AppColors.onPanelMuted,
+                          decorationColor: context.palette.onPanelMuted,
                         ),
                       ),
                       if (subtitle != null && subtitle!.isNotEmpty)
                         Text(
                           subtitle!,
-                          style: t.bodySmall?.copyWith(color: AppColors.onPanelMuted),
+                          style: t.bodySmall?.copyWith(color: context.palette.onPanelMuted),
                         ),
                     ],
                   ),
@@ -455,8 +455,8 @@ class _TaskRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = task.priority == TaskPriority.low
-        ? AppColors.onPanelMuted
-        : task.priority.colorAt(accent);
+        ? context.palette.onPanelMuted
+        : task.priority.colorAt(accent, muted: context.palette.onPanelMuted);
     return _RadarRow(
       leading: SizedBox(
         width: 36,
@@ -498,7 +498,7 @@ class _CheckDot extends StatelessWidget {
         shape: BoxShape.circle,
         color: done ? accent : Colors.transparent,
         border: Border.all(
-          color: done ? accent : AppColors.onPanelMuted,
+          color: done ? accent : context.palette.onPanelMuted,
           width: 1.4,
         ),
       ),

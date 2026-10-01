@@ -27,8 +27,7 @@ class AppTheme {
     String? textColorHex,
     String? accentColorHex,
   }) {
-    AppColors.use(style);
-    final p = AppPalette.of(style);
+    final p = AppPalette.forStyle(style);
     final accent = _hexToColor(accentColorHex ?? style.defaultAccentHex);
     final foreground = style.isGlass
         ? _hexToColor(textColorHex ?? '#FFFFFF')
@@ -108,6 +107,8 @@ class AppTheme {
         style.isGlass ? const Color(0xF0161930) : p.surface;
 
     return base.copyWith(
+      // Paleta do estilo publicada no tema: widgets leem `context.palette`.
+      extensions: [p],
       colorScheme: colorScheme,
       scaffoldBackgroundColor: Colors.transparent,
       canvasColor: style.isGlass ? const Color(0xFF161930) : p.surface,

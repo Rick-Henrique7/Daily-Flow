@@ -38,14 +38,14 @@ class PomodoroTimerView extends ConsumerWidget {
     return Color(int.parse('FF$clean', radix: 16));
   }
 
-  String get _label {
+  String _label({required bool glass}) {
     switch (state.type) {
       case PomodoroType.focus:
-        return AppColors.isGlass ? 'FOCO' : 'Foco';
+        return glass ? 'FOCO' : 'Foco';
       case PomodoroType.shortBreak:
-        return AppColors.isGlass ? 'PAUSA CURTA' : 'Pausa curta';
+        return glass ? 'PAUSA CURTA' : 'Pausa curta';
       case PomodoroType.longBreak:
-        return AppColors.isGlass ? 'PAUSA LONGA' : 'Pausa longa';
+        return glass ? 'PAUSA LONGA' : 'Pausa longa';
     }
   }
 
@@ -64,7 +64,7 @@ class PomodoroTimerView extends ConsumerWidget {
     // Google Fonts (fonts.gstatic.com) na primeira vez que o usuário
     // entrava na aba Foco — gerava um delay visível de 1–3s.
     final theme = Theme.of(context);
-    final glass = AppColors.isGlass;
+    final glass = context.palette.isGlass;
     final labelStyle = glass
         ? theme.textTheme.labelLarge!.copyWith(
             fontWeight: FontWeight.w700,
@@ -78,12 +78,12 @@ class PomodoroTimerView extends ConsumerWidget {
       letterSpacing: -2,
       height: 1.0,
       fontFeatures: const [FontFeature.tabularFigures()],
-      color: AppColors.textPrimary,
+      color: context.palette.textPrimary,
     );
     final percentStyle = theme.textTheme.labelLarge!.copyWith(
       fontWeight: FontWeight.w500,
       letterSpacing: 0.5,
-      color: AppColors.textSecondary,
+      color: context.palette.textSecondary,
     );
 
     return Center(
@@ -101,8 +101,8 @@ class PomodoroTimerView extends ConsumerWidget {
                     progress: state.progress,
                     color: accent,
                     track: glass
-                        ? AppColors.surfaceElevated
-                        : AppColors.textPrimary.withValues(alpha: 0.35),
+                        ? context.palette.surfaceElevated
+                        : context.palette.textPrimary.withValues(alpha: 0.35),
                     editorial: !glass,
                   ),
                 ),
@@ -113,7 +113,7 @@ class PomodoroTimerView extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    _label,
+                    _label(glass: glass),
                     textAlign: TextAlign.center,
                     style: labelStyle,
                   ),

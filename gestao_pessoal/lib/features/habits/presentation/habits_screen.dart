@@ -114,7 +114,7 @@ class HabitsScreen extends ConsumerWidget {
                               style: Theme.of(context)
                                   .textTheme
                                   .titleLarge
-                                  ?.copyWith(color: AppColors.onPanel),
+                                  ?.copyWith(color: context.palette.onPanel),
                             ),
                           ],
                         ),
@@ -128,7 +128,7 @@ class HabitsScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Icon(Icons.local_fire_department_outlined,
-                            color: AppColors.onPanel, size: 26),
+                            color: context.palette.onPanel, size: 26),
                         const SizedBox(height: 6),
                         Text(
                           '${allHabits.length} '
@@ -136,7 +136,7 @@ class HabitsScreen extends ConsumerWidget {
                           style: Theme.of(context)
                               .textTheme
                               .labelMedium
-                              ?.copyWith(color: AppColors.onPanelMuted),
+                              ?.copyWith(color: context.palette.onPanelMuted),
                         ),
                       ],
                     ),
@@ -178,7 +178,7 @@ class HabitsScreen extends ConsumerWidget {
             LiquidGlassCard(
               child: Text(
                 'Nenhum hábito previsto para este dia. Toque no + para criar um.',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.palette.textSecondary),
               ),
             )
           else
@@ -241,14 +241,14 @@ class HabitsScreen extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.delete_outline, color: AppColors.textPrimary),
+                  Icon(Icons.delete_outline, color: context.palette.textPrimary),
                   SizedBox(width: 8),
                   Text(
                     'Excluir hábito?',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                   ),
                 ],
@@ -257,7 +257,7 @@ class HabitsScreen extends ConsumerWidget {
               Text(
                 '"$habitTitle" e todo o seu histórico de conclusões serão removidos. Essa ação pode ser desfeita na barra inferior.',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.palette.textSecondary,
                   fontSize: 14,
                 ),
               ),
@@ -272,8 +272,8 @@ class HabitsScreen extends ConsumerWidget {
                   const SizedBox(width: 8),
                   FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.surface2,
-                      foregroundColor: AppColors.textPrimary,
+                      backgroundColor: context.palette.surface2,
+                      foregroundColor: context.palette.textPrimary,
                     ),
                     onPressed: () => Navigator.pop(ctx, true),
                     child: const Text('Excluir'),
@@ -312,7 +312,7 @@ class _DeleteBackground extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.transparent, AppColors.surface2],
+          colors: [Colors.transparent, context.palette.surface2],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -327,13 +327,13 @@ class _DeleteBackground extends StatelessWidget {
           Text(
             'Excluir',
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: context.palette.textPrimary,
               fontWeight: FontWeight.w600,
               fontSize: 15,
             ),
           ),
           SizedBox(width: 8),
-          Icon(Icons.delete_outline, color: AppColors.textPrimary, size: 22),
+          Icon(Icons.delete_outline, color: context.palette.textPrimary, size: 22),
         ],
       ),
     );
@@ -369,28 +369,28 @@ class _SfCalendarCard extends StatelessWidget {
         ),
         todayHighlightColor: accent,
         todayTextStyle: TextStyle(
-          color: AppColors.textPrimary,
+          color: context.palette.textPrimary,
           fontWeight: FontWeight.w700,
         ),
         monthViewSettings: MonthViewSettings(
           monthCellStyle: MonthCellStyle(
-            textStyle: TextStyle(color: AppColors.textPrimary),
-            trailingDatesTextStyle: TextStyle(color: AppColors.textTertiary),
-            leadingDatesTextStyle: TextStyle(color: AppColors.textTertiary),
+            textStyle: TextStyle(color: context.palette.textPrimary),
+            trailingDatesTextStyle: TextStyle(color: context.palette.textTertiary),
+            leadingDatesTextStyle: TextStyle(color: context.palette.textTertiary),
           ),
           navigationDirection: MonthNavigationDirection.horizontal,
         ),
         headerStyle: CalendarHeaderStyle(
           textStyle: TextStyle(
-            color: AppColors.textPrimary,
+            color: context.palette.textPrimary,
             fontWeight: FontWeight.w700,
             fontSize: 16,
           ),
           backgroundColor: Colors.transparent,
         ),
         viewHeaderStyle: ViewHeaderStyle(
-          dayTextStyle: TextStyle(color: AppColors.textSecondary, fontSize: 11),
-          dateTextStyle: TextStyle(color: AppColors.textPrimary, fontSize: 16),
+          dayTextStyle: TextStyle(color: context.palette.textSecondary, fontSize: 11),
+          dateTextStyle: TextStyle(color: context.palette.textPrimary, fontSize: 16),
           backgroundColor: Colors.transparent,
         ),
         initialSelectedDate: selectedDay,
@@ -418,7 +418,7 @@ class _SfCalendarCard extends StatelessWidget {
                 Container(
                   margin: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: AppColors.veil(0.06),
+                    color: context.palette.veil(0.06),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -428,8 +428,8 @@ class _SfCalendarCard extends StatelessWidget {
                   '${date.day}',
                   style: TextStyle(
                     color: isIncomplete
-                        ? AppColors.textSecondary
-                        : AppColors.textPrimary,
+                        ? context.palette.textSecondary
+                        : context.palette.textPrimary,
                     fontWeight:
                         isToday ? FontWeight.w700 : FontWeight.w500,
                     fontSize: 14,
@@ -533,14 +533,14 @@ class _HabitCard extends ConsumerWidget {
                       habit.title,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: context.palette.textPrimary,
                       ),
                     ),
                     Text(
                       'Meta: ${habit.targetValue} ${habit.unit} • ${habit.category}'
                       '${habit.durationMinutes != null ? ' • ${_cardDurationLabel(habit.durationMinutes!)}' : ''}',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: context.palette.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -551,7 +551,7 @@ class _HabitCard extends ConsumerWidget {
                 tooltip: done ? 'Reabrir' : 'Concluir',
                 icon: Icon(
                   done ? Icons.check_circle : Icons.radio_button_unchecked,
-                  color: done ? accent : AppColors.textTertiary,
+                  color: done ? accent : context.palette.textTertiary,
                 ),
                 onPressed: () {
                   ref
@@ -668,13 +668,13 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Quanto tempo você pretende dedicar a este hábito?',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                style: TextStyle(color: context.palette.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: 16),
               Wrap(
@@ -785,14 +785,14 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.delete_outline, color: AppColors.textPrimary),
+                  Icon(Icons.delete_outline, color: context.palette.textPrimary),
                   SizedBox(width: 8),
                   Text(
                     'Excluir hábito?',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                   ),
                 ],
@@ -803,7 +803,7 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                 'serão removidos. Essa ação pode ser desfeita na barra '
                 'inferior.',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.palette.textSecondary,
                   fontSize: 14,
                 ),
               ),
@@ -818,8 +818,8 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                   const SizedBox(width: 8),
                   FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.surface2,
-                      foregroundColor: AppColors.textPrimary,
+                      backgroundColor: context.palette.surface2,
+                      foregroundColor: context.palette.textPrimary,
                     ),
                     onPressed: () => Navigator.pop(ctx, true),
                     child: const Text('Excluir'),
@@ -874,7 +874,7 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -896,7 +896,7 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                 'Ícone',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -913,7 +913,7 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                         decoration: BoxDecoration(
                           color: _iconKey == entry.key
                               ? _hexToColor(_colorHex).withValues(alpha: 0.35)
-                              : AppColors.surfaceElevated,
+                              : context.palette.surfaceElevated,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: _iconKey == entry.key
@@ -925,7 +925,7 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                         child: Icon(entry.value,
                             color: _iconKey == entry.key
                                 ? _hexToColor(_colorHex)
-                                : AppColors.textPrimary),
+                                : context.palette.textPrimary),
                       ),
                     ),
                 ],
@@ -937,7 +937,7 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                 'Cor',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -956,7 +956,7 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
                             color: _colorHex == hex
-                                ? AppColors.textPrimary
+                                ? context.palette.textPrimary
                                 : Colors.transparent,
                             width: 2,
                           ),
@@ -995,7 +995,7 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                 'Estimativa',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -1007,12 +1007,12 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                       horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
                     color: _durationMinutes == null
-                        ? AppColors.veil(0.06)
+                        ? context.palette.veil(0.06)
                         : accent.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: _durationMinutes == null
-                          ? AppColors.veil(0.18)
+                          ? context.palette.veil(0.18)
                           : accent,
                       width: 1,
                     ),
@@ -1023,8 +1023,8 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                         Icons.timer_outlined,
                         size: 18,
                         color: _durationMinutes == null
-                            ? AppColors.textSecondary
-                            : AppColors.textPrimary,
+                            ? context.palette.textSecondary
+                            : context.palette.textPrimary,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -1034,8 +1034,8 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                               : 'Estimado: ${_formatDuration(_durationMinutes!)}',
                           style: TextStyle(
                             color: _durationMinutes == null
-                                ? AppColors.textSecondary
-                                : AppColors.textPrimary,
+                                ? context.palette.textSecondary
+                                : context.palette.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -1048,7 +1048,7 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                           child: Icon(
                             Icons.close,
                             size: 16,
-                            color: AppColors.textSecondary,
+                            color: context.palette.textSecondary,
                           ),
                         ),
                     ],
@@ -1062,7 +1062,7 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                 'Frequência',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -1089,12 +1089,12 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(Icons.notifications_outlined,
-                    color: AppColors.textPrimary),
+                    color: context.palette.textPrimary),
                 title: Text(
                   _reminder == null
                       ? 'Sem lembrete'
                       : 'Lembrete às ${_reminder!.format(context)}',
-                  style: TextStyle(color: AppColors.textPrimary),
+                  style: TextStyle(color: context.palette.textPrimary),
                 ),
                 trailing: TextButton(
                   onPressed: _pickReminder,
@@ -1115,15 +1115,15 @@ class _CreateHabitDialogState extends ConsumerState<CreateHabitDialog> {
                       icon: Icon(
                         Icons.delete_outline,
                         size: 18,
-                        color: AppColors.textPrimary,
+                        color: context.palette.textPrimary,
                       ),
                       label: Text(
                         'Excluir',
-                        style: TextStyle(color: AppColors.textPrimary),
+                        style: TextStyle(color: context.palette.textPrimary),
                       ),
                       style: TextButton.styleFrom(
-                        backgroundColor: AppColors.surface2,
-                        foregroundColor: AppColors.textPrimary,
+                        backgroundColor: context.palette.surface2,
+                        foregroundColor: context.palette.textPrimary,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,
@@ -1170,9 +1170,9 @@ class _DayChip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accent = ref.watch(accentColorProvider);
-    final activeBg = AppColors.isGlass ? accent : AppColors.panel;
+    final activeBg = context.palette.isGlass ? accent : context.palette.panel;
     final activeFg =
-        AppColors.isGlass ? AppColors.onColor(accent) : AppColors.onPanel;
+        context.palette.isGlass ? AppColors.onColor(accent) : context.palette.onPanel;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -1183,7 +1183,7 @@ class _DayChip extends ConsumerWidget {
           color: active ? activeBg : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: active ? activeBg : AppColors.border,
+            color: active ? activeBg : context.palette.border,
             width: 1,
           ),
         ),
@@ -1191,7 +1191,7 @@ class _DayChip extends ConsumerWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: active ? activeFg : AppColors.textPrimary,
+            color: active ? activeFg : context.palette.textPrimary,
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
@@ -1223,14 +1223,14 @@ class _DurationChip extends ConsumerWidget {
           color: active ? accent : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: active ? accent : AppColors.border,
+            color: active ? accent : context.palette.border,
             width: 1,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: active ? AppColors.onColor(accent) : AppColors.textPrimary,
+            color: active ? AppColors.onColor(accent) : context.palette.textPrimary,
             fontSize: 13,
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
           ),

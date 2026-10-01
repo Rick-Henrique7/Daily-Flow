@@ -73,13 +73,13 @@ class TasksScreen extends ConsumerWidget {
                     Icon(
                       _emptyIconFor(filter),
                       size: 56,
-                      color: AppColors.textTertiary,
+                      color: context.palette.textTertiary,
                     ),
                     const SizedBox(height: 12),
                     Text(
                       _emptyTitleFor(filter),
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: context.palette.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -89,7 +89,7 @@ class TasksScreen extends ConsumerWidget {
                     Text(
                       _emptyHintFor(filter),
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: context.palette.textSecondary,
                         fontSize: 13,
                       ),
                       textAlign: TextAlign.center,
@@ -200,14 +200,14 @@ class TasksScreen extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.delete_outline, color: AppColors.textPrimary),
+                  Icon(Icons.delete_outline, color: context.palette.textPrimary),
                   SizedBox(width: 8),
                   Text(
                     'Excluir tarefa?',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                   ),
                 ],
@@ -217,7 +217,7 @@ class TasksScreen extends ConsumerWidget {
                 '"${task.title}" será removida permanentemente.'
                 ' Essa ação pode ser desfeita na barra inferior.',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.palette.textSecondary,
                   fontSize: 14,
                 ),
               ),
@@ -226,10 +226,10 @@ class TasksScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.surface2,
+                    color: context.palette.surface2,
                     borderRadius: BorderRadius.circular(AppColors.radiusSm),
                     border: Border.all(
-                      color: AppColors.border,
+                      color: context.palette.border,
                       width: 1,
                     ),
                   ),
@@ -243,7 +243,7 @@ class TasksScreen extends ConsumerWidget {
                         child: Text(
                           _recurrenceWarning(task),
                           style: TextStyle(
-                            color: AppColors.textPrimary,
+                            color: context.palette.textPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
@@ -264,8 +264,8 @@ class TasksScreen extends ConsumerWidget {
                   const SizedBox(width: 8),
                   FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.surface2,
-                      foregroundColor: AppColors.textPrimary,
+                      backgroundColor: context.palette.surface2,
+                      foregroundColor: context.palette.textPrimary,
                     ),
                     onPressed: () => Navigator.pop(ctx, true),
                     child: const Text('Excluir'),
@@ -338,7 +338,7 @@ class _TaskTile extends ConsumerWidget {
     final Color priorityColor = switch (task.priority) {
       TaskPriority.high => accent,
       TaskPriority.medium => HSVColor.fromColor(accent).withValue(0.7).toColor(),
-      TaskPriority.low => AppColors.textSecondary,
+      TaskPriority.low => context.palette.textSecondary,
     };
     return LiquidGlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
@@ -371,8 +371,8 @@ class _TaskTile extends ConsumerWidget {
                             ? TextDecoration.lineThrough
                             : null,
                         color: done
-                            ? AppColors.textSecondary
-                            : AppColors.textPrimary,
+                            ? context.palette.textSecondary
+                            : context.palette.textPrimary,
                       ),
                     ),
                   ),
@@ -384,7 +384,7 @@ class _TaskTile extends ConsumerWidget {
                           : Icons.radio_button_unchecked,
                       color: done
                           ? accent
-                          : AppColors.textTertiary,
+                          : context.palette.textTertiary,
                     ),
                     onPressed: () =>
                         ref.read(tasksProvider.notifier).toggleCompleted(task),
@@ -397,13 +397,13 @@ class _TaskTile extends ConsumerWidget {
                   child: Row(
                     children: [
                       Icon(Icons.event_outlined,
-                          size: 14, color: AppColors.textSecondary),
+                          size: 14, color: context.palette.textSecondary),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           dueLine,
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: context.palette.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -417,7 +417,7 @@ class _TaskTile extends ConsumerWidget {
                   child: Text(
                     'Sub-tarefas: ${task.completedSubtasksCount}/${task.subtasks.length}',
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: context.palette.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -578,7 +578,7 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -605,9 +605,9 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
                     vertical: AppColors.space3 + 2,
                   ),
                 ),
-                iconEnabledColor: AppColors.textSecondary,
+                iconEnabledColor: context.palette.textSecondary,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                 items: [
                   for (final p in TaskPriority.values)
@@ -615,7 +615,14 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
                       value: p,
                       child: Row(
                         children: [
-                          Icon(p.icon, color: p.colorAt(accent), size: 18),
+                          Icon(
+                              p.icon,
+                              color: p.colorAt(
+                                accent,
+                                muted: context.palette.textSecondary,
+                              ),
+                              size: 18,
+                            ),
                           const SizedBox(width: 8),
                           Text(p.label),
                         ],
@@ -639,7 +646,7 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
                 'Quando',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -681,7 +688,7 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
                 'Repetir',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -755,12 +762,12 @@ class _GlassPickerButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: active
               ? accent.withValues(alpha: 0.25)
-              : AppColors.veil(0.06),
+              : context.palette.veil(0.06),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: active
                 ? accent
-                : AppColors.veil(0.18),
+                : context.palette.veil(0.18),
             width: 1,
           ),
         ),
@@ -770,7 +777,7 @@ class _GlassPickerButton extends StatelessWidget {
               icon,
               size: 18,
               color:
-                  active ? AppColors.textPrimary : AppColors.textSecondary,
+                  active ? context.palette.textPrimary : context.palette.textSecondary,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -778,8 +785,8 @@ class _GlassPickerButton extends StatelessWidget {
                 label,
                 style: TextStyle(
                   color: active
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
+                      ? context.palette.textPrimary
+                      : context.palette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -791,7 +798,7 @@ class _GlassPickerButton extends StatelessWidget {
                 child: Icon(
                   Icons.close,
                   size: 16,
-                  color: AppColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
               ),
           ],
@@ -816,9 +823,9 @@ class _DayChip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accent = ref.watch(accentColorProvider);
-    final activeBg = AppColors.isGlass ? accent : AppColors.panel;
+    final activeBg = context.palette.isGlass ? accent : context.palette.panel;
     final activeFg =
-        AppColors.isGlass ? AppColors.onColor(accent) : AppColors.onPanel;
+        context.palette.isGlass ? AppColors.onColor(accent) : context.palette.onPanel;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -829,7 +836,7 @@ class _DayChip extends ConsumerWidget {
           color: active ? activeBg : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: active ? activeBg : AppColors.border,
+            color: active ? activeBg : context.palette.border,
             width: 1,
           ),
         ),
@@ -837,7 +844,7 @@ class _DayChip extends ConsumerWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: active ? activeFg : AppColors.textPrimary,
+            color: active ? activeFg : context.palette.textPrimary,
             fontSize: 13,
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
           ),
@@ -858,7 +865,7 @@ class _DeleteBackground extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.transparent, AppColors.surface2],
+          colors: [Colors.transparent, context.palette.surface2],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -873,13 +880,13 @@ class _DeleteBackground extends StatelessWidget {
           Text(
             'Excluir',
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: context.palette.textPrimary,
               fontWeight: FontWeight.w600,
               fontSize: 15,
             ),
           ),
           SizedBox(width: 8),
-          Icon(Icons.delete_outline, color: AppColors.textPrimary, size: 22),
+          Icon(Icons.delete_outline, color: context.palette.textPrimary, size: 22),
         ],
       ),
     );
@@ -920,8 +927,8 @@ class _FilterTabs extends StatelessWidget {
                       labelFor(f),
                       style: t.titleSmall?.copyWith(
                         color: f == current
-                            ? AppColors.textPrimary
-                            : AppColors.textTertiary,
+                            ? context.palette.textPrimary
+                            : context.palette.textTertiary,
                         fontWeight:
                             f == current ? FontWeight.w500 : FontWeight.w400,
                       ),

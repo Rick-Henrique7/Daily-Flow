@@ -50,7 +50,7 @@ class AppUndoSnackBar {
               child: Text(
                 message,
                 style: TextStyle(
-                  color: AppColors.onPanel,
+                  color: context.palette.onPanel,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   height: 1.3,
@@ -60,15 +60,15 @@ class AppUndoSnackBar {
           ],
         ),
         backgroundColor:
-            AppColors.isGlass ? const Color(0xF0161930) : AppColors.panel,
+            context.palette.isGlass ? const Color(0xF0161930) : context.palette.panel,
         elevation: 0,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 84), // 84px = nav bar safe-area
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: AppColors.isGlass
-              ? BorderSide(color: AppColors.border, width: 1)
+          side: context.palette.isGlass
+              ? BorderSide(color: context.palette.border, width: 1)
               : BorderSide.none,
         ),
         duration: const Duration(seconds: 4),

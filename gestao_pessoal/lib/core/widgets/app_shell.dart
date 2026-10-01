@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/settings/data/settings_controller.dart';
 import 'animated_background.dart';
 import 'glass_nav_bar.dart';
 
@@ -12,7 +10,7 @@ import 'glass_nav_bar.dart';
 /// 1. `AnimatedBackground` (composição editorial ou blobs do glass)
 /// 2. Conteúdo da rota atual
 /// 3. `GlassNavBar` flutuante no rodapé
-class AppShell extends ConsumerWidget {
+class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child, required this.location});
   final Widget child;
   final String location;
@@ -59,25 +57,20 @@ class AppShell extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // As cores de `AppColors` são estáticas (trocadas pelo app ao mudar
-    // de estilo). A key força a reconstrução de toda a árvore da tela
-    // quando o estilo muda, para nenhum widget ficar com a paleta velha.
-    final style = ref.watch(settingsProvider.select((s) => s.style));
+  Widget build(BuildContext context) {
+    // A paleta vem do tema (`context.palette`): ao trocar de estilo, o
+    // Flutter reconstrói só quem depende dela — sem recriar a árvore.
     return AnimatedBackground(
       routeIndex: _routeIndex,
-      child: KeyedSubtree(
-        key: ValueKey(style),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          // Sem `extendBody`: assim o FAB de cada tela fica acima da
-          // nav bar flutuante em vez de escondido atrás dela.
-          body: child,
-          bottomNavigationBar: GlassNavBar(
-            items: _items,
-            currentRoute: location,
-            onTap: (route) => context.go(route),
-          ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        // Sem `extendBody`: assim o FAB de cada tela fica acima da
+        // nav bar flutuante em vez de escondido atrás dela.
+        body: child,
+        bottomNavigationBar: GlassNavBar(
+          items: _items,
+          currentRoute: location,
+          onTap: (route) => context.go(route),
         ),
       ),
     );
