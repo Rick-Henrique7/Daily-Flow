@@ -208,16 +208,30 @@ class _ProgressHero extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(_two(done), style: big?.copyWith(color: accent)),
-            const SizedBox(width: 10),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                '/ ${_two(total)}',
-                style: t.displaySmall?.copyWith(color: AppColors.textTertiary),
+            // Números grandes encolhem para caber em telas estreitas ou
+            // com fonte do sistema aumentada (em vez de estourar a linha).
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.bottomLeft,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(_two(done), style: big?.copyWith(color: accent)),
+                    const SizedBox(width: 10),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        '/ ${_two(total)}',
+                        style: t.displaySmall
+                            ?.copyWith(color: AppColors.textTertiary),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const Spacer(),
+            const SizedBox(width: 12),
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Column(

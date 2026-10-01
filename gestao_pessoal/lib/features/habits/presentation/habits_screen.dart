@@ -94,7 +94,10 @@ class HabitsScreen extends ConsumerWidget {
                               .labelLarge
                               ?.copyWith(color: accent),
                         ),
-                        Row(
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Row(
                           crossAxisAlignment: CrossAxisAlignment.baseline,
                           textBaseline: TextBaseline.alphabetic,
                           children: [
@@ -114,6 +117,7 @@ class HabitsScreen extends ConsumerWidget {
                                   ?.copyWith(color: AppColors.onPanel),
                             ),
                           ],
+                        ),
                         ),
                       ],
                     ),
