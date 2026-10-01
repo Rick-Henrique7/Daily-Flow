@@ -7,6 +7,31 @@ e este projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Corrigido
+- Tarefa recorrente ficava concluída para sempre; agora a conclusão é por dia
+  e ela volta a ficar pendente na próxima ocorrência (dados antigos migrados).
+- Tarefas não contavam em "Feitos hoje" e a tela Hoje divergia da aba Hoje.
+- Sequência de hábitos não zerava ao perder dias; agora é calculada.
+- Estatísticas não atualizavam após uma sessão de foco.
+- Gráfico "Ano" contava só o mesmo dia de cada mês.
+- Um registro corrompido no armazenamento podia fechar o app.
+
+### Performance
+- Provider de hábitos do dia criava uma instância nova a cada rebuild (chave
+  com segundos) sem liberar; agora chave estável + `autoDispose`.
+- Calendário de hábitos e estatísticas memoizados em providers.
+- `SoundService` liberado ao ser recriado.
+
+### Arquitetura
+- Repositórios com interface no domínio; implementação `SharedPreferences` em `data/`.
+- Providers de infraestrutura em `core/`; fim da dependência circular `settings ↔ habits`.
+- Regras de negócio puras: `TaskSchedule`, `HabitStreak`, `HabitCalendar`, `StatsCalculator`.
+- 35 testes unitários.
+
+### Documentação
+- `docs/`: arquitetura, ADRs, ciclo de vida, estratégia de testes e registro
+  da etapa 1, com diagramas (SVG e Mermaid).
+
 ### Performance
 - **Pomodoro (aba Foco)**: removidas chamadas a `GoogleFonts.spaceGrotesk()`
   e `GoogleFonts.inter()` que disparavam download sob demanda de `fonts.gstatic.com`

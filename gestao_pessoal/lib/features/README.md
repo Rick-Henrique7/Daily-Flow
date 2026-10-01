@@ -1,64 +1,57 @@
-# `lib/features/` — Arquitetura por Feature
+# `lib/features/` — Arquitetura por feature
 
-Cada pasta aqui dentro representa uma **feature vertical** do Daily Flow
-(tarefas, hábitos, pomodoro, etc). Uma feature é **auto-contida**: tudo
-que ela precisa para funcionar vive dentro dela, e ela não depende
-horizontalmente de outras features — apenas de `lib/core/`.
+Cada pasta é uma **funcionalidade vertical** do Daily Flow. Visão completa em
+[`docs/arquitetura.md`](../../../docs/arquitetura.md) e decisões em
+[`docs/adr/`](../../../docs/adr/README.md).
 
 ## Estrutura padrão
 
 ```
 features/<nome>/
-├── data/          # Camada de dados — Notifiers Riverpod, acesso a SharedPreferences
-│   └── *_controller.dart
-├── domain/        # Modelos de domínio — imutáveis, com copyWith + fromJson
-│   └── *_model.dart
-└── presentation/  # Telas + widgets + diálogo de criação/edição
-    └── *_screen.dart
+├── domain/        # Modelos imutáveis, regras puras e contratos (interfaces)
+│   ├── <nome>_model.dart
+│   ├── <nome>_repository.dart      # abstract interface class
+│   └── <regras>.dart               # funções puras (ex.: task_schedule.dart)
+├── data/          # Estado (Riverpod Notifier) e implementações dos contratos
+│   ├── <nome>_controller.dart
+│   └── prefs_<nome>_repository.dart
+└── presentation/  # Telas, widgets e diálogos
+    └── <nome>_screen.dart
 ```
 
-Algumas features têm variações legítimas:
-
-- `pomodoro/` e `stats/` usam `controllers/` em vez de `data/` para a
-  camada de estado. Mantido por consistência histórica.
-- `pomodoro/` não tem `domain/` porque os tipos (`PomodoroType`,
-  `PomodoroTimerState`, `PomodoroSessionModel`) ficaram dentro de
-  `data/` e `controllers/` por proximidade de uso.
-
-E algumas têm **diretórios vazios reservados** para expansão futura
-(ainda não populados, mas já estruturados na arquitetura correta):
-
-- `dashboard/controllers/` — reservado para extrair a lógica de
-  progresso diário quando crescer.
-- `dashboard/data/` — reservado para cache/preferências do dashboard.
-- `stats/controllers/` — reservado para extrair agregações de gráficos
-  (atualmente inline em `presentation/stats_screen.dart`).
-
-A presença deles não é bug — é um sinal de **onde a feature vai
-crescer**. Removê-los só porque estão vazios agora seria voltar
-atrás quando precisarmos.
+| Feature | domain | data | presentation |
+| --- | --- | --- | --- |
+| `habits` | `HabitModel`, `HabitStreak`, `HabitCalendar`, `HabitsRepository` | `HabitsNotifier`, `PrefsHabitsRepository` | `HabitsScreen` |
+| `tasks` | `TaskModel`, `TaskSchedule`, `TasksRepository` | `TasksNotifier`, `PrefsTasksRepository` | `TasksScreen` |
+| `pomodoro` | `PomodoroSessionModel`, `PomodoroSessionsRepository` | timer + `PomodoroHistoryNotifier` | `PomodoroScreen` |
+| `settings` | `AppSettings`, `SettingsRepository` | `SettingsNotifier` | `SettingsScreen` |
+| `stats` | `StatsCalculator` | `stats_providers.dart` | `StatsScreen` |
+| `dashboard` | — | — | `DashboardScreen` (tela Hoje) |
 
 ## Regras de dependência
 
 ```
 presentation/  ──►  data/  ──►  domain/
-        │
-        └────────►  core/  (constants, widgets, services, utils)
+       └──────────────┴────────────┴──►  core/
 ```
 
-- `presentation/` **nunca** importa de outra feature.
-- `data/` **nunca** importa de `presentation/`.
-- `domain/` **nunca** importa de `data/` nem `presentation/` —
-  é a camada mais interna e estável.
-- Todas as features podem importar de `core/` (é compartilhado por
-  definição).
+- `domain/` não importa `data/`, `presentation/`, Riverpod nem armazenamento.
+- `data/` não importa `presentation/`.
+- Features **de domínio** (`habits`, `tasks`, `pomodoro`, `settings`) não
+  importam umas às outras.
+- Features **agregadoras** (`dashboard`, `stats`) podem ler os controllers de
+  outras features — juntar dados é o propósito delas. Exceção pontual: o Foco
+  lê a lista de tarefas para vincular uma sessão. ([ADR 0002](../../../docs/adr/0002-providers-em-core.md))
+- Infraestrutura (armazenamento, "hoje", vibração, som) vem de
+  `core/providers/core_providers.dart`, nunca de outra feature.
 
-## Adicionando uma nova feature
+## Adicionando uma feature
 
-1. Crie `features/<nome>/` com as 3 subpastas.
-2. Defina o modelo em `domain/<nome>_model.dart` (imutável, com
-   `copyWith`, `toJson`, `fromJson`).
-3. Implemente o controller em `data/<nome>_controller.dart` usando
-   Riverpod (`Notifier<T>` ou `AsyncNotifier<T>`).
-4. Implemente a UI em `presentation/<nome>_screen.dart`.
-5. Registre a rota em `routing/app_router.dart`.
+1. `domain/`: modelo imutável (`copyWith`, `toJson`, `fromJson`) e o contrato
+   do repositório.
+2. `data/`: implementação `Prefs<Nome>Repository` + provider tipado com a
+   interface; controller `Notifier` que depende só da interface.
+3. Regras de negócio como funções puras em `domain/`, com testes em
+   `test/features/<nome>/`.
+4. `presentation/`: tela que lê providers e chama o controller.
+5. Rota em `routing/app_router.dart`.
