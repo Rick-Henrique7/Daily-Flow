@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatters.dart';
 import '../../settings/data/settings_controller.dart';
-import '../controllers/pomodoro_controller.dart';
-import '../data/pomodoro_session_model.dart';
+import '../data/pomodoro_controller.dart';
+import '../domain/pomodoro_session_model.dart';
 
 /// Timer circular minimalista do Pomodoro (RF-PO-01, RNF-PO-01).
 ///

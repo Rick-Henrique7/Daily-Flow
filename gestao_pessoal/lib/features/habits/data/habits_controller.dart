@@ -4,28 +4,19 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/providers/core_providers.dart';
 import '../../../core/utils/date_formatters.dart';
-import '../../../core/utils/json_coders.dart';
 import '../domain/habit_model.dart';
+import 'prefs_habits_repository.dart';
 
 const _uuid = Uuid();
 
-/// Notifier que mantém a lista de hábitos do usuário em memória e
-/// persiste cada mudança no `SharedPreferences` (RF-HB-01..05).
+/// Notifier que mantém a lista de hábitos em memória e persiste cada
+/// mudança pelo [HabitsRepository] (RF-HB-01..05). Não sabe *onde* os
+/// dados ficam — só fala com a interface.
 class HabitsNotifier extends Notifier<List<HabitModel>> {
   @override
-  List<HabitModel> build() {
-    final store = ref.watch(prefsStoreProvider);
-    return JsonCoders.decodeList<HabitModel>(
-      store.habits,
-      HabitModel.fromJson,
-    );
-  }
+  List<HabitModel> build() => ref.watch(habitsRepositoryProvider).loadAll();
 
-  Future<void> _persist() async {
-    final store = ref.read(prefsStoreProvider);
-    final raw = JsonCoders.encodeList<HabitModel>(state, (h) => h.toJson());
-    await store.setHabits(raw);
-  }
+  Future<void> _persist() => ref.read(habitsRepositoryProvider).saveAll(state);
 
   Future<void> add(HabitModel habit) async {
     state = [...state, habit];

@@ -1,23 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/providers/core_providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../domain/app_settings.dart';
+import 'prefs_settings_repository.dart';
 
 /// Notifier que mantém as configurações do app em memória e persiste
 /// cada mudança em [PrefsKeys.settings].
 class SettingsNotifier extends Notifier<AppSettings> {
   @override
-  AppSettings build() {
-    final store = ref.watch(prefsStoreProvider);
-    return AppSettings.fromJsonString(store.settings);
-  }
+  AppSettings build() => ref.watch(settingsRepositoryProvider).load();
 
-  Future<void> _persist() async {
-    final store = ref.read(prefsStoreProvider);
-    await store.setSettings(state.toJsonString());
-  }
+  Future<void> _persist() => ref.read(settingsRepositoryProvider).save(state);
 
   /// Troca o estilo visual. Ao trocar, a cor de destaque volta para o
   /// padrão do novo estilo (coral no editorial, lilás no glass) — uma

@@ -7,8 +7,8 @@ import '../../../core/widgets/liquid_glass_card.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../settings/data/settings_controller.dart';
 import '../../tasks/data/tasks_controller.dart';
-import '../controllers/pomodoro_controller.dart';
-import '../data/pomodoro_session_model.dart';
+import '../data/pomodoro_controller.dart';
+import '../domain/pomodoro_session_model.dart';
 import 'pomodoro_timer_view.dart';
 
 class PomodoroScreen extends ConsumerWidget {

@@ -3,25 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/providers/core_providers.dart';
-import '../../../core/utils/json_coders.dart';
 import '../domain/subtask_model.dart';
 import '../domain/task_model.dart';
+import 'prefs_tasks_repository.dart';
 
 const _uuid = Uuid();
 
 class TasksNotifier extends Notifier<List<TaskModel>> {
   @override
-  List<TaskModel> build() {
-    final store = ref.watch(prefsStoreProvider);
-    return JsonCoders.decodeList<TaskModel>(store.tasks, TaskModel.fromJson)
-      ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
-  }
+  List<TaskModel> build() => ref.watch(tasksRepositoryProvider).loadAll()
+    ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
 
-  Future<void> _persist() async {
-    final store = ref.read(prefsStoreProvider);
-    final raw = JsonCoders.encodeList<TaskModel>(state, (t) => t.toJson());
-    await store.setTasks(raw);
-  }
+  Future<void> _persist() => ref.read(tasksRepositoryProvider).saveAll(state);
 
   Future<TaskModel> create({
     required String title,

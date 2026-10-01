@@ -3,9 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../core/utils/json_coders.dart';
-import '../../../core/providers/core_providers.dart';
-import '../data/pomodoro_session_model.dart';
+import '../domain/pomodoro_session_model.dart';
+import 'prefs_pomodoro_sessions_repository.dart';
 
 const _uuid = Uuid();
 
@@ -118,11 +117,6 @@ class PomodoroTimerNotifier extends Notifier<PomodoroTimerState> {
 
   Future<void> _persistSession({required bool isCompleted}) async {
     if (!isCompleted) return;
-    final store = ref.read(prefsStoreProvider);
-    final history = JsonCoders.decodeList<PomodoroSessionModel>(
-      store.pomodoroSessions,
-      PomodoroSessionModel.fromJson,
-    );
     final session = PomodoroSessionModel(
       id: _uuid.v4(),
       taskId: state.taskId,
@@ -132,13 +126,9 @@ class PomodoroTimerNotifier extends Notifier<PomodoroTimerState> {
       isCompleted: true,
       type: state.type,
     );
-    final updated = [...history, session];
-    await store.setPomodoroSessions(
-      JsonCoders.encodeList<PomodoroSessionModel>(
-        updated,
-        (s) => s.toJson(),
-      ),
-    );
+    // Passa pelo notifier do histórico: assim as Estatísticas atualizam
+    // na hora (antes o histórico só era relido ao reiniciar o app).
+    await ref.read(pomodoroHistoryProvider.notifier).record(session);
   }
 
   // === API pública ===
@@ -185,11 +175,19 @@ final pomodoroTimerProvider =
   PomodoroTimerNotifier.new,
 );
 
-/// Histórico de sessões concluídas (RF-ST-01).
-final pomodoroHistoryProvider = Provider<List<PomodoroSessionModel>>((ref) {
-  final store = ref.watch(prefsStoreProvider);
-  return JsonCoders.decodeList<PomodoroSessionModel>(
-    store.pomodoroSessions,
-    PomodoroSessionModel.fromJson,
-  );
-});
+/// Histórico de sessões concluídas (RF-ST-01), reativo.
+class PomodoroHistoryNotifier extends Notifier<List<PomodoroSessionModel>> {
+  @override
+  List<PomodoroSessionModel> build() =>
+      ref.watch(pomodoroSessionsRepositoryProvider).loadAll();
+
+  Future<void> record(PomodoroSessionModel session) async {
+    state = [...state, session];
+    await ref.read(pomodoroSessionsRepositoryProvider).saveAll(state);
+  }
+}
+
+final pomodoroHistoryProvider =
+    NotifierProvider<PomodoroHistoryNotifier, List<PomodoroSessionModel>>(
+  PomodoroHistoryNotifier.new,
+);
