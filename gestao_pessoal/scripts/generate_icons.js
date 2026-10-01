@@ -1,8 +1,8 @@
 // generate_icons.js
 //
 // Gera todas as variantes do ícone do app a partir de:
-//   - `assets/icons/daily_flow_icon.png`      (master, fundo branco — web/PWA)
-//   - `assets/icons/trident_foreground.png`   (foreground transparente — Android)
+//   - `assets/icons/daily_flow_icon.png`      (master "Órbita", fundo creme — web/PWA)
+//   - `assets/icons/orbit_foreground.png`     (foreground transparente — Android)
 //
 // Saídas:
 //   Android (em `android/app/src/main/res/`):
@@ -21,7 +21,7 @@
 //   Sem `mipmap-anydpi-v26/ic_launcher.xml`, o launcher aplica um inset
 //   maior no ícone legacy → ele PARECE pequeno em relação aos outros
 //   apps no Android (que usam adaptive icons desde a API 26).
-//   Com adaptive icons configurados, o background branco preenche a
+//   Com adaptive icons configurados, o background creme preenche a
 //   área total do ícone e a única folga fica na safe-zone interna do
 //   foreground (~72dp dos 108dp).
 
@@ -31,7 +31,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const SRC_MASTER = path.join(ROOT, 'assets/icons/daily_flow_icon.png');
-const SRC_FOREGROUND = path.join(ROOT, 'assets/icons/trident_foreground.png');
+const SRC_FOREGROUND = path.join(ROOT, 'assets/icons/orbit_foreground.png');
 
 // Tamanhos Android (mdpi=48, hdpi=72, xhdpi=96, xxhdpi=144, xxxhdpi=192)
 // Para adaptive icons, o sistema renderiza o foreground em 108dp = 432px no
@@ -121,12 +121,12 @@ async function generate() {
   const backgroundXml = `<?xml version="1.0" encoding="utf-8"?>
 <!--
   Background sólido do adaptive icon do Daily Flow.
-  Branco puro (#FFFFFF) — mesma cor do master p/ coerência visual
+  Creme editorial (#EDE5D8) — mesma cor do master p/ coerência visual
   entre o ícone legacy e o adaptive no Android 8+ (API 26+).
 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#FFFFFF" />
+    <solid android:color="#EDE5D8" />
 </shape>
 `;
   fs.writeFileSync(
@@ -134,7 +134,7 @@ async function generate() {
     backgroundXml,
     'utf-8',
   );
-  console.log('✓ drawable/ic_launcher_background.xml (solid white #FFFFFF)');
+  console.log('✓ drawable/ic_launcher_background.xml (creme #EDE5D8)');
 
   // === Adaptive icon config (Android 8.0 / API 26+) ===
   // Sem este XML, o sistema cai no legacy mipmap e o launcher aplica
@@ -151,12 +151,12 @@ async function generate() {
 <!--
   Adaptive icon configuration for Daily Flow.
   Refs:
-    - foreground: tridente 108×108dp (${fgName}.png)
+    - foreground: "Órbita" 108×108dp (${fgName}.png)
                   área visível segura: 72×72dp centralizado
-    - background: branco puro (#FFFFFF) via drawable/ic_launcher_background.xml
+    - background: creme editorial (#EDE5D8) via drawable/ic_launcher_background.xml
 
   Sistema aplica máscara (círculo/squircle/teardrop) na área 108×108dp
-  inteira → o background branco preenche o ícone completo, dando a
+  inteira → o background creme preenche o ícone completo, dando a
   sensação de "ícone grande" no launcher (vs legacy inset).
 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
@@ -199,7 +199,7 @@ async function generate() {
         bottom: pad,
         left: pad,
         right: pad,
-        background: { r: 13, g: 17, b: 23, alpha: 1 }, // #0D1117
+        background: { r: 237, g: 229, b: 216, alpha: 1 }, // #EDE5D8
       })
       .png()
       .toFile(path.join(webDir, `Icon-maskable-${size}.png`));

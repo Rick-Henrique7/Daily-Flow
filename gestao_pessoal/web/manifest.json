@@ -3,9 +3,9 @@
     "short_name": "Daily Flow",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0D1117",
-    "theme_color": "#8B5CF6",
-    "description": "Daily Flow — Aplicativo pessoal de gestão de rotina com hábitos, tarefas, timer Pomodoro e estatísticas. Visual Liquid Glass 3D.",
+    "background_color": "#EDE5D8",
+    "theme_color": "#E4553F",
+    "description": "Daily Flow — Aplicativo pessoal de gestão de rotina com hábitos, tarefas, timer Pomodoro e estatísticas. Visual editorial, com estilo Liquid Glass opcional.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
