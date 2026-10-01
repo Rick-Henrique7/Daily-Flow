@@ -35,9 +35,13 @@ class AppTheme {
         : p.textPrimary;
     final onAccent = AppColors.onColor(accent);
 
-    final base = style.isGlass
-        ? ThemeData.dark(useMaterial3: true)
-        : ThemeData.light(useMaterial3: true);
+    final base = ThemeData(
+      useMaterial3: true,
+      brightness: style.isGlass ? Brightness.dark : Brightness.light,
+      // Fonte base do app inteiro — inclusive widgets que não herdam do
+      // textTheme (dropdowns, campos com `style` próprio).
+      fontFamily: style.isGlass ? GoogleFonts.dmSans().fontFamily : 'Jost',
+    );
 
     TextStyle font(double size, FontWeight weight, {double? height, double? spacing}) {
       final s = TextStyle(

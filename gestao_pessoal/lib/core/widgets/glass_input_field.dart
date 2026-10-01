@@ -37,19 +37,15 @@ class GlassInputField extends ConsumerWidget {
       keyboardType: keyboardType,
       maxLines: maxLines,
       onChanged: onChanged,
-      style: TextStyle(
-        color: AppColors.textPrimary,
-        fontSize: 15,
-        fontWeight: FontWeight.w400,
-      ),
+      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: AppColors.textPrimary,
+          ),
       cursorColor: accent,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 15,
-          fontWeight: FontWeight.w400,
-        ),
+        hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: AppColors.textTertiary,
+            ),
         filled: true,
         fillColor: AppColors.surface2,
         contentPadding: const EdgeInsets.symmetric(

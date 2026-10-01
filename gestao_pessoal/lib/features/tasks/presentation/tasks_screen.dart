@@ -585,51 +585,38 @@ class _TaskDialogState extends ConsumerState<_TaskDialog> {
               ),
               const SizedBox(height: 12),
 
-              // Prioridade
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.veil(0.06),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: AppColors.veil(0.18),
-                    width: 1,
+              // Prioridade — mesmo visual do GlassInputField (o tema
+              // já define preenchimento, borda arredondada e foco), sem
+              // container extra por fora que vazava nos cantos.
+              DropdownButtonFormField<TaskPriority>(
+                initialValue: _priority,
+                isExpanded: true,
+                borderRadius: BorderRadius.circular(AppColors.radiusMd),
+                decoration: const InputDecoration(
+                  hintText: 'Prioridade',
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: AppColors.space5,
+                    vertical: AppColors.space3 + 2,
                   ),
                 ),
-                child: DropdownButtonFormField<TaskPriority>(
-                  initialValue: _priority,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    hintText: 'Prioridade',
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+                iconEnabledColor: AppColors.textSecondary,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppColors.textPrimary,
                     ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                  ),
-                  iconEnabledColor: AppColors.textPrimary,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  items: [
-                    for (final p in TaskPriority.values)
-                      DropdownMenuItem(
-                        value: p,
-                        child: Row(
-                          children: [
-                            Icon(p.icon, color: p.colorAt(accent), size: 18),
-                            const SizedBox(width: 8),
-                            Text(p.label),
-                          ],
-                        ),
+                items: [
+                  for (final p in TaskPriority.values)
+                    DropdownMenuItem(
+                      value: p,
+                      child: Row(
+                        children: [
+                          Icon(p.icon, color: p.colorAt(accent), size: 18),
+                          const SizedBox(width: 8),
+                          Text(p.label),
+                        ],
                       ),
-                  ],
-                  onChanged: (v) =>
-                      setState(() => _priority = v ?? _priority),
-                ),
+                    ),
+                ],
+                onChanged: (v) => setState(() => _priority = v ?? _priority),
               ),
               const SizedBox(height: 12),
 
