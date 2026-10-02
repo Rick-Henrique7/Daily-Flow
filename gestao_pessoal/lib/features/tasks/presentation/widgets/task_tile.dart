@@ -5,7 +5,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/core_providers.dart';
 import '../../../../core/utils/date_formatters.dart';
 import '../../../../core/widgets/liquid_glass_card.dart';
-import '../../../settings/data/settings_controller.dart';
 import '../../data/tasks_controller.dart';
 import '../../domain/task_model.dart';
 
@@ -18,7 +17,7 @@ class TaskTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dueLine = _dueLine(task);
-    final accent = ref.watch(accentColorProvider);
+    final accent = context.accent;
     // Recorrente: "feita" vale para hoje; pontual: concluída de vez.
     final done = TaskSchedule.isDoneOn(task, ref.watch(todayProvider));
     // Mapeia prioridade para a cor — high usa accent (customizado),

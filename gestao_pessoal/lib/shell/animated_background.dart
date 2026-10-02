@@ -63,7 +63,7 @@ class _AnimatedBackgroundState extends ConsumerState<AnimatedBackground>
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
-    final accent = ref.watch(accentColorProvider);
+    final accent = context.accent;
     final glass = settings.style.isGlass;
     final animated = glass && settings.wallpaperMode == WallpaperMode.animated;
     _syncTicker(animated);

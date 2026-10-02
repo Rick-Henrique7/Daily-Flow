@@ -9,7 +9,6 @@ import '../../../core/widgets/confirm_delete_dialog.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../../core/widgets/swipe_delete_background.dart';
-import '../../settings/data/settings_controller.dart';
 import '../data/habits_controller.dart';
 import '../domain/habit_model.dart';
 import 'habit_form_dialog.dart';
@@ -50,7 +49,7 @@ class HabitsScreen extends ConsumerWidget {
     final selectedDay = ref.watch(_selectedDayProvider);
     final habits = ref.watch(habitsForDayProvider(selectedDay));
     final allHabits = ref.watch(habitsProvider);
-    final accent = ref.watch(accentColorProvider);
+    final accent = context.accent;
     final bestStreak = ref.watch(bestStreakProvider);
     final doneOnDay = habits.where((h) => h.isCompletedOn(selectedDay)).length;
     final appointments = ref.watch(_appointmentsProvider);

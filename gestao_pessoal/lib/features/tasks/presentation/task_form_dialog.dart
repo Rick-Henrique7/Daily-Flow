@@ -6,7 +6,6 @@ import '../../../core/utils/date_formatters.dart';
 import '../../../core/widgets/glass_input_field.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../../../core/widgets/weekday_chip.dart';
-import '../../settings/data/settings_controller.dart';
 import '../data/tasks_controller.dart';
 import '../domain/subtask_model.dart';
 import '../domain/task_model.dart';
@@ -116,7 +115,7 @@ class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final accent = ref.watch(accentColorProvider);
+    final accent = context.accent;
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(16),

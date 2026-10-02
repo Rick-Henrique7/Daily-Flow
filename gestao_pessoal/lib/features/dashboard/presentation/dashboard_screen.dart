@@ -10,7 +10,6 @@ import '../../../core/widgets/liquid_glass_card.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../habits/data/habits_controller.dart';
 import '../../habits/domain/habit_model.dart';
-import '../../settings/data/settings_controller.dart';
 import '../../tasks/data/tasks_controller.dart';
 import '../../tasks/domain/subtask_model.dart';
 import '../../tasks/domain/task_model.dart';
@@ -22,7 +21,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
     final today = ref.watch(todayProvider);
-    final accent = ref.watch(accentColorProvider);
+    final accent = context.accent;
     final habitsToday = ref.watch(habitsForDayProvider(today));
     // Mesma regra da aba "Hoje" de Tarefas (TaskSchedule), incluindo as
     // já feitas hoje — para riscar na lista e contar no progresso.
@@ -136,7 +135,7 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   void _showCreateSheet(BuildContext context, WidgetRef ref) {
-    final accent = ref.read(accentColorProvider);
+    final accent = context.accent;
     showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => SafeArea(

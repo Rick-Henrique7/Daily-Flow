@@ -6,7 +6,6 @@ import '../../../core/widgets/app_snackbar.dart';
 import '../../../core/widgets/confirm_delete_dialog.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../../core/widgets/swipe_delete_background.dart';
-import '../../settings/data/settings_controller.dart';
 import '../data/tasks_controller.dart';
 import '../domain/task_model.dart';
 import 'task_form_dialog.dart';
@@ -20,7 +19,7 @@ class TasksScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(taskFilterProvider);
     final tasks = ref.watch(filteredTasksProvider);
-    final accent = ref.watch(accentColorProvider);
+    final accent = context.accent;
 
     final pending = ref.watch(pendingTasksCountProvider);
 

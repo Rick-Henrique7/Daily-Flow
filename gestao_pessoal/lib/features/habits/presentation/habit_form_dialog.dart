@@ -8,7 +8,6 @@ import '../../../core/widgets/confirm_delete_dialog.dart';
 import '../../../core/widgets/glass_input_field.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../../../core/widgets/weekday_chip.dart';
-import '../../settings/data/settings_controller.dart';
 import '../data/habits_controller.dart';
 import '../domain/habit_model.dart';
 
@@ -245,7 +244,7 @@ class _HabitFormDialogState extends ConsumerState<HabitFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final accent = ref.watch(accentColorProvider);
+    final accent = context.accent;
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(16),
@@ -533,7 +532,7 @@ class _HabitFormDialogState extends ConsumerState<HabitFormDialog> {
 }
 
 /// Chip de duração para o picker de estimativa (5min, 10min, 1h...).
-class _DurationChip extends ConsumerWidget {
+class _DurationChip extends StatelessWidget {
   const _DurationChip({
     required this.label,
     required this.active,
@@ -544,8 +543,8 @@ class _DurationChip extends ConsumerWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final accent = ref.watch(accentColorProvider);
+  Widget build(BuildContext context) {
+    final accent = context.accent;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(

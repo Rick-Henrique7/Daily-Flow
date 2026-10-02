@@ -168,9 +168,17 @@ class AppPalette extends ThemeExtension<AppPalette> {
   }
 }
 
-/// Atalho: `context.palette.textPrimary`.
+/// Atalhos: `context.palette.textPrimary`, `context.accent`.
 extension AppPaletteContext on BuildContext {
   AppPalette get palette => AppPalette.of(this);
+
+  /// Cor de destaque escolhida pelo usuário. O tema já a recebe como
+  /// `colorScheme.primary`; ler daqui evita que uma feature importe as
+  /// configurações só para pegar uma cor (ADR 0008).
+  Color get accent => Theme.of(this).colorScheme.primary;
+
+  /// Cor de texto do tema (no Liquid Glass, a escolhida pelo usuário).
+  Color get foreground => Theme.of(this).colorScheme.onSurface;
 }
 
 /// Tokens que **não** dependem do estilo: espaçamento, raios e uma

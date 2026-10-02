@@ -6,7 +6,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/providers/core_providers.dart';
 import '../../../core/widgets/liquid_glass_card.dart';
 import '../../../core/widgets/screen_header.dart';
-import '../../settings/data/settings_controller.dart';
 import '../../tasks/data/tasks_controller.dart';
 import '../data/pomodoro_controller.dart';
 import '../domain/pomodoro_session_model.dart';
@@ -24,7 +23,7 @@ class PomodoroScreen extends ConsumerWidget {
         .watch(tasksProvider)
         .where((t) => !t.isCompletedOn(today))
         .toList();
-    final accent = ref.watch(accentColorProvider);
+    final accent = context.accent;
 
     return Scaffold(
       backgroundColor: Colors.transparent,

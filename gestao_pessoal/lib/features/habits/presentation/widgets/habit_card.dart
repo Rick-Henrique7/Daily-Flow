@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/liquid_glass_card.dart';
-import '../../../settings/data/settings_controller.dart';
 import '../../data/habits_controller.dart';
 import '../../domain/habit_model.dart';
 import '../habit_form_dialog.dart';
@@ -25,7 +24,7 @@ class HabitCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final done = habit.isCompletedOn(day);
-    final accent = ref.watch(accentColorProvider);
+    final accent = context.accent;
     return LiquidGlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: InkWell(
