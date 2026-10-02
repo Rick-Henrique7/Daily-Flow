@@ -6,6 +6,7 @@ import '../../../../core/providers/core_providers.dart';
 import '../../../../core/utils/date_formatters.dart';
 import '../../../../core/widgets/liquid_glass_card.dart';
 import '../../data/tasks_controller.dart';
+import '../../domain/subtask_model.dart';
 import '../../domain/task_model.dart';
 
 /// Cartão de tarefa com tap para editar + check para concluir.
