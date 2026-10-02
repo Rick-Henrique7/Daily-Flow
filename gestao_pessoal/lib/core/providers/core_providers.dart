@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../database/prefs_store.dart';
 import '../services/haptics_service.dart';
 import '../services/sound_service.dart';
+import '../services/wakelock_service.dart';
 
 /// Providers de infraestrutura compartilhados por todas as features.
 ///
@@ -50,6 +51,18 @@ final soundServiceProvider = Provider<SoundService>((ref) {
   ref.onDispose(service.dispose);
   return service;
 });
+
+/// Mantém a tela acesa durante o timer de foco.
+final wakelockServiceProvider = Provider<WakelockService>(
+  (ref) => const WakelockService(),
+);
+
+/// Relógio do app. Quem precisa de "agora" com hora (o timer de foco)
+/// lê daqui em vez de chamar `DateTime.now()` — os testes avançam o
+/// tempo sem esperar de verdade.
+typedef Clock = DateTime Function();
+
+final clockProvider = Provider<Clock>((ref) => DateTime.now);
 
 /// Data de hoje (sem hora), recalculada automaticamente à meia-noite.
 ///

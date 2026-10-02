@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gestao_pessoal/core/providers/core_providers.dart';
 import 'package:gestao_pessoal/core/services/haptics_service.dart';
 import 'package:gestao_pessoal/core/services/sound_service.dart';
+import 'package:gestao_pessoal/core/services/wakelock_service.dart';
 import 'package:gestao_pessoal/features/habits/data/prefs_habits_repository.dart';
 import 'package:gestao_pessoal/features/habits/domain/habit_model.dart';
 import 'package:gestao_pessoal/features/habits/domain/habits_repository.dart';
@@ -78,6 +79,33 @@ class SilentSound implements SoundService {
   Future<void> dispose() async {}
 }
 
+/// Som que só conta quantas vezes tocou.
+class CountingSound extends SilentSound {
+  int plays = 0;
+
+  @override
+  Future<void> playSuccess() async => plays++;
+}
+
+/// Tela acesa em memória: guarda o último pedido.
+class FakeWakelock implements WakelockService {
+  bool on = false;
+
+  @override
+  Future<void> keepScreenOn(bool on) async => this.on = on;
+}
+
+/// Relógio controlado pelo teste: o tempo só anda com [advance].
+class FakeClock {
+  FakeClock(this.now);
+
+  DateTime now;
+
+  DateTime call() => now;
+
+  void advance(Duration d) => now = now.add(d);
+}
+
 /// Overrides que isolam o app de armazenamento, relógio e plataforma.
 List<Override> testOverrides({
   required DateTime today,
@@ -85,6 +113,9 @@ List<Override> testOverrides({
   InMemoryHabitsRepository? habits,
   InMemorySettingsRepository? settings,
   InMemorySessionsRepository? sessions,
+  FakeClock? clock,
+  SoundService? sound,
+  FakeWakelock? wakelock,
 }) {
   return [
     tasksRepositoryProvider.overrideWithValue(tasks ?? InMemoryTasksRepository()),
@@ -96,6 +127,8 @@ List<Override> testOverrides({
         .overrideWithValue(sessions ?? InMemorySessionsRepository()),
     todayProvider.overrideWithValue(today),
     hapticsServiceProvider.overrideWithValue(HapticsService(enabled: false)),
-    soundServiceProvider.overrideWithValue(SilentSound()),
+    soundServiceProvider.overrideWithValue(sound ?? SilentSound()),
+    wakelockServiceProvider.overrideWithValue(wakelock ?? FakeWakelock()),
+    clockProvider.overrideWithValue((clock ?? FakeClock(today)).call),
   ];
 }

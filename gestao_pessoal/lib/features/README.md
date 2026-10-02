@@ -16,15 +16,20 @@ features/<nome>/
 │   ├── <nome>_controller.dart
 │   └── prefs_<nome>_repository.dart
 └── presentation/  # Telas, widgets e diálogos
-    └── <nome>_screen.dart
+    ├── <nome>_screen.dart           # composição e navegação
+    ├── <nome>_form_dialog.dart      # formulário de criar/editar
+    └── widgets/                     # blocos visuais com nome próprio
 ```
+
+Uma tela que passa de ~400 linhas é sinal de que algum bloco merece um
+widget próprio em `widgets/`.
 
 | Feature | domain | data | presentation |
 | --- | --- | --- | --- |
-| `habits` | `HabitModel`, `HabitStreak`, `HabitCalendar`, `HabitsRepository` | `HabitsNotifier`, `PrefsHabitsRepository` | `HabitsScreen` |
-| `tasks` | `TaskModel`, `TaskSchedule`, `TasksRepository` | `TasksNotifier`, `PrefsTasksRepository` | `TasksScreen` |
-| `pomodoro` | `PomodoroSessionModel`, `PomodoroSessionsRepository` | timer + `PomodoroHistoryNotifier` | `PomodoroScreen` |
-| `settings` | `AppSettings`, `SettingsRepository` | `SettingsNotifier` | `SettingsScreen` |
+| `habits` | `HabitModel`, `HabitStreak`, `HabitCalendar`, `HabitsRepository` | `HabitsNotifier`, `PrefsHabitsRepository` | `HabitsScreen`, `HabitFormDialog`, `widgets/` |
+| `tasks` | `TaskModel`, `TaskSchedule`, `TasksRepository` | `TasksNotifier`, `PrefsTasksRepository` | `TasksScreen`, `TaskFormDialog`, `widgets/` |
+| `pomodoro` | `PomodoroSessionModel`, `PomodoroCycle`, `PomodoroSessionsRepository` | `PomodoroTimerNotifier` (horário de término), `PomodoroHistoryNotifier` | `PomodoroScreen`, `PomodoroTimerView` |
+| `settings` | `AppSettings`, `SettingsRepository` | `SettingsNotifier` | `SettingsScreen`, `widgets/` |
 | `stats` | `StatsCalculator` | `stats_providers.dart` | `StatsScreen` |
 | `dashboard` | — | — | `DashboardScreen` (tela Hoje) |
 
@@ -41,8 +46,12 @@ presentation/  ──►  data/  ──►  domain/
   importam umas às outras.
 - Features **agregadoras** (`dashboard`, `stats`) podem ler os controllers de
   outras features — juntar dados é o propósito delas. Exceção pontual: o Foco
-  lê a lista de tarefas para vincular uma sessão. ([ADR 0002](../../../docs/adr/0002-providers-em-core.md))
-- Infraestrutura (armazenamento, "hoje", vibração, som) vem de
+  lê a lista de tarefas para vincular uma sessão e as cores do anel nas
+  configurações. ([ADR 0002](../../../docs/adr/0002-providers-em-core.md))
+- Cor de destaque e de texto vêm do tema (`context.accent`,
+  `context.foreground`), não de `settings`
+  ([ADR 0008](../../../docs/adr/0008-shell-fora-do-core.md)).
+- Infraestrutura (armazenamento, "hoje", relógio, vibração, som, tela acesa) vem de
   `core/providers/core_providers.dart`, nunca de outra feature.
 
 ## Adicionando uma feature
