@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../constants/app_colors.dart';
-import '../../features/settings/data/settings_controller.dart';
 
 /// Snackbar padronizado do Daily Flow — usado para "Desfazer" exclusões
 /// de hábitos/tarefas.
@@ -29,16 +27,14 @@ class AppUndoSnackBar {
   /// - [message]: texto principal
   /// - [onUndo]: callback ao tocar em "Desfazer". Após executar,
   ///   o snackbar é fechado explicitamente.
-  /// - [ref]: para ler o accent color atual do usuário.
   static void show(
-    BuildContext context,
-    WidgetRef ref, {
+    BuildContext context, {
     required IconData icon,
     required String message,
     required VoidCallback onUndo,
   }) {
     final messenger = ScaffoldMessenger.of(context);
-    final accent = ref.read(accentColorProvider);
+    final accent = Theme.of(context).colorScheme.primary;
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(

@@ -1,9 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/settings/data/settings_controller.dart';
 import '../constants/app_colors.dart';
 
 /// Item de navegação com rótulo + ícone.
@@ -96,7 +94,7 @@ class GlassNavBar extends StatelessWidget {
   }
 }
 
-class _NavButton extends ConsumerWidget {
+class _NavButton extends StatelessWidget {
   const _NavButton({
     required this.item,
     required this.active,
@@ -107,8 +105,8 @@ class _NavButton extends ConsumerWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final accent = ref.watch(accentColorProvider);
+  Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
     final glass = context.palette.isGlass;
     final idle = glass ? context.palette.textSecondary : context.palette.onPanelMuted;
     final color = active ? (glass ? context.palette.textPrimary : accent) : idle;

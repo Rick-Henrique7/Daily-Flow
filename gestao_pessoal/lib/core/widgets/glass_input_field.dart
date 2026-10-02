@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/settings/data/settings_controller.dart';
 import '../constants/app_colors.dart';
 
 /// Campo de entrada flat dark do Daily Flow.
@@ -13,7 +11,7 @@ import '../constants/app_colors.dart';
 /// - Radius: 16px (radius-md)
 /// - Texto: 15px, weight 400 (DM Sans via tema)
 /// - Hint: `#7A7A7A` (text-secondary)
-class GlassInputField extends ConsumerWidget {
+class GlassInputField extends StatelessWidget {
   const GlassInputField({
     super.key,
     required this.controller,
@@ -30,8 +28,8 @@ class GlassInputField extends ConsumerWidget {
   final ValueChanged<String>? onChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final accent = ref.watch(accentColorProvider);
+  Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
     return TextField(
       controller: controller,
       keyboardType: keyboardType,

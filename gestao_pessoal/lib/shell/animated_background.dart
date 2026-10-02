@@ -4,9 +4,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/settings/data/settings_controller.dart';
-import '../../features/settings/domain/app_settings.dart';
-import '../constants/app_colors.dart';
+import '../core/constants/app_colors.dart';
+import '../core/utils/color_hex.dart';
+import '../features/settings/data/settings_controller.dart';
+import '../features/settings/domain/app_settings.dart';
 
 /// Fundo de todas as telas. Muda conforme o [AppStyle]:
 ///
@@ -49,10 +50,6 @@ class _AnimatedBackgroundState extends ConsumerState<AnimatedBackground>
     super.dispose();
   }
 
-  Color _hexToColor(String hex) {
-    final clean = hex.replaceAll('#', '');
-    return Color(int.parse('FF$clean', radix: 16));
-  }
 
   /// Liga o ticker só quando há algo animando (glass + modo animado).
   void _syncTicker(bool shouldAnimate) {
@@ -78,7 +75,7 @@ class _AnimatedBackgroundState extends ConsumerState<AnimatedBackground>
         layout: _EditorialLayout.forRoute(widget.routeIndex),
       );
     } else if (!animated) {
-      backdrop = ColoredBox(color: _hexToColor(settings.wallpaperSolidColor));
+      backdrop = ColoredBox(color: colorFromHex(settings.wallpaperSolidColor));
     } else {
       backdrop = _buildBlobs(settings);
     }
@@ -92,7 +89,7 @@ class _AnimatedBackgroundState extends ConsumerState<AnimatedBackground>
   }
 
   Widget _buildBlobs(AppSettings settings) {
-    final seed = _hexToColor(settings.wallpaperSeed);
+    final seed = colorFromHex(settings.wallpaperSeed);
     final intensity = settings.blobIntensity;
     final hsv = HSVColor.fromColor(seed);
 

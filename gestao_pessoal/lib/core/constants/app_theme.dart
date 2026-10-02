@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../utils/color_hex.dart';
 import 'app_colors.dart';
 import 'app_style.dart';
 
@@ -14,10 +15,6 @@ import 'app_style.dart';
 class AppTheme {
   AppTheme._();
 
-  static Color _hexToColor(String hex) {
-    final clean = hex.replaceAll('#', '');
-    return Color(int.parse('FF$clean', radix: 16));
-  }
 
   /// Monta o tema do [style]. `textColorHex` só vale no Liquid Glass
   /// (no editorial o texto é sempre tinta grafite para manter contraste
@@ -28,9 +25,9 @@ class AppTheme {
     String? accentColorHex,
   }) {
     final p = AppPalette.forStyle(style);
-    final accent = _hexToColor(accentColorHex ?? style.defaultAccentHex);
+    final accent = colorFromHex(accentColorHex ?? style.defaultAccentHex);
     final foreground = style.isGlass
-        ? _hexToColor(textColorHex ?? '#FFFFFF')
+        ? colorFromHex(textColorHex ?? '#FFFFFF')
         : p.textPrimary;
     final onAccent = AppColors.onColor(accent);
 

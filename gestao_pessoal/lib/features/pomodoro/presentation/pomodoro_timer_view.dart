@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/color_hex.dart';
 import '../../../core/utils/date_formatters.dart';
 import '../../settings/data/settings_controller.dart';
 import '../data/pomodoro_controller.dart';
@@ -25,18 +26,14 @@ class PomodoroTimerView extends ConsumerWidget {
   Color _accentColor(String focusHex, String shortHex, String longHex) {
     switch (state.type) {
       case PomodoroType.focus:
-        return _hexToColor(focusHex);
+        return colorFromHex(focusHex);
       case PomodoroType.shortBreak:
-        return _hexToColor(shortHex);
+        return colorFromHex(shortHex);
       case PomodoroType.longBreak:
-        return _hexToColor(longHex);
+        return colorFromHex(longHex);
     }
   }
 
-  Color _hexToColor(String hex) {
-    final clean = hex.replaceAll('#', '');
-    return Color(int.parse('FF$clean', radix: 16));
-  }
 
   String _label({required bool glass}) {
     switch (state.type) {

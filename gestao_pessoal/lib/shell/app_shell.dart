@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/widgets/glass_nav_bar.dart';
 import 'animated_background.dart';
-import 'glass_nav_bar.dart';
 
 /// Shell padrão para todas as telas do app.
+///
+/// Fica em `lib/shell/` (nível do app, como `routing/`) e não em `core/`
+/// porque o fundo depende das configurações do usuário — e `core/` não
+/// importa features.
 ///
 /// Empilha:
 /// 1. `AnimatedBackground` (composição editorial ou blobs do glass)

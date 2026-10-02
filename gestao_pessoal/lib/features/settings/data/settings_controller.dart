@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/color_hex.dart';
 import '../domain/app_settings.dart';
 import 'prefs_settings_repository.dart';
 
@@ -123,9 +124,7 @@ final settingsProvider =
 /// "ativos" (priority bar, check button, etc.) consomem via
 /// `ref.watch(accentColorProvider)`.
 final accentColorProvider = Provider<Color>((ref) {
-  final hex = ref.watch(settingsProvider).accentColor;
-  final clean = hex.replaceAll('#', '');
-  return Color(int.parse('FF$clean', radix: 16));
+  return colorFromHex(ref.watch(settingsProvider).accentColor);
 });
 
 /// Provider que resolve a cor de texto (foreground) configurada pelo
@@ -142,7 +141,5 @@ final textColorProvider = Provider<Color>((ref) {
   final settings = ref.watch(settingsProvider);
   // No editorial o texto é sempre tinta grafite (contraste no creme).
   if (!settings.style.isGlass) return AppPalette.editorial.textPrimary;
-  final hex = settings.textColor;
-  final clean = hex.replaceAll('#', '');
-  return Color(int.parse('FF$clean', radix: 16));
+  return colorFromHex(settings.textColor);
 });
