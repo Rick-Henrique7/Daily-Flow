@@ -55,8 +55,8 @@ class PomodoroTimerView extends ConsumerWidget {
       settings.pomodoroLongBreakColor,
     );
 
-    // Herda a fonte do tema (Jost embutida no editorial; DM Sans no glass, via
-    // GoogleFonts.dmSans). Antes este widget usava GoogleFonts.spaceGrotesk
+    // Herda a fonte do tema (Jost no editorial, DM Sans no glass, ambas
+    // embutidas). Antes este widget usava GoogleFonts.spaceGrotesk
     // / GoogleFonts.inter, que disparavam download sob demanda da CDN do
     // Google Fonts (fonts.gstatic.com) na primeira vez que o usuário
     // entrava na aba Foco — gerava um delay visível de 1–3s.

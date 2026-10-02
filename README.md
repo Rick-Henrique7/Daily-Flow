@@ -111,8 +111,8 @@ Daily-Flow/
 
 ## Próximos passos
 
-Antes da Play Store: `applicationId` definitivo e fonte DM Sans embutida.
-Depois: backup dos dados e notificações locais.
+Antes da Play Store: chave de upload e assinatura do release. Depois: backup
+dos dados e notificações locais.
 [Backlog completo](docs/requisitos/README.md#3-backlog).
 
 ## Licença

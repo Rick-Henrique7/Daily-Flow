@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/color_hex.dart';
 import 'app_colors.dart';
@@ -31,12 +30,15 @@ class AppTheme {
         : p.textPrimary;
     final onAccent = AppColors.onColor(accent);
 
+    // Fontes embutidas em assets/fonts (sem download em tempo de execução).
+    final family = style.isGlass ? 'DMSans' : 'Jost';
+
     final base = ThemeData(
       useMaterial3: true,
       brightness: style.isGlass ? Brightness.dark : Brightness.light,
       // Fonte base do app inteiro — inclusive widgets que não herdam do
       // textTheme (dropdowns, campos com `style` próprio).
-      fontFamily: style.isGlass ? GoogleFonts.dmSans().fontFamily : 'Jost',
+      fontFamily: family,
     );
 
     TextStyle font(double size, FontWeight weight, {double? height, double? spacing}) {
@@ -47,9 +49,7 @@ class AppTheme {
         height: height,
         letterSpacing: spacing,
       );
-      return style.isGlass
-          ? GoogleFonts.dmSans(textStyle: s)
-          : s.copyWith(fontFamily: 'Jost');
+      return s.copyWith(fontFamily: family);
     }
 
     // Editorial usa títulos leves (como capa de revista); glass, mais

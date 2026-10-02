@@ -87,5 +87,5 @@ A sequência de hábitos **não é gravada**: é calculada a partir de
 | Versão | Conteúdo | Situação |
 | --- | --- | --- |
 | v0.1 | Funcionalidades das 6 áreas, dois estilos, arquitetura refatorada, 55 testes, CI | atual |
-| v0.2 | Itens 1 a 5 do [backlog](requisitos/README.md#3-backlog): `applicationId`, fonte embutida, backup, notificações, criação rápida | próxima |
+| v0.2 | `applicationId` definitivo e fontes embutidas (feitos); assinatura do release, backup, notificações e criação rápida ([backlog](requisitos/README.md#3-backlog)) | próxima |
 | v1.0 | Publicação na Play Store (teste fechado → produção) | — |

@@ -45,24 +45,25 @@ Situação atual (v0.1, etapa 4):
 | | ✅ | 🟡 | ⬜ | Total |
 | --- | --- | --- | --- | --- |
 | Funcionais | 25 | 6 | 7 | 38 |
-| Não funcionais | 6 | 4 | 0 | 10 |
+| Não funcionais | 7 | 3 | 0 | 10 |
 
 ## 3. Backlog
 
-Ordem de ataque para a v0.2, da mais urgente para a menos urgente. Os dois
-primeiros itens **bloqueiam a publicação**.
+Ordem de ataque para a v0.2, da mais urgente para a menos urgente. O item 1
+**bloqueia a publicação**.
 
 | # | Item | Requisitos | Por quê |
 | --- | --- | --- | --- |
-| 1 | Definir o `applicationId` final | RNF-10 | Não pode mudar depois da 1ª publicação |
-| 2 | Embutir a fonte DM Sans | RNF-01, RNF-02 | O Liquid Glass perde a fonte sem internet, e talvez no build de release |
-| 3 | Backup: exportar e importar os dados | RF-CF-07 | Sem nuvem, trocar de celular hoje perde tudo |
-| 4 | Notificações locais: lembrete de hábito, horário de tarefa, fim do foco em segundo plano | RF-HB-05, RF-TD-05, RF-PO-04 | Uma dependência resolve os três |
-| 5 | **+** da tela Hoje abre o formulário direto | RF-DB-03 | Um toque a menos no fluxo mais comum |
-| 6 | Subtarefas e descrição no formulário de tarefa | RF-TD-01 | Modelo e controller prontos; falta a tela |
-| 7 | Indicadores das Estatísticas pelo período | RF-ST-01 | O filtro hoje só muda o gráfico |
-| 8 | Sequência por hábito no cartão | RF-HB-03 | Regra pronta e testada; falta exibir |
-| 9 | Tempo de foco por tarefa | RF-PO-03 | Sessões já guardam a tarefa |
+| 1 | Chave de upload e assinatura do release | RNF-10 | Hoje o release é assinado com a chave de debug |
+| ✓ | ~~Definir o `applicationId` final~~ → `com.aevumtech.dailyflow` | RNF-10 | feito |
+| ✓ | ~~Embutir a fonte DM Sans~~ | RNF-01, RNF-02 | feito |
+| 2 | Backup: exportar e importar os dados | RF-CF-07 | Sem nuvem, trocar de celular hoje perde tudo |
+| 3 | Notificações locais: lembrete de hábito, horário de tarefa, fim do foco em segundo plano | RF-HB-05, RF-TD-05, RF-PO-04 | Uma dependência resolve os três |
+| 4 | **+** da tela Hoje abre o formulário direto | RF-DB-03 | Um toque a menos no fluxo mais comum |
+| 5 | Subtarefas e descrição no formulário de tarefa | RF-TD-01 | Modelo e controller prontos; falta a tela |
+| 6 | Indicadores das Estatísticas pelo período | RF-ST-01 | O filtro hoje só muda o gráfico |
+| 7 | Sequência por hábito no cartão | RF-HB-03 | Regra pronta e testada; falta exibir |
+| 8 | Tempo de foco por tarefa | RF-PO-03 | Sessões já guardam a tarefa |
 | — | Durações do foco configuráveis · rosca por categoria · busca e filtros | RF-PO-08, RF-ST-04, RF-TD-08 | Could |
 | — | Reordenar tarefas arrastando | RF-TD-02 | Won't nesta fase |
 

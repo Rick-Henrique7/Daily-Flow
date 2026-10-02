@@ -24,6 +24,11 @@ e este projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ### Adicionado
 - Tela fica acesa enquanto o timer de foco está rodando.
 
+### Alterado
+- `applicationId` definitivo para a Play Store: `com.aevumtech.dailyflow`.
+- Fonte DM Sans (Liquid Glass) embutida no app; removido `google_fonts`. O app
+  não faz mais nenhuma requisição de rede e funciona igual offline.
+
 ### Performance
 - Provider de hábitos do dia criava uma instância nova a cada rebuild (chave
   com segundos) sem liberar; agora chave estável + `autoDispose`.
