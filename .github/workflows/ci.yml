@@ -41,6 +41,21 @@ jobs:
       - name: Análise estática
         run: flutter analyze --no-fatal-infos
 
+      # Regras de dependência (docs/arquitetura.md, ADRs 0002 e 0008):
+      # core não importa features, e domain não importa Riverpod nem
+      # armazenamento (tipos de valor do Flutter, como Color, são aceitos).
+      - name: Regras de arquitetura
+        run: |
+          set -e
+          falhou=0
+          if grep -rnE "import '.*features/" lib/core --include=*.dart; then
+            echo "::error::lib/core não pode importar features/ (ADR 0008)."; falhou=1
+          fi
+          if grep -rnE "import 'package:(flutter_riverpod|shared_preferences)" lib/features/*/domain --include=*.dart; then
+            echo "::error::domain/ deve ser puro (ADR 0004)."; falhou=1
+          fi
+          exit $falhou
+
       - name: Testes
         run: flutter test --coverage --reporter expanded
 
