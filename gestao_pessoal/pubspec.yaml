@@ -1,7 +1,7 @@
 name: gestao_pessoal
 description: >-
   Daily Flow — Aplicativo pessoal de gestão de rotina com hábitos, tarefas,
-  timer Pomodoro e estatísticas. Visual Liquid Glass 3D com paleta Dark/Green.
+  timer Pomodoro e estatísticas. Dois estilos: Editorial e Liquid Glass.
 publish_to: 'none'
 
 # Versionamento semântico: MAJOR.MINOR.PATCH+BUILD
@@ -34,12 +34,9 @@ dependencies:
   # Interface, Animações e Gráficos
   flutter_animate: ^4.5.0
   google_fonts: ^6.2.0
-  flutter_colorpicker: ^1.1.0
 
   # Recursos Nativos e Utilitários
-  flutter_local_notifications: ^18.0.1
-  wakelock_plus: ^1.2.0
-  vibration: ^2.0.0
+  wakelock_plus: ^1.2.0 # tela acesa durante o timer de foco
   intl: ^0.20.2
 
   # Audio (som de conclusão de tarefa)
