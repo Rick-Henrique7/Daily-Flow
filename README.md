@@ -343,21 +343,22 @@ Daily-Flow/
     └── lib/
         ├── main.dart
         ├── app.dart
-        ├── routing/         ← GoRouter + AppShell
-        ├── core/            ← widgets, constantes, utils, services, database
-        │   ├── constants/app_colors.dart  ← tokens do design system
-        │   ├── constants/app_theme.dart    ← DM Sans + tema dark
-        │   ├── widgets/liquid_glass_card.dart   ← agora flat dark (compat)
-        │   ├── widgets/glass_nav_bar.dart       ← agora flat dark (compat)
-        │   ├── widgets/glass_input_field.dart   ← agora flat dark (compat)
-        │   └── widgets/animated_background.dart ← solid + animated (opt)
-        └── features/        ← 1 pasta por feature
-            ├── dashboard/   ← presentation · controllers · data
-            ├── habits/      ← presentation · data · domain
-            ├── tasks/       ← presentation · data · domain
-            ├── pomodoro/    ← presentation · data · controllers
-            ├── stats/       ← presentation · controllers
-            └── settings/    ← presentation · data · domain
+        ├── routing/         ← GoRouter
+        ├── shell/           ← AppShell + fundo animado (casca do app)
+        ├── core/            ← tema, providers, serviços, utils, widgets compartilhados
+        │   ├── constants/app_colors.dart  ← AppPalette (ThemeExtension) + espaçamentos
+        │   ├── constants/app_theme.dart   ← tema Editorial (Jost) e Liquid Glass (DM Sans)
+        │   ├── providers/core_providers.dart ← armazenamento, hoje, relógio, feedback
+        │   └── widgets/                   ← nav bar, cards, seletor de dias, diálogos
+        └── features/        ← 1 pasta por feature (domain · data · presentation)
+            ├── dashboard/   ← tela Hoje (agregadora)
+            ├── habits/
+            ├── tasks/
+            ├── pomodoro/
+            ├── stats/       ← agregadora
+            └── settings/
+
+Detalhes em docs/arquitetura.md
 ```
 
 ---

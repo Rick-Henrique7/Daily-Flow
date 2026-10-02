@@ -10,7 +10,7 @@
 
 | Nível | O que cobre | Velocidade | Hoje | Meta |
 | --- | --- | --- | --- | --- |
-| **Unitário** | Regras puras do domínio, modelos (JSON e migração), controllers com repositório em memória | milissegundos | 35 | toda regra nova e todo bug corrigido |
+| **Unitário** | Regras puras do domínio, modelos (JSON e migração), controllers com repositório em memória e relógio falso | milissegundos | 51 | toda regra nova e todo bug corrigido |
 | **Widget** | App real (rotas, shell, tema, telas) com armazenamento em memória e data fixa | rápido | 4 | fluxos principais de cada tela |
 | **Integração / E2E** | Fluxos completos no aparelho ou emulador (`integration_test`) | lento | 0 | antes da primeira versão na Play Store |
 
@@ -27,15 +27,17 @@ testadas sem montar interface.
 | `test/features/tasks/tasks_controller_test.dart` | 4 | Concluir/desfazer recorrente por dia, persistência via repositório |
 | `test/features/habits/habit_rules_test.dart` | 9 | Sequência (dias previstos, quebra, hoje em aberto), dias incompletos |
 | `test/features/stats/stats_calculator_test.dart` | 4 | Contagem de conclusões, gráfico semanal e anual, minutos de foco |
+| `test/features/pomodoro/pomodoro_cycle_test.dart` | 6 | Próximo modo (pausa longa no 4º foco), "pular", tempo restante arredondado |
+| `test/features/pomodoro/pomodoro_controller_test.dart` | 10 | Timer pelo horário de término: segundo plano, pausa, conclusão única, sessão gravada, som, tela acesa |
 | `test/core/json_coders_test.dart` | 3 | Registros corrompidos não derrubam o app |
 | `test/app_test.dart` | 4 | Tela Hoje (progresso e concluir), estado vazio, abas de Tarefas, estilos em Configurações |
 
-**Total: 39 testes** (35 unitários + 4 de widget).
+**Total: 55 testes** (51 unitários + 4 de widget).
 
 **Testes de regressão:** cada bug corrigido na etapa 1 tem um teste com o
 cenário que falhava — por exemplo `gráfico anual soma o mês inteiro (bug
 antigo: só o mesmo dia)` e `recorrente feita na terça volta a ficar pendente
-na quinta`.
+na quinta` e, na etapa 3, `segundo plano não atrasa o timer`.
 
 ## 3. Convenções
 
@@ -45,7 +47,11 @@ na quinta`.
 - **Datas fixas.** Nada de `DateTime.now()` em teste. As regras recebem "hoje"
   como parâmetro e o controller lê do `todayProvider`, sobrescrito com
   `thu` (quinta, 01/10/2026) — ver `test/helpers/fixtures.dart`.
-- **Fakes em vez de mocks.** Repositórios em memória e som silencioso em
+- **Tempo controlado.** O timer de foco lê o `clockProvider`; nos testes é um
+  `FakeClock` que só anda com `advance(...)`. 25 minutos de foco levam
+  milissegundos, sem `sleep` nem espera real.
+- **Fakes em vez de mocks.** Repositórios em memória, som silencioso (ou que
+  conta toques), tela acesa em memória e relógio falso em
   `test/helpers/fakes.dart`; `testOverrides(today: ...)` isola o app inteiro
   de armazenamento, relógio e plataforma. Sem bibliotecas de mock: os
   contratos são pequenos e o fake fica legível.
@@ -84,6 +90,7 @@ na `main` e em todo pull request:
 | --- | --- | --- |
 | Formatação | `dart format --set-exit-if-changed lib test` | não (só aviso) |
 | Análise estática | `flutter analyze --no-fatal-infos` | sim, em erros e avisos |
+| Regras de arquitetura | `grep`: `core/` sem imports de `features/`; `domain/` sem Riverpod nem armazenamento | sim |
 | Testes | `flutter test --coverage` | sim |
 | Cobertura | `coverage/lcov.info` publicado como artefato | — |
 
@@ -96,8 +103,8 @@ Aparecem como *info* — guiam a limpeza sem travar o CI.
 
 ## 6. Próximos passos
 
-- Testes de widget para Hábitos (calendário) e Foco (timer), depois que o
-  timer passar a calcular pelo horário de término (etapa 3).
+- Testes de widget para Hábitos (calendário) e Foco (iniciar, pausar, pular
+  na tela) — o timer já é testável com `FakeClock` desde a etapa 3.
 - `integration_test/` com 3 fluxos no emulador: criar hábito e ver a
   sequência; tarefa recorrente que volta no próximo dia; sessão de foco
   que aparece nas Estatísticas.

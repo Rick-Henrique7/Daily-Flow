@@ -15,6 +15,14 @@ e este projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Estatísticas não atualizavam após uma sessão de foco.
 - Gráfico "Ano" contava só o mesmo dia de cada mês.
 - Um registro corrompido no armazenamento podia fechar o app.
+- Timer de foco atrasava ou parava com o app em segundo plano; agora calcula
+  o tempo pelo horário de término.
+- Botão "Parar" do foco só pausava; agora volta ao tempo cheio do modo.
+- Fim de uma sessão de foco não tocava som nem vibrava, apesar da opção
+  "Som de conclusão".
+
+### Adicionado
+- Tela fica acesa enquanto o timer de foco está rodando.
 
 ### Performance
 - Provider de hábitos do dia criava uma instância nova a cada rebuild (chave
@@ -27,17 +35,28 @@ e este projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Providers de infraestrutura em `core/`; fim da dependência circular `settings ↔ habits`.
 - Regras de negócio puras: `TaskSchedule`, `HabitStreak`, `HabitCalendar`, `StatsCalculator`.
 - 35 testes unitários.
+- Paleta de cores como `ThemeExtension` (`context.palette`) no lugar de
+  estado global; troca de estilo animada e sem recriar a árvore.
+- Telas de Hábitos, Tarefas e Configurações divididas em tela, diálogo de
+  formulário e widgets menores (de ~1.000 para 180–350 linhas).
+- Componentes repetidos unificados em `core/` (seletor de dias, diálogo de
+  exclusão, fundo de deslizar, conversão de cor hexadecimal).
+- `core/` não depende mais de nenhuma feature; casca do app em `lib/shell/`.
+- Regras do ciclo de foco puras em `PomodoroCycle`; relógio injetável.
+- Removidas dependências sem uso: `flutter_local_notifications`, `vibration`,
+  `flutter_colorpicker`; removido widget morto `DailyProgressRing`.
 
 ### Qualidade
 - Integração contínua no GitHub Actions: análise estática e testes a cada push e pull request.
 - 4 testes de widget do app real (tela Hoje, estado vazio, abas de Tarefas, Configurações).
+- 16 testes do timer de foco com relógio falso (55 no total).
 - Lints extras no `analysis_options.yaml`.
 - Números grandes da tela Hoje e de Hábitos encolhem em telas estreitas ou com fonte aumentada.
 - APK removido do controle de versão.
 
 ### Documentação
-- `docs/`: arquitetura, ADRs, ciclo de vida, estratégia de testes e registro
-  da etapa 1, com diagramas (SVG e Mermaid).
+- `docs/`: arquitetura, ADRs 0001–0008, ciclo de vida, estratégia de testes
+  e registros das etapas 1 a 3, com diagramas (SVG e Mermaid).
 
 ### Performance
 - **Pomodoro (aba Foco)**: removidas chamadas a `GoogleFonts.spaceGrotesk()`

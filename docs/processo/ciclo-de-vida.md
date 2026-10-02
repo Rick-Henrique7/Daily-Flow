@@ -68,6 +68,21 @@ gitGraph
   commit id: "docs"
   checkout main
   merge etapa-1-fundacao
+  branch etapa-2-qualidade
+  checkout etapa-2-qualidade
+  commit id: "testes de widget"
+  commit id: "CI"
+  commit id: "docs 2"
+  checkout main
+  merge etapa-2-qualidade
+  branch etapa-3-clean-code
+  checkout etapa-3-clean-code
+  commit id: "ThemeExtension"
+  commit id: "quebra telas"
+  commit id: "timer"
+  commit id: "docs 3"
+  checkout main
+  merge etapa-3-clean-code
 ```
 
 ### Commits: Conventional Commits
