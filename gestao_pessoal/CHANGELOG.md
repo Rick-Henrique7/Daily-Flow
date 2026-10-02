@@ -56,7 +56,10 @@ e este projeto segue [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ### Documentação
 - `docs/`: arquitetura, ADRs 0001–0008, ciclo de vida, estratégia de testes
-  e registros das etapas 1 a 3, com diagramas (SVG e Mermaid).
+  e registros das etapas 1 a 4, com diagramas (SVG e Mermaid).
+- Requisitos: 38 funcionais e 10 não funcionais com critérios de aceite e
+  status, 7 casos de uso, matriz de rastreabilidade e backlog priorizado.
+- Visão de produto, design e README reescritos para refletir o app atual.
 
 ### Performance
 - **Pomodoro (aba Foco)**: removidas chamadas a `GoogleFonts.spaceGrotesk()`
